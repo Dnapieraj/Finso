@@ -1,0 +1,14 @@
+/**
+ * Współdzielone tokeny motywu Tailwind v4 dla produktów Vireo.
+ *
+ * Ważne: ten plik NIE zawiera `@import "tailwindcss"` — każda apka
+ * (web, w przyszłości mobile) musi mieć ten import bezpośrednio
+ * w swoim globals.css, bo narzędzia (np. CLI shadcn/ui, Tailwind
+ * IntelliSense) wykrywają Tailwind po tym dosłownym imporcie.
+ * Ten plik importuje się DODATKOWO, po nim.
+ *
+ * Na etapie 0 (szkielet) nie definiujemy jeszcze tokenów marki
+ * (kolory, typografia) — to świadoma decyzja z PRODUCT.md: branding
+ * Vireo/Finso ustalamy przy budowie UI (etap 3), nie przy scaffoldzie.
+ * Tu wyląduje `@theme` ze wspólną paletą.
+ */
