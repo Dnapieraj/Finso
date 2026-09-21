@@ -1,0 +1,24 @@
+{
+  "name": "finso",
+  "private": true,
+  "packageManager": "pnpm@11.1.2",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "prettier": "@vireo/config/prettier",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "@vireo/config": "workspace:*",
+    "prettier": "^3.9.8",
+    "turbo": "^2.11.2",
+    "typescript": "^5.9.3"
+  }
+}

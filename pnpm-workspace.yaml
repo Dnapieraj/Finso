@@ -1,0 +1,9 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Next.js (apps/web) potrzebuje natywnych zależności (sharp, unrs-resolver)
+# z build scriptami — jawnie zezwalamy im na budowanie przy instalacji.
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
