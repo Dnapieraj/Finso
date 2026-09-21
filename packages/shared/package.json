@@ -1,0 +1,19 @@
+{
+  "name": "@vireo/shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@vireo/config": "workspace:*",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.2"
+  }
+}
