@@ -10,6 +10,7 @@ import { CommonModule } from './common/common.module.js';
 import { PrismaNotFoundFilter } from './common/prisma-not-found.filter.js';
 import { ZodValidationPipe } from './common/zod-validation.pipe.js';
 import { validateEnv } from './config/env.js';
+import { GoalsModule } from './goals/goals.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { TransactionsModule } from './transactions/transactions.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -23,6 +24,7 @@ import { UsersModule } from './users/users.module.js';
     UsersModule,
     CategoriesModule,
     TransactionsModule,
+    GoalsModule,
   ],
   controllers: [AppController],
   providers: [
