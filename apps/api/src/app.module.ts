@@ -11,6 +11,7 @@ import { PrismaNotFoundFilter } from './common/prisma-not-found.filter.js';
 import { ZodValidationPipe } from './common/zod-validation.pipe.js';
 import { validateEnv } from './config/env.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { TransactionsModule } from './transactions/transactions.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -21,6 +22,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     UsersModule,
     CategoriesModule,
+    TransactionsModule,
   ],
   controllers: [AppController],
   providers: [
