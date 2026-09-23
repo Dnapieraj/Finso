@@ -1,4 +1,4 @@
 // @ts-check
-import { baseConfig } from "@vireo/config/eslint/base";
+import { reactConfig } from "@vireo/config/eslint/react";
 
-export default baseConfig;
+export default reactConfig;
