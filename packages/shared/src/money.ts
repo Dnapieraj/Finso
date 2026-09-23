@@ -13,4 +13,11 @@ export type Grosze = number & { readonly __brand: 'Grosze' };
  * arytmetyką zmiennoprzecinkową, więc łapiemy to na granicy, nie
  * w środku obliczeń.
  */
-export declare function grosze(value: number): Grosze;
+export function grosze(value: number): Grosze {
+  if (!Number.isInteger(value)) {
+    throw new TypeError(
+      `Kwota w groszach musi być skończoną liczbą całkowitą, otrzymano: ${String(value)}.`,
+    );
+  }
+  return value as Grosze;
+}

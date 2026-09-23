@@ -17,22 +17,74 @@
  */
 export type IsoDate = string & { readonly __brand: 'IsoDate' };
 
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+const MS_PER_DAY = 86_400_000;
+
+interface DateParts {
+  year: number;
+  month: number;
+  day: number;
+}
+
+function parseIsoDateParts(value: string): DateParts {
+  const match = ISO_DATE_PATTERN.exec(value);
+  if (!match) {
+    throw new TypeError(
+      `Nieprawidłowy format daty: "${value}" (oczekiwano YYYY-MM-DD).`,
+    );
+  }
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+  };
+}
+
+function toEpochDay({ year, month, day }: DateParts): number {
+  return Date.UTC(year, month - 1, day) / MS_PER_DAY;
+}
+
+function epochDayToIsoDate(epochDay: number): IsoDate {
+  const date = new Date(epochDay * MS_PER_DAY);
+  const year = String(date.getUTCFullYear()).padStart(4, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}` as IsoDate;
+}
+
 /**
  * Tworzy wartość typu {@link IsoDate}. Rzuca, jeśli `value` nie pasuje
  * do formatu YYYY-MM-DD albo nie jest realną datą kalendarzową
  * (np. "2024-02-30" albo "2023-02-29" w roku nieprzestępnym).
  */
-export declare function isoDate(value: string): IsoDate;
+export function isoDate(value: string): IsoDate {
+  const parts = parseIsoDateParts(value);
+  // Date.UTC normalizuje przepełnienia (np. dzień 30 lutego zamienia
+  // w 1/2 marca) zamiast rzucać, więc sprawdzamy ręcznie, że to, co
+  // wraca, zgadza się z tym, co podano — inaczej "2024-02-30" po cichu
+  // stałoby się poprawną datą 1 marca.
+  const roundTrip = epochDayToIsoDate(toEpochDay(parts));
+  if (roundTrip !== value) {
+    throw new TypeError(`Nieprawidłowa data kalendarzowa: "${value}".`);
+  }
+  return value as IsoDate;
+}
 
 /**
  * Liczba pełnych dni kalendarzowych między `from` a `to` (`to - from`).
  * Dodatnia, gdy `to` jest później. Poprawnie liczy przez lata przestępne
- * (arytmetyka na dniach juliańskich, nie na `Date` z lokalnym czasem).
+ * (arytmetyka na dniach epoki w UTC, nie na `Date` z lokalnym czasem).
  */
-export declare function daysBetween(from: IsoDate, to: IsoDate): number;
+export function daysBetween(from: IsoDate, to: IsoDate): number {
+  return toEpochDay(parseIsoDateParts(to)) - toEpochDay(parseIsoDateParts(from));
+}
 
 /** Dodaje (lub odejmuje, dla ujemnego `days`) dni kalendarzowe do daty. */
-export declare function addDays(date: IsoDate, days: number): IsoDate;
+export function addDays(date: IsoDate, days: number): IsoDate {
+  return epochDayToIsoDate(toEpochDay(parseIsoDateParts(date)) + days);
+}
 
-/** `a <= b` jako data kalendarzowa (proste porównanie leksykograficzne działa dla YYYY-MM-DD, ale nazwana funkcja czyta się lepiej w logice budżetu). */
-export declare function isOnOrBefore(a: IsoDate, b: IsoDate): boolean;
+/** `a <= b` jako data kalendarzowa. */
+export function isOnOrBefore(a: IsoDate, b: IsoDate): boolean {
+  return a <= b;
+}

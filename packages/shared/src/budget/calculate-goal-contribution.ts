@@ -1,3 +1,4 @@
+import { grosze } from '../money.js';
 import type { GoalContributionInput, GoalContributionOutput } from './types.js';
 
 /**
@@ -12,7 +13,31 @@ import type { GoalContributionInput, GoalContributionOutput } from './types.js';
  *
  * `contributionPerPeriod = ceil((targetAmount - currentAmount) / periodsRemaining)`
  */
-export declare function calculateGoalContribution(
+export function calculateGoalContribution(
   goal: GoalContributionInput,
   periodsRemaining: number,
-): GoalContributionOutput;
+): GoalContributionOutput {
+  const remainingNeeded = goal.targetAmount - goal.currentAmount;
+
+  if (remainingNeeded <= 0) {
+    return {
+      contributionPerPeriod: grosze(0),
+      alreadyReached: true,
+      isOverdue: false,
+    };
+  }
+
+  if (periodsRemaining <= 0) {
+    return {
+      contributionPerPeriod: grosze(remainingNeeded),
+      alreadyReached: false,
+      isOverdue: true,
+    };
+  }
+
+  return {
+    contributionPerPeriod: grosze(Math.ceil(remainingNeeded / periodsRemaining)),
+    alreadyReached: false,
+    isOverdue: false,
+  };
+}

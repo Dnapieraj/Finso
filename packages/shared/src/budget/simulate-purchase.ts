@@ -1,5 +1,15 @@
-import type { Grosze } from '../money.js';
-import type { SimulatePurchaseInput, SimulatePurchaseOutput } from './types.js';
+import { daysBetween, type IsoDate } from '../date.js';
+import { grosze, type Grosze } from '../money.js';
+import { calculateAvailableBalance } from './calculate-available-balance.js';
+import type {
+  GoalImpact,
+  RiskLevel,
+  SimulatedGoal,
+  SimulatePurchaseInput,
+  SimulatePurchaseOutput,
+} from './types.js';
+
+const DEFAULT_TIGHT_THRESHOLD_RATIO = 0.5;
 
 /**
  * Symuluje planowany zakup: czy stać, ile zostanie, ile dziennie do
@@ -16,8 +26,97 @@ import type { SimulatePurchaseInput, SimulatePurchaseOutput } from './types.js';
  * pojawi, zamiast zmieniać typ publiczny wtedy. Jeśli wolisz to
  * usunąć, dopóki naprawdę nie jest potrzebne — powiedz, wywalę.
  */
-export declare function simulatePurchase(
+export function simulatePurchase(
   input: SimulatePurchaseInput,
   amountInGrosze: Grosze,
   categoryId: string,
-): SimulatePurchaseOutput;
+): SimulatePurchaseOutput {
+  void categoryId;
+
+  const before = calculateAvailableBalance(input);
+  const remainingAfter = grosze(before.availableBalance - amountInGrosze);
+  const dailyAllowanceAfter = grosze(
+    before.daysRemaining === 0
+      ? 0
+      : Math.floor(remainingAfter / before.daysRemaining),
+  );
+
+  const canAfford = remainingAfter >= 0;
+  const tightThresholdRatio =
+    input.tightThresholdRatio ?? DEFAULT_TIGHT_THRESHOLD_RATIO;
+  const riskLevel = calculateRiskLevel(
+    canAfford,
+    before.dailyAllowance,
+    dailyAllowanceAfter,
+    tightThresholdRatio,
+  );
+
+  // Ile faktycznie zabraknie po tym zakupie — 0, jeśli i tak starczyło.
+  const deficit = Math.max(0, -remainingAfter);
+  const contributionByGoalId = new Map(
+    input.goalContributions.map((line) => [line.goalId, line.amount]),
+  );
+
+  const goalImpacts: GoalImpact[] = input.goals.map((goal) => ({
+    goalId: goal.id,
+    delayDays: calculateGoalDelayDays(
+      goal,
+      contributionByGoalId.get(goal.id) ?? grosze(0),
+      deficit,
+      input.asOf,
+    ),
+  }));
+
+  return { canAfford, remainingAfter, dailyAllowanceAfter, goalImpacts, riskLevel };
+}
+
+/**
+ * Uwaga: gałąź `dailyAllowanceBefore <= 0` nie jest pokryta żadnym
+ * zatwierdzonym testem (we wszystkich naszych scenariuszach jest
+ * dodatnie) — to czysto defensywny fallback, żeby nie dzielić przez
+ * zero i nie zwrócić NaN, gdyby budżet wszedł tam z zerowym zapasem
+ * jeszcze przed zakupem. Wart dopisania testu, gdy się pojawi realny
+ * przypadek użycia.
+ */
+function calculateRiskLevel(
+  canAfford: boolean,
+  dailyAllowanceBefore: Grosze,
+  dailyAllowanceAfter: Grosze,
+  tightThresholdRatio: number,
+): RiskLevel {
+  if (!canAfford) {
+    return 'over';
+  }
+  if (dailyAllowanceBefore <= 0) {
+    return 'tight';
+  }
+  const ratio = dailyAllowanceAfter / dailyAllowanceBefore;
+  return ratio < tightThresholdRatio ? 'tight' : 'safe';
+}
+
+function calculateGoalDelayDays(
+  goal: SimulatedGoal,
+  contributionThisPeriod: Grosze,
+  deficit: number,
+  asOf: IsoDate,
+): number {
+  if (deficit <= 0) {
+    return 0;
+  }
+  const remainingNeeded = goal.targetAmount - goal.currentAmount;
+  if (remainingNeeded <= 0) {
+    return 0; // cel już osiągnięty
+  }
+  const daysUntilTarget = daysBetween(asOf, goal.targetDate);
+  if (daysUntilTarget <= 0) {
+    return 0; // termin już minął — nie ma względem czego liczyć opóźnienia
+  }
+
+  const affectedAmount = Math.min(deficit, contributionThisPeriod);
+  if (affectedAmount <= 0) {
+    return 0;
+  }
+
+  const dailyRate = remainingNeeded / daysUntilTarget;
+  return Math.ceil(affectedAmount / dailyRate);
+}
