@@ -77,6 +77,12 @@ model RefreshToken {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  /// Jedna rodzina = jedna sesja logowania (np. jeden telefon). Każda
+  /// rotacja tworzy nowy token w tej samej rodzinie. Gdy ktoś użyje
+  /// tokena już zrotowanego (klasyczny znak kradzieży), unieważniamy całą
+  /// rodzinę — złodziej i ofiara tracą tę sesję, inne urządzenia zostają.
+  familyId String
+
   /// Nigdy nie zapisujemy surowego tokena — tylko jego hash (tak jak hasła).
   tokenHash String    @unique
   expiresAt DateTime
@@ -87,6 +93,7 @@ model RefreshToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([familyId])
   @@index([expiresAt])
 }
 
