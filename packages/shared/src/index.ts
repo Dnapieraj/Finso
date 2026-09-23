@@ -9,6 +9,7 @@ export * from './budget/calculate-goal-contribution.js';
 export * from './budget/period.js';
 export * from './budget/recurrence.js';
 export * from './budget/assemble-budget-input.js';
+export * from './budget/schemas.js';
 export * from './common/schemas.js';
 export * from './auth/schemas.js';
 export * from './users/schemas.js';
