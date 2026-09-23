@@ -93,6 +93,27 @@ describe('occurrencesInPeriod — WEEKLY', () => {
   });
 });
 
+describe('occurrencesInPeriod — brak kotwicy dnia (obrona przed niespójnymi danymi)', () => {
+  // API do tego nie dopuszcza (recurringRuleShapeSchema), ale gdyby taka
+  // reguła trafiła do silnika, lepiej użyć dnia ze startDate niż po cichu
+  // zgubić zobowiązanie z budżetu.
+  it('WEEKLY bez dayOfWeek → dzień tygodnia startDate', () => {
+    const schedule = weekly(5, { dayOfWeek: null, startDate: d('2026-09-01') }); // wtorek
+    expect(occurrencesInPeriod(schedule, september)).toEqual([
+      '2026-09-01',
+      '2026-09-08',
+      '2026-09-15',
+      '2026-09-22',
+      '2026-09-29',
+    ]);
+  });
+
+  it('MONTHLY bez dayOfMonth → dzień miesiąca startDate', () => {
+    const schedule = monthly(1, { dayOfMonth: null, startDate: d('2026-01-17') });
+    expect(occurrencesInPeriod(schedule, september)).toEqual(['2026-09-17']);
+  });
+});
+
 describe('occurrencesInPeriod — YEARLY', () => {
   const yearly = (startDate: string, dayOfMonth: number): RecurrenceSchedule => ({
     frequency: 'YEARLY',

@@ -1,7 +1,14 @@
 import type { IsoDate } from '../date.js';
-import type { Grosze } from '../money.js';
-import type { RecurrenceSchedule } from './recurrence.js';
-import type { SimulatePurchaseInput } from './types.js';
+import { grosze, type Grosze } from '../money.js';
+import { calculateGoalContribution } from './calculate-goal-contribution.js';
+import { currentBudgetPeriod, periodsUntil } from './period.js';
+import { occurrencesInPeriod, type RecurrenceSchedule } from './recurrence.js';
+import type {
+  BudgetPeriod,
+  FixedCommitment,
+  GoalContributionLine,
+  SimulatePurchaseInput,
+} from './types.js';
 
 type ConfirmationStatus = 'PENDING' | 'CONFIRMED' | 'DECLINED';
 
@@ -84,4 +91,71 @@ export interface BudgetSnapshot {
  * **goalContributions** / **goals** — każdy cel z ratą z
  * calculateGoalContribution(cel, periodsUntil(...)).
  */
-export declare function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseInput;
+export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseInput {
+  const period = currentBudgetPeriod(snapshot.today, snapshot.periodStartDay);
+  const confirmedInPeriod = <T extends { date: IsoDate; status: ConfirmationStatus }>(rows: T[]) =>
+    rows.filter((row) => row.status === 'CONFIRMED' && isInPeriod(row.date, period));
+
+  const entries = confirmedInPeriod(snapshot.incomeEntries);
+  const transactions = confirmedInPeriod(snapshot.transactions);
+
+  return {
+    period,
+    asOf: snapshot.today,
+    periodIncome: periodIncome(snapshot.incomeSources, entries, period),
+    remainingFixedCommitments: remainingCommitments(snapshot.expenseRules, transactions, period),
+    goalContributions: snapshot.goals.map(
+      (goal): GoalContributionLine => ({
+        goalId: goal.id,
+        amount: calculateGoalContribution(
+          goal,
+          periodsUntil(snapshot.today, goal.targetDate, snapshot.periodStartDay),
+        ).contributionPerPeriod,
+      }),
+    ),
+    alreadySpent: sumAmounts(transactions),
+    goals: snapshot.goals.map((goal) => ({ ...goal })),
+  };
+}
+
+function periodIncome(
+  sources: BudgetIncomeSource[],
+  confirmedEntries: BudgetIncomeEntry[],
+  period: BudgetPeriod,
+): Grosze {
+  let total = 0;
+  for (const source of sources) {
+    const received = confirmedEntries.filter((entry) => entry.incomeSourceId === source.id);
+    total += sumAmounts(received);
+    if (source.kind === 'REGULAR' && source.isActive && source.expectedAmount !== null) {
+      const expectedCount = source.schedule
+        ? occurrencesInPeriod(source.schedule, period).length
+        : 1;
+      total += source.expectedAmount * Math.max(0, expectedCount - received.length);
+    }
+  }
+  return grosze(total);
+}
+
+function remainingCommitments(
+  rules: BudgetExpenseRule[],
+  confirmedTransactions: BudgetTransaction[],
+  period: BudgetPeriod,
+): FixedCommitment[] {
+  return rules
+    .filter((rule) => rule.isActive)
+    .map((rule) => {
+      const paid = confirmedTransactions.filter((tx) => tx.recurringRuleId === rule.id).length;
+      const unpaid = Math.max(0, occurrencesInPeriod(rule.schedule, period).length - paid);
+      return { label: rule.label, amount: grosze(rule.expectedAmount * unpaid) };
+    })
+    .filter((commitment) => commitment.amount > 0);
+}
+
+function isInPeriod(date: IsoDate, period: BudgetPeriod): boolean {
+  return date >= period.start && date <= period.end;
+}
+
+function sumAmounts(rows: { amount: Grosze }[]): Grosze {
+  return grosze(rows.reduce((sum, row) => sum + row.amount, 0));
+}
