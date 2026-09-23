@@ -1,7 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // Nest wipes dist/ before every build (deleteOutDir), but tsc's
+    // incremental cache lived next to this file and still claimed
+    // "everything is up to date" — the build emitted nothing. Keeping the
+    // cache inside dist/ makes it disappear together with the output.
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
   },
   "include": ["src"],
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
