@@ -1,12 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service.js';
+
+import { Public } from './auth/decorators.js';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  /** Health check dla load balancera / Dockera — bez bazy, bez auth. */
+  @Public()
+  @Get('health')
+  health(): { status: 'ok' } {
+    return { status: 'ok' };
   }
 }
