@@ -6,6 +6,7 @@ export * from './budget/types.js';
 export * from './budget/calculate-available-balance.js';
 export * from './budget/simulate-purchase.js';
 export * from './budget/calculate-goal-contribution.js';
+export * from './auth/schemas.js';
 
 // Jeszcze nie zbudowane (poza etapem 3): forecastIrregularIncome,
 // detectRecurringPatterns.
