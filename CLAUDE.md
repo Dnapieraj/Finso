@@ -37,6 +37,9 @@ i **wyjaśniaj decyzje architektoniczne**. Chcę rozumieć kod, nie tylko go mie
 | NestJS | **11** |
 | Auth | **Własna implementacja w NestJS**: argon2 + JWT (access + refresh). Nie Lucia (porzucona), nie Auth.js |
 | Kwoty | **Int w groszach** |
+| Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo), Bricolage Grotesque (display) + Hanken Grotesk (tekst, kwoty) |
+| Tokeny designu | **W `@vireo/ui`**, źródło prawdy w `tokens.ts` (współdzielone z mobile) |
+| Dark mode | **Systemowy domyślnie** + klasa `.dark`/`.light` pod przyszły przełącznik |
 
 ## Stack
 
@@ -48,8 +51,8 @@ finso/
 │   └── mobile/       Expo SDK 57 + Expo Router + NativeWind
 ├── packages/
 │   ├── shared/       @vireo/shared — typy, schematy Zod, CZYSTA logika budżetu
-│   ├── ui/           @vireo/ui — design system Vireo
-│   └── config/       @vireo/config — eslint, tsconfig, tailwind preset
+│   ├── ui/           @vireo/ui — design system Vireo (tokeny, motyw, komponenty)
+│   └── config/       @vireo/config — eslint, tsconfig, prettier
 └── turbo.json
 ```
 
