@@ -231,7 +231,10 @@ model Transaction {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId, date])
+  /// Kolejność [userId, deletedAt, date]: soft-delete extension dokłada
+  /// `deletedAt: null` do praktycznie każdego odczytu, więc predykaty
+  /// równościowe (userId, deletedAt) idą przed zakresowym (date).
+  @@index([userId, deletedAt, date])
   @@index([categoryId])
   @@index([recurringRuleId])
 }
@@ -255,5 +258,5 @@ model Goal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId])
+  @@index([userId, deletedAt])
 }
