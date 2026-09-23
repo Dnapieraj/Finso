@@ -137,6 +137,54 @@ Narzędzie: **Turborepo** + **pnpm workspaces**
 | Dokumentacja API | **Swagger** (wbudowany w NestJS) | |
 | Kolejki/cron | **BullMQ** + Redis | powiadomienia, wykrywanie subskrypcji |
 
+#### Usuwanie danych — który mechanizm
+
+Trzy mechanizmy to odpowiedzi na **dwa różne pytania**, a nie trzy
+wersje tego samego:
+
+**1. „To przestało obowiązywać od teraz”** (zmiana pracy, anulowana
+subskrypcja) → **archiwizacja: `isActive: false`**. Rzecz znika z prognoz
+i budżetu, ale historia nadal się do niej odwołuje i pokazuje ją w
+raportach. To zwykła edycja (`PATCH`), a nie usuwanie.
+
+**2. „To ma zniknąć”** (pomyłka, duplikat) → `DELETE`. Sposób zależy od
+tego, czym jest rekord:
+
+| Rodzaj rekordu | `DELETE` robi | Dlaczego |
+|---|---|---|
+| **Fakt finansowy** (pieniądze, które się ruszyły) albo **postęp** | miękkie usunięcie: `deletedAt` + `POST /:id/restore` | utrata jest kosztowna i zwykle przypadkowa, więc użytkownik musi móc cofnąć |
+| **Konfiguracja** (kategoria, reguła, źródło) | twarde usunięcie | nie ma czego przywracać, bo to ustawienie, nie historia |
+
+Zasada nadrzędna: **usunięcie konfiguracji nigdy nie kasuje faktów.**
+Klucze obce od faktów do konfiguracji mają `onDelete: SetNull` (fakt
+zostaje bez powiązania) albo `NoAction` (usunięcie jest blokowane, 409,
+a konfigurację trzeba zarchiwizować). `Cascade` jest dozwolone tylko od
+`User`: usunięcie konta ma skasować wszystko (RODO).
+
+Obecne encje:
+
+| Encja | Rodzaj | Archiwizacja | `DELETE` |
+|---|---|---|---|
+| Transaction | fakt | — | miękkie |
+| IncomeEntry | fakt | — | miękkie |
+| Goal | postęp | — | miękkie |
+| RecurringRule | konfiguracja | `isActive` | twarde; transakcje → `SetNull` |
+| IncomeSource | konfiguracja | `isActive` | twarde tylko bez wpływów (także tych w koszu); inaczej 409 (`NoAction`) |
+| Category | konfiguracja | — | twarde; transakcje i reguły → `SetNull` |
+| User | — | — | twarde, kaskadowo wszystko, wymaga hasła |
+
+**Nowa encja? Zadaj oba pytania:**
+1. Czy może „przestać obowiązywać”, a jej historia ma zostać? → dodaj `isActive`.
+2. Czy jest faktem finansowym lub postępem użytkownika? → `deletedAt`,
+   dopisz model do soft-delete extension (`apps/api/src/prisma/soft-delete.extension.ts`),
+   dodaj `restore` i wiersz `restorable` w teście izolacji. W przeciwnym razie
+   usuwaj twardo, ale sprawdź `onDelete` każdej relacji wskazującej na nią.
+
+**Znane ograniczenie:** kosz nie ma jeszcze opróżniania. Źródło dochodu,
+którego jedyne wpływy leżą w koszu, nadal nie da się usunąć, tylko
+zarchiwizować. Rozwiąże to przyszłe „opróżnij kosz”, czyli twarde
+usunięcie rekordów z `deletedAt`.
+
 ### Web — `apps/web`
 | Element | Wybór |
 |---|---|
