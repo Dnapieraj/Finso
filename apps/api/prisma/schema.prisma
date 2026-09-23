@@ -50,12 +50,16 @@ model User {
   email        String @unique
   passwordHash String
 
-  plan     SubscriptionPlan @default(FREE)
+  plan           SubscriptionPlan @default(FREE)
   /// Kod waluty ISO 4217, np. "PLN".
-  currency String           @default("PLN") @db.Char(3)
+  currency       String           @default("PLN") @db.Char(3)
   /// Nazwa strefy czasowej IANA, np. "Europe/Warsaw" — używana do liczenia
   /// "dnia" (dzień wypłaty, dzienny limit) w silniku budżetu.
-  timezone String           @default("Europe/Warsaw")
+  timezone       String           @default("Europe/Warsaw")
+  /// Dzień miesiąca, od którego liczy się okres budżetowy (zwykle dzień
+  /// wypłaty). 1 = miesiąc kalendarzowy. Max 28, żeby okres zaczynał się
+  /// w każdym miesiącu tego samego dnia — bez przycinania dla lutego.
+  periodStartDay Int              @default(1)
 
   revenueCatId     String? @unique
   stripeCustomerId String? @unique
@@ -131,6 +135,9 @@ model RecurringRule {
   frequency  RecurrenceFrequency
   /// Co ile jednostek `frequency` (np. frequency=WEEKLY, interval=2 = co 2 tygodnie).
   interval   Int                 @default(1)
+  /// Pierwsze wystąpienie reguły. Bez niego "co 2 tygodnie" nie mówi,
+  /// KTÓRE tygodnie, a YEARLY nie ma miesiąca (dayOfMonth to tylko dzień).
+  startDate  DateTime            @db.Date
   /// Kotwica dla MONTHLY/YEARLY (1-31). Miesiące krótsze niż kotwica —
   /// przycinanie do ostatniego dnia miesiąca liczy packages/shared, nie baza.
   dayOfMonth Int?
