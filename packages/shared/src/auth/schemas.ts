@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { publicUserSchema } from '../users/schemas.js';
+
 // Schematy nie mają własnych komunikatów błędów. Kody issue Zoda
 // (`too_small`, `invalid_format`...) są stabilne i maszynowo czytelne —
 // web i mobile mapują je na teksty UI w swoim katalogu tłumaczeń, więc
@@ -52,22 +54,6 @@ export const deleteAccountSchema = z.object({
   password: existingPasswordSchema,
 });
 
-/** Plan subskrypcji — lustrzane odbicie enuma `SubscriptionPlan` z bazy. */
-export const subscriptionPlanSchema = z.enum(['FREE', 'PLUS']);
-
-/**
- * Publiczny widok użytkownika zwracany przez API. Jawna lista pól
- * (a nie "wszystko poza hasłem") — nowa kolumna w tabeli User nie
- * wycieknie do klienta, dopóki ktoś świadomie jej tu nie doda.
- */
-export const publicUserSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  plan: subscriptionPlanSchema,
-  currency: z.string(),
-  timezone: z.string(),
-});
-
 /** Para tokenów wydawana przy logowaniu, rejestracji i odświeżeniu sesji. */
 export const authTokensSchema = z.object({
   accessToken: z.string(),
@@ -89,8 +75,6 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 /** Body potwierdzenia usunięcia konta. */
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
-/** Publiczny widok użytkownika. */
-export type PublicUser = z.infer<typeof publicUserSchema>;
 /** Para tokenów sesji. */
 export type AuthTokens = z.infer<typeof authTokensSchema>;
 /** Sesja: tokeny + użytkownik. */
