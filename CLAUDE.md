@@ -4,7 +4,8 @@ Ten plik czytasz automatycznie przy każdej sesji. Trzymaj się go.
 
 ## Projekt
 
-**Finso** — menadżer finansów osobistych (web + iOS + Android).
+**Finso** — menadżer finansów osobistych: **aplikacja iOS + Android**
+(`apps/mobile`) i **strona wizytówkowa** (`apps/web`).
 Marka parasolowa: **Vireo** (w przyszłości kolejne produkty w tym samym monorepo).
 
 **Pozycjonowanie:** Finso odpowiada na pytanie „czy stać mnie na to TERAZ",
@@ -40,6 +41,9 @@ i **wyjaśniaj decyzje architektoniczne**. Chcę rozumieć kod, nie tylko go mie
 | Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo), Bricolage Grotesque (display) + Hanken Grotesk (tekst, kwoty) |
 | Tokeny designu | **W `@vireo/ui`**, źródło prawdy w `tokens.ts` (współdzielone z mobile) |
 | Dark mode | **Systemowy domyślnie** + klasa `.dark`/`.light` pod przyszły przełącznik |
+| Rola `apps/web` | **Wyłącznie strona wizytówkowa**: hero, wyróżniki, jak działa, cennik, linki do App Store / Google Play, polityka prywatności, regulamin, usuwanie konta. Bez logowania, bez danych użytkownika, bez wywołań API |
+| Rola `apps/mobile` | **Cała aplikacja**: auth, dashboard, symulator, wydatki, cele, historia, onboarding, paywall |
+| Płatności | **Tylko RevenueCat** (Apple IAP + Google Play Billing). Bez Stripe — web niczego nie sprzedaje, kieruje do sklepów |
 
 ## Stack
 
@@ -47,8 +51,8 @@ i **wyjaśniaj decyzje architektoniczne**. Chcę rozumieć kod, nie tylko go mie
 finso/
 ├── apps/
 │   ├── api/          NestJS 11 + Prisma 7 + PostgreSQL
-│   ├── web/          Next.js 16 (App Router) + Tailwind v4 + shadcn/ui (Base UI)
-│   └── mobile/       Expo SDK 57 + Expo Router + NativeWind
+│   ├── web/          Next.js 16 (App Router) + Tailwind v4 + shadcn/ui (Base UI) — strona wizytówkowa, statyczna
+│   └── mobile/       Expo SDK 57 + Expo Router + NativeWind — cała aplikacja
 ├── packages/
 │   ├── shared/       @vireo/shared — typy, schematy Zod, CZYSTA logika budżetu
 │   ├── ui/           @vireo/ui — design system Vireo (tokeny, motyw, komponenty)
@@ -57,10 +61,10 @@ finso/
 ```
 
 Monorepo: **Turborepo + pnpm workspaces**
-Stan serwera (web i mobile): **TanStack Query**
-Formularze: **React Hook Form + Zod**
+Stan serwera (mobile): **TanStack Query**
+Formularze (mobile): **React Hook Form + Zod**
 Testy: **Vitest** (jednostkowe), **Supertest** (API e2e), **Playwright** (web e2e)
-Płatności: **RevenueCat** (mobile) + **Stripe** (web)
+Płatności: **RevenueCat** (mobile). Web tylko pokazuje cennik
 
 **Zanim zainstalujesz dowolną bibliotekę — sprawdź jej aktualną wersję
 i kompatybilność z resztą stacku.** Jeśli coś jest niekompatybilne
@@ -106,7 +110,9 @@ zanim wybierzesz obejście.
 ### UI
 - Dark mode od początku, nie jako dodatek
 - Mobile-first
-- Każdy widok ma stany: loading (skeleton), error, empty
+- Każdy ekran aplikacji (mobile) ma stany: loading (skeleton), error, empty
+- Strona web jest statyczna (SSG): metadane SEO i OG, szybkie ładowanie,
+  te same wymagania dostępności co aplikacja
 - Dostępność: nawigacja klawiaturą, aria-labels, kontrast WCAG AA
 - Interfejs po polsku, ale kod (nazwy zmiennych, komentarze) po angielsku.
   Teksty UI trzymaj w jednym miejscu, żeby dało się później dodać inne języki
@@ -119,7 +125,9 @@ zanim wybierzesz obejście.
 - Każde zapytanie do bazy filtrowane po `userId` zalogowanego użytkownika —
   użytkownik nigdy nie widzi cudzych danych (test e2e na to)
 - Sekrety tylko w zmiennych środowiskowych, nigdy w kodzie ani w commitach
-- Użytkownik musi móc usunąć konto z danymi (wymóg App Store + RODO)
+- Użytkownik musi móc usunąć konto z danymi (wymóg App Store + RODO) — w aplikacji.
+  Google Play wymaga dodatkowo strony web z instrukcją usunięcia konta bez
+  instalowania aplikacji (`apps/web`, `/usuwanie-konta`: instrukcja + e-mail)
 
 ## Jak ze mną pracujesz
 
@@ -137,6 +145,8 @@ zanim wybierzesz obejście.
 
 - Nie dodawaj bibliotek spoza stacku bez zapytania mnie
 - Nie pisz integracji bankowej (Open Banking) — to Faza 3
+- Nie dodawaj do `apps/web` logowania, wywołań API ani funkcji aplikacji —
+  to strona wizytówkowa
 - Nie pomijaj testów, „bo to prosta funkcja"
 - Nie wyłączaj reguł lintera ani nie dodawaj `@ts-ignore`, żeby coś przeszło
 - Nie pisz komentarzy typu `// increment counter` — komentuj *dlaczego*, nie *co*

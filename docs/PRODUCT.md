@@ -1,6 +1,12 @@
 # Finso — brief produktowy i techniczny
 **Marka parasolowa: Vireo** · Pierwszy produkt: **Finso**
 
+> **Podział ról (wrzesień 2026):** Finso to **aplikacja mobilna** (iOS + Android, `apps/mobile`) —
+> tam jest cała funkcjonalność. `apps/web` to **wyłącznie strona wizytówkowa**: hero, wyróżniki,
+> jak działa, cennik, linki do sklepów, polityka prywatności, regulamin, usuwanie konta.
+> Bez logowania i bez danych użytkownika. Fragmenty niżej, które mówią o „aplikacji webowej”,
+> są nieaktualne tam, gdzie się z tym kłócą.
+
 ---
 
 ## 1. Marka
@@ -63,6 +69,8 @@ Finso łączy jedno z drugim:
 
 ## 3. Funkcje — podział na fazy
 
+Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
+
 ### MVP (Faza 1) — to wypuszczasz
 1. Rejestracja/logowanie (e-mail + Google/Apple)
 2. Onboarding: źródła dochodu (regularne lub nieregularne), stałe zobowiązania
@@ -113,12 +121,12 @@ Do rewizji w Fazie 2, jeśli feedback użytkowników pokaże, że to myli.
 finso/
 ├── apps/
 │   ├── api/          NestJS — backend
-│   ├── web/          Next.js 15 — aplikacja webowa
-│   └── mobile/       Expo (React Native) — iOS + Android
+│   ├── web/          Next.js 16 — strona wizytówkowa (statyczna)
+│   └── mobile/       Expo (React Native) — cała aplikacja, iOS + Android
 ├── packages/
 │   ├── shared/       typy TS, schematy Zod, logika biznesowa budżetu
 │   ├── ui/           design system Vireo (współdzielony)
-│   └── config/       eslint, tsconfig, tailwind preset
+│   └── config/       eslint, tsconfig, prettier
 └── turbo.json
 ```
 
@@ -185,24 +193,25 @@ którego jedyne wpływy leżą w koszu, nadal nie da się usunąć, tylko
 zarchiwizować. Rozwiąże to przyszłe „opróżnij kosz”, czyli twarde
 usunięcie rekordów z `deletedAt`.
 
-### Web — `apps/web`
+### Web — `apps/web` (strona wizytówkowa)
 | Element | Wybór |
 |---|---|
-| Framework | **Next.js 15** (App Router) |
-| Style | **Tailwind CSS v4** |
-| Komponenty | **shadcn/ui** |
-| Formularze | **React Hook Form** + Zod |
-| Stan serwera | **TanStack Query** |
-| Wykresy | **Recharts** |
-| Animacje | **Framer Motion** |
+| Framework | **Next.js 16** (App Router), generowanie statyczne (SSG) |
+| Style | **Tailwind CSS v4** + tokeny `@vireo/ui` |
+| Komponenty | **shadcn/ui** (Base UI) w stylu Vireo |
+| SEO | metadane, obrazy OG, sitemap, robots |
+| Podstrony | `/`, `/polityka-prywatnosci`, `/regulamin`, `/usuwanie-konta` |
+| Później | `apple-app-site-association` i `assetlinks.json` (linki z e-maili otwierają aplikację) |
+
+Bez logowania, bez TanStack Query, bez formularzy i bez wywołań API.
 
 ### Mobile — `apps/mobile`
 | Element | Wybór |
 |---|---|
-| Framework | **React Native + Expo (SDK 54+)** |
+| Framework | **React Native + Expo (SDK 57)** |
 | Nawigacja | **Expo Router** (file-based, jak Next.js) |
-| Style | **NativeWind** (Tailwind w RN — spójność z webem) |
-| Stan serwera | **TanStack Query** (ten sam co web) |
+| Style | **NativeWind** (Tailwind w RN — te same tokeny co strona) |
+| Stan serwera | **TanStack Query** |
 | Wykresy | **Victory Native XL** |
 | Push | **Expo Notifications** |
 | Bezpieczne przechowywanie | **expo-secure-store** |
@@ -211,7 +220,7 @@ usunięcie rekordów z `deletedAt`.
 ### Płatności
 - **RevenueCat** — warstwa nad Apple IAP + Google Play Billing + Stripe
 - **Krytyczne:** subskrypcja sprzedawana w appce mobilnej **musi** iść przez Apple IAP / Google Billing (prowizja 15–30%). Nie da się tego obejść Stripe'em wewnątrz appki. RevenueCat to ujednolica i daje jedno źródło prawdy o statusie subskrypcji w backendzie (webhooki).
-- Web: **Stripe Checkout** (bez prowizji Apple, ~2,9% Stripe) — warto kierować użytkowników tam, gdzie to zgodne z regulaminami sklepów.
+- ~~Web: Stripe Checkout~~ — **porzucone**: web nie ma logowania, więc nie ma do czego przypisać zakupu. Subskrypcje sprzedajemy wyłącznie w aplikacji (RevenueCat). Web pokazuje cennik i kieruje do sklepów.
 
 ### Infrastruktura
 | Co | Gdzie |
@@ -234,6 +243,7 @@ Appka finansowa to dane wrażliwe. Do portfolio i do realnego wypuszczenia potrz
 - **Rate limiting** na endpointach auth
 - **RODO/GDPR:** polityka prywatności, eksport danych użytkownika, usunięcie konta z danymi
 - **Apple App Store** wymaga przycisku „usuń konto" wewnątrz appki, jeśli jest rejestracja — inaczej odrzucą review
+- **Google Play** wymaga dodatkowo strony internetowej, na której można poprosić o usunięcie konta bez instalowania aplikacji → `apps/web` `/usuwanie-konta` (instrukcja + adres e-mail)
 - Regulamin i polityka prywatności są **wymagane** przy publikacji w obu sklepach
 
 Nie jestem prawnikiem — przy sprzedaży subskrypcji w Polsce skonsultuj kwestie podatkowe i formę działalności.
@@ -258,6 +268,8 @@ Nie jestem prawnikiem — przy sprzedaży subskrypcji w Polsce skonsultuj kwesti
 
 Rocznie z wyraźnym rabatem (~36%) — to standard, bo poprawia retencję i cashflow.
 
+Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez RevenueCat). Strona web pokazuje ten cennik i linki do sklepów.
+
 ---
 
 ## 7. Kolejność budowania
@@ -267,11 +279,12 @@ Rocznie z wyraźnym rabatem (~36%) — to standard, bo poprawia retencję i cash
 | 0 | Setup monorepo, CI, Prisma schema, migracje | 2–3 dni |
 | 1 | API: auth + CRUD transakcji/celów + testy | 1–2 tyg. |
 | 2 | **Silnik budżetu** w `packages/shared` + testy jednostkowe | 1 tydz. |
-| 3 | Web: dashboard, dodawanie wydatków, symulator | 2–3 tyg. |
-| 4 | Mobile: te same ekrany na Expo | 2–3 tyg. |
-| 5 | RevenueCat + Stripe, paywall | 1 tydz. |
-| 6 | Push, onboarding, dark mode, polish | 1–2 tyg. |
-| 7 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
+| 3–5 | Design system Vireo (`@vireo/ui`), `formatMoney` — **zrobione** | — |
+| 6 | **Web: strona wizytówkowa** — hero, wyróżniki, jak działa, cennik, sklepy, dokumenty prawne, SEO | kilka dni |
+| 7 | **Mobile: cała aplikacja** — Expo + NativeWind, komponenty RN, auth, dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
+| 8 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
+
+_Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 
 **Kluczowa rada:** silnik liczenia budżetu (etap 2) napisz jako **czystą funkcję w `packages/shared`, bez zależności od frameworka, pokrytą testami**. Web i mobile tylko ją wywołują. To jest sedno appki i to najlepiej wygląda w portfolio.
 
@@ -396,7 +409,10 @@ Napisz najpierw testy, potem implementację. Pokaż mi testy do
 akceptacji zanim napiszesz kod.
 ```
 
-### Prompt 4 — frontend
+### Prompt 4 — frontend (nieaktualny)
+
+> **Nieaktualny:** te ekrany powstają w `apps/mobile`, nie w `apps/web`. Zostawiony jako zapis
+> wymagań dla ekranów aplikacji.
 
 ```
 Etap 3: apps/web — dashboard i symulator.
