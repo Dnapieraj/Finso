@@ -8,8 +8,11 @@ services:
       POSTGRES_DB: finso
     ports:
       - "5432:5432"
+    # Postgres 18+ przechowuje dane pod ścieżką z numerem wersji
+    # (żeby wspierać pg_ctlcluster-style upgrade'y) — montujemy
+    # katalog nadrzędny, nie .../data, inaczej entrypoint się wywala.
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U finso -d finso"]
       interval: 5s
