@@ -35,8 +35,9 @@
 }
 
 @layer base {
+  /* Full-strength ring: the 3:1 focus contrast is only tested for the solid color. */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
   body {
     @apply bg-background text-foreground;
