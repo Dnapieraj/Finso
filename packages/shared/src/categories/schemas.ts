@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { idSchema } from '../common/schemas.js';
+import { idSchema } from "../common/schemas.js";
 
 const hexColorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 

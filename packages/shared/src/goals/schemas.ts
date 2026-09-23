@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import {
   amountSchema,
@@ -6,7 +6,7 @@ import {
   isoDateInputSchema,
   isoDateOutputSchema,
   nonNegativeAmountSchema,
-} from '../common/schemas.js';
+} from "../common/schemas.js";
 
 // Termin w przeszłości jest dozwolony — silnik budżetu obsługuje cel
 // "po terminie" (calculateGoalContribution → isOverdue), a użytkownik

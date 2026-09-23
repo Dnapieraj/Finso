@@ -1,21 +1,21 @@
-import type { IsoDate } from '../date.js';
-import { grosze, type Grosze } from '../money.js';
-import { calculateGoalContribution } from './calculate-goal-contribution.js';
-import { currentBudgetPeriod, periodsUntil } from './period.js';
-import { occurrencesInPeriod, type RecurrenceSchedule } from './recurrence.js';
+import type { IsoDate } from "../date.js";
+import { grosze, type Grosze } from "../money.js";
+import { calculateGoalContribution } from "./calculate-goal-contribution.js";
+import { currentBudgetPeriod, periodsUntil } from "./period.js";
+import { occurrencesInPeriod, type RecurrenceSchedule } from "./recurrence.js";
 import type {
   BudgetPeriod,
   FixedCommitment,
   GoalContributionLine,
   SimulatePurchaseInput,
-} from './types.js';
+} from "./types.js";
 
-type ConfirmationStatus = 'PENDING' | 'CONFIRMED' | 'DECLINED';
+type ConfirmationStatus = "PENDING" | "CONFIRMED" | "DECLINED";
 
 /** Źródło dochodu w kształcie potrzebnym do policzenia `periodIncome`. */
 export interface BudgetIncomeSource {
   id: string;
-  kind: 'REGULAR' | 'IRREGULAR';
+  kind: "REGULAR" | "IRREGULAR";
   expectedAmount: Grosze | null;
   isActive: boolean;
   /** Harmonogram z podpiętej reguły INCOME; `null` = raz na okres. */
@@ -94,7 +94,7 @@ export interface BudgetSnapshot {
 export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseInput {
   const period = currentBudgetPeriod(snapshot.today, snapshot.periodStartDay);
   const confirmedInPeriod = <T extends { date: IsoDate; status: ConfirmationStatus }>(rows: T[]) =>
-    rows.filter((row) => row.status === 'CONFIRMED' && isInPeriod(row.date, period));
+    rows.filter((row) => row.status === "CONFIRMED" && isInPeriod(row.date, period));
 
   const entries = confirmedInPeriod(snapshot.incomeEntries);
   const transactions = confirmedInPeriod(snapshot.transactions);
@@ -104,15 +104,13 @@ export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseI
     asOf: snapshot.today,
     periodIncome: periodIncome(snapshot.incomeSources, entries, period),
     remainingFixedCommitments: remainingCommitments(snapshot.expenseRules, transactions, period),
-    goalContributions: snapshot.goals.map(
-      (goal): GoalContributionLine => ({
-        goalId: goal.id,
-        amount: calculateGoalContribution(
-          goal,
-          periodsUntil(snapshot.today, goal.targetDate, snapshot.periodStartDay),
-        ).contributionPerPeriod,
-      }),
-    ),
+    goalContributions: snapshot.goals.map((goal): GoalContributionLine => ({
+      goalId: goal.id,
+      amount: calculateGoalContribution(
+        goal,
+        periodsUntil(snapshot.today, goal.targetDate, snapshot.periodStartDay),
+      ).contributionPerPeriod,
+    })),
     alreadySpent: sumAmounts(transactions),
     goals: snapshot.goals.map((goal) => ({ ...goal })),
   };
@@ -127,7 +125,7 @@ function periodIncome(
   for (const source of sources) {
     const received = confirmedEntries.filter((entry) => entry.incomeSourceId === source.id);
     total += sumAmounts(received);
-    if (source.kind === 'REGULAR' && source.isActive && source.expectedAmount !== null) {
+    if (source.kind === "REGULAR" && source.isActive && source.expectedAmount !== null) {
       const expectedCount = source.schedule
         ? occurrencesInPeriod(source.schedule, period).length
         : 1;

@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { isoDate } from '../date.js';
+import { isoDate } from "../date.js";
 
 /**
  * Górna granica kwoty w jednym wierszu. Kolumny `Int` w Postgresie to

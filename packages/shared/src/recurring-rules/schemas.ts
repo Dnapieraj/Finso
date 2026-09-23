@@ -1,16 +1,16 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import {
   amountSchema,
   idSchema,
   isoDateInputSchema,
   isoDateOutputSchema,
-} from '../common/schemas.js';
+} from "../common/schemas.js";
 
 /** Czy reguła opisuje dochód czy wydatek — lustro enuma z bazy. */
-export const recurringRuleKindSchema = z.enum(['INCOME', 'EXPENSE']);
+export const recurringRuleKindSchema = z.enum(["INCOME", "EXPENSE"]);
 /** Jednostka cyklu — lustro enuma z bazy. */
-export const recurrenceFrequencySchema = z.enum(['WEEKLY', 'MONTHLY', 'YEARLY']);
+export const recurrenceFrequencySchema = z.enum(["WEEKLY", "MONTHLY", "YEARLY"]);
 
 /**
  * Pola, od których zależy spójność reguły. Osobny schemat, bo przy PATCH
@@ -44,23 +44,23 @@ type ShapeFields = z.infer<typeof shapeFieldsSchema>;
  */
 function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
   const issue = (path: keyof ShapeFields, message: string) =>
-    ctx.addIssue({ code: 'custom', path: [path], message });
+    ctx.addIssue({ code: "custom", path: [path], message });
 
-  if (rule.frequency === 'WEEKLY') {
-    if (rule.dayOfWeek === null) issue('dayOfWeek', 'required_for_weekly');
-    if (rule.dayOfMonth !== null) issue('dayOfMonth', 'not_allowed_for_weekly');
+  if (rule.frequency === "WEEKLY") {
+    if (rule.dayOfWeek === null) issue("dayOfWeek", "required_for_weekly");
+    if (rule.dayOfMonth !== null) issue("dayOfMonth", "not_allowed_for_weekly");
   } else {
-    if (rule.dayOfMonth === null) issue('dayOfMonth', 'required_for_monthly_and_yearly');
-    if (rule.dayOfWeek !== null) issue('dayOfWeek', 'not_allowed_for_monthly_and_yearly');
+    if (rule.dayOfMonth === null) issue("dayOfMonth", "required_for_monthly_and_yearly");
+    if (rule.dayOfWeek !== null) issue("dayOfWeek", "not_allowed_for_monthly_and_yearly");
   }
-  if (rule.kind === 'EXPENSE' && rule.expectedAmount === null) {
-    issue('expectedAmount', 'required_for_expense');
+  if (rule.kind === "EXPENSE" && rule.expectedAmount === null) {
+    issue("expectedAmount", "required_for_expense");
   }
-  if (rule.kind === 'EXPENSE' && rule.name === null) {
-    issue('name', 'required_for_expense');
+  if (rule.kind === "EXPENSE" && rule.name === null) {
+    issue("name", "required_for_expense");
   }
-  if (rule.kind === 'INCOME' && rule.categoryId !== null) {
-    issue('categoryId', 'not_allowed_for_income');
+  if (rule.kind === "INCOME" && rule.categoryId !== null) {
+    issue("categoryId", "not_allowed_for_income");
   }
 }
 

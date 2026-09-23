@@ -5,7 +5,7 @@
  * które waliduje integer-ność w runtime (typy nie złapią np. wyniku
  * dzielenia dwóch liczb zmiennoprzecinkowych).
  */
-export type Grosze = number & { readonly __brand: 'Grosze' };
+export type Grosze = number & { readonly __brand: "Grosze" };
 
 /**
  * Tworzy wartość typu {@link Grosze}. Rzuca, jeśli `value` nie jest

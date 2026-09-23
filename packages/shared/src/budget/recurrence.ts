@@ -1,10 +1,10 @@
-import { addDays, daysBetween, type IsoDate } from '../date.js';
-import { clampedDayInMonth, dayOfWeekOf, laterOf, monthIndexOf, yearMonth } from './calendar.js';
-import type { BudgetPeriod } from './types.js';
+import { addDays, daysBetween, type IsoDate } from "../date.js";
+import { clampedDayInMonth, dayOfWeekOf, laterOf, monthIndexOf, yearMonth } from "./calendar.js";
+import type { BudgetPeriod } from "./types.js";
 
 /** Harmonogram reguły cyklicznej — pola RecurringRule istotne dla kalendarza. */
 export interface RecurrenceSchedule {
-  frequency: 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  frequency: "WEEKLY" | "MONTHLY" | "YEARLY";
   /** Co ile jednostek `frequency` (≥ 1). */
   interval: number;
   /** Początek cyklu — wyznacza fazę przy interval > 1 i miesiąc dla YEARLY. */
@@ -29,25 +29,19 @@ export interface RecurrenceSchedule {
  * Brak `dayOfMonth`/`dayOfWeek` (walidacja API do tego nie dopuszcza)
  * → dzień ze `startDate`, zamiast cicho zwracać zero wystąpień.
  */
-export function occurrencesInPeriod(
-  schedule: RecurrenceSchedule,
-  period: BudgetPeriod,
-): IsoDate[] {
+export function occurrencesInPeriod(schedule: RecurrenceSchedule, period: BudgetPeriod): IsoDate[] {
   const from = laterOf(period.start, schedule.startDate);
   if (from > period.end) {
     return [];
   }
-  return schedule.frequency === 'WEEKLY'
+  return schedule.frequency === "WEEKLY"
     ? weeklyOccurrences(schedule, from, period.end)
     : monthlyOccurrences(schedule, from, period.end);
 }
 
 function weeklyOccurrences(schedule: RecurrenceSchedule, from: IsoDate, to: IsoDate): IsoDate[] {
   const targetDay = schedule.dayOfWeek ?? dayOfWeekOf(schedule.startDate);
-  const first = addDays(
-    schedule.startDate,
-    (targetDay - dayOfWeekOf(schedule.startDate) + 7) % 7,
-  );
+  const first = addDays(schedule.startDate, (targetDay - dayOfWeekOf(schedule.startDate) + 7) % 7);
   const step = 7 * schedule.interval;
   // Przeskok od pierwszego wystąpienia prosto do pierwszego >= `from`,
   // zamiast iterować tydzień po tygodniu od (być może odległego) startu.
@@ -61,7 +55,7 @@ function weeklyOccurrences(schedule: RecurrenceSchedule, from: IsoDate, to: IsoD
 
 function monthlyOccurrences(schedule: RecurrenceSchedule, from: IsoDate, to: IsoDate): IsoDate[] {
   const day = schedule.dayOfMonth ?? yearMonth(schedule.startDate).day;
-  const stepMonths = schedule.interval * (schedule.frequency === 'YEARLY' ? 12 : 1);
+  const stepMonths = schedule.interval * (schedule.frequency === "YEARLY" ? 12 : 1);
   const anchor = monthIndexOf(schedule.startDate);
   const dates: IsoDate[] = [];
   // Każdy miesiąc zakresu ma co najwyżej jedno wystąpienie, więc wystarczy

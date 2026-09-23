@@ -1,5 +1,5 @@
-import { grosze } from '../money.js';
-import type { GoalContributionInput, GoalContributionOutput } from './types.js';
+import { grosze } from "../money.js";
+import type { GoalContributionInput, GoalContributionOutput } from "./types.js";
 
 /**
  * Ile odkładać na najbliższy okres, żeby zdążyć z celem przed

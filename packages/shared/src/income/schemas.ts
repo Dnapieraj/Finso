@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import {
   amountSchema,
@@ -7,11 +7,11 @@ import {
   isoDateInputSchema,
   isoDateOutputSchema,
   pageSchema,
-} from '../common/schemas.js';
-import { confirmationStatusSchema } from '../transactions/schemas.js';
+} from "../common/schemas.js";
+import { confirmationStatusSchema } from "../transactions/schemas.js";
 
 /** Rodzaj źródła dochodu — lustro enuma `IncomeSourceKind` z bazy. */
-export const incomeSourceKindSchema = z.enum(['REGULAR', 'IRREGULAR']);
+export const incomeSourceKindSchema = z.enum(["REGULAR", "IRREGULAR"]);
 
 const sourceShapeFieldsSchema = z.object({
   kind: incomeSourceKindSchema,
@@ -26,14 +26,14 @@ type SourceShapeFields = z.infer<typeof sourceShapeFieldsSchema>;
  * sprzeczna z tym, co pokazuje budżet.
  */
 function checkSourceShape(source: SourceShapeFields, ctx: z.RefinementCtx): void {
-  if (source.kind === 'REGULAR' && source.expectedAmount === null) {
-    ctx.addIssue({ code: 'custom', path: ['expectedAmount'], message: 'required_for_regular' });
+  if (source.kind === "REGULAR" && source.expectedAmount === null) {
+    ctx.addIssue({ code: "custom", path: ["expectedAmount"], message: "required_for_regular" });
   }
-  if (source.kind === 'IRREGULAR' && source.expectedAmount !== null) {
+  if (source.kind === "IRREGULAR" && source.expectedAmount !== null) {
     ctx.addIssue({
-      code: 'custom',
-      path: ['expectedAmount'],
-      message: 'not_allowed_for_irregular',
+      code: "custom",
+      path: ["expectedAmount"],
+      message: "not_allowed_for_irregular",
     });
   }
 }
@@ -87,7 +87,7 @@ const incomeEntryFieldsSchema = z.object({
  * spodziewanych, które kiedyś zaproponuje system na podstawie reguł.
  */
 export const createIncomeEntrySchema = incomeEntryFieldsSchema.extend({
-  status: confirmationStatusSchema.default('CONFIRMED'),
+  status: confirmationStatusSchema.default("CONFIRMED"),
 });
 
 /** Body `PATCH /income/entries/:id`. Źródła nie da się zmienić — to byłby inny wpływ. */

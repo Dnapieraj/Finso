@@ -1,6 +1,6 @@
-import { addDays, isoDate, type IsoDate } from '../date.js';
-import { clampedDayInMonth, monthIndexOf, yearMonth } from './calendar.js';
-import type { BudgetPeriod } from './types.js';
+import { addDays, isoDate, type IsoDate } from "../date.js";
+import { clampedDayInMonth, monthIndexOf, yearMonth } from "./calendar.js";
+import type { BudgetPeriod } from "./types.js";
 
 /**
  * "Jaki dziś jest dzień" dla użytkownika w jego strefie czasowej.
@@ -16,11 +16,11 @@ export function todayInTimeZone(instant: Date, timeZone: string): IsoDate {
   // formatToParts, a nie gotowy string: kolejność i separatory zależą od
   // locale, a części mają stabilne nazwy.
   const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-US', {
+    new Intl.DateTimeFormat("en-US", {
       timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     })
       .formatToParts(instant)
       .map((part) => [part.type, part.value]),

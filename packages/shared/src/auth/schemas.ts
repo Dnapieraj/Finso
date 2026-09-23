@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { publicUserSchema } from '../users/schemas.js';
+import { publicUserSchema } from "../users/schemas.js";
 
 // Schematy nie mają własnych komunikatów błędów. Kody issue Zoda
 // (`too_small`, `invalid_format`...) są stabilne i maszynowo czytelne —

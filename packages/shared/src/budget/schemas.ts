@@ -1,6 +1,6 @@
-import { z } from 'zod';
+import { z } from "zod";
 
-import { amountSchema, idSchema, isoDateOutputSchema } from '../common/schemas.js';
+import { amountSchema, idSchema, isoDateOutputSchema } from "../common/schemas.js";
 
 const amountOutput = z.number().int();
 
@@ -34,7 +34,7 @@ export const simulatePurchaseRequestSchema = z.object({
 /** Odpowiedź `POST /budget/simulate`. */
 export const simulationResultSchema = z.object({
   canAfford: z.boolean(),
-  riskLevel: z.enum(['safe', 'tight', 'over']),
+  riskLevel: z.enum(["safe", "tight", "over"]),
   /** Stan przed zakupem — żeby UI mogło pokazać "dziennie: z X na Y". */
   before: z.object({ availableBalance: amountOutput, dailyAllowance: amountOutput }),
   remainingAfter: amountOutput,

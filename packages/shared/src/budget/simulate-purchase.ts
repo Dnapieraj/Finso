@@ -1,13 +1,13 @@
-import { daysBetween, type IsoDate } from '../date.js';
-import { grosze, type Grosze } from '../money.js';
-import { calculateAvailableBalance } from './calculate-available-balance.js';
+import { daysBetween, type IsoDate } from "../date.js";
+import { grosze, type Grosze } from "../money.js";
+import { calculateAvailableBalance } from "./calculate-available-balance.js";
 import type {
   GoalImpact,
   RiskLevel,
   SimulatedGoal,
   SimulatePurchaseInput,
   SimulatePurchaseOutput,
-} from './types.js';
+} from "./types.js";
 
 const DEFAULT_TIGHT_THRESHOLD_RATIO = 0.5;
 
@@ -36,14 +36,11 @@ export function simulatePurchase(
   const before = calculateAvailableBalance(input);
   const remainingAfter = grosze(before.availableBalance - amountInGrosze);
   const dailyAllowanceAfter = grosze(
-    before.daysRemaining === 0
-      ? 0
-      : Math.floor(remainingAfter / before.daysRemaining),
+    before.daysRemaining === 0 ? 0 : Math.floor(remainingAfter / before.daysRemaining),
   );
 
   const canAfford = remainingAfter >= 0;
-  const tightThresholdRatio =
-    input.tightThresholdRatio ?? DEFAULT_TIGHT_THRESHOLD_RATIO;
+  const tightThresholdRatio = input.tightThresholdRatio ?? DEFAULT_TIGHT_THRESHOLD_RATIO;
   const riskLevel = calculateRiskLevel(
     canAfford,
     before.dailyAllowance,
@@ -82,13 +79,13 @@ function calculateRiskLevel(
   tightThresholdRatio: number,
 ): RiskLevel {
   if (!canAfford) {
-    return 'over';
+    return "over";
   }
   if (dailyAllowanceBefore <= 0) {
-    return 'tight';
+    return "tight";
   }
   const ratio = dailyAllowanceAfter / dailyAllowanceBefore;
-  return ratio < tightThresholdRatio ? 'tight' : 'safe';
+  return ratio < tightThresholdRatio ? "tight" : "safe";
 }
 
 function calculateGoalDelayDays(

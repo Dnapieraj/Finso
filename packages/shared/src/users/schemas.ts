@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /** Plan subskrypcji — lustrzane odbicie enuma `SubscriptionPlan` z bazy. */
-export const subscriptionPlanSchema = z.enum(['FREE', 'PLUS']);
+export const subscriptionPlanSchema = z.enum(["FREE", "PLUS"]);
 
 /** Najpóźniejszy dzień startu okresu — każdy miesiąc ma co najmniej 28 dni. */
 export const PERIOD_START_DAY_MAX = 28;
@@ -13,7 +13,7 @@ export const PERIOD_START_DAY_MAX = 28;
  */
 export function isValidTimeZone(value: string): boolean {
   try {
-    new Intl.DateTimeFormat('en-US', { timeZone: value });
+    new Intl.DateTimeFormat("en-US", { timeZone: value });
     return true;
   } catch {
     return false;

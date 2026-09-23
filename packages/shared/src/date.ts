@@ -15,7 +15,7 @@
  * jako jawny argument. Rozstrzygnięcie "co jest dziś w Europe/Warsaw"
  * to zadanie warstwy wywołującej (apps/api), nie silnika budżetu.
  */
-export type IsoDate = string & { readonly __brand: 'IsoDate' };
+export type IsoDate = string & { readonly __brand: "IsoDate" };
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MS_PER_DAY = 86_400_000;
@@ -29,9 +29,7 @@ interface DateParts {
 function parseIsoDateParts(value: string): DateParts {
   const match = ISO_DATE_PATTERN.exec(value);
   if (!match) {
-    throw new TypeError(
-      `Nieprawidłowy format daty: "${value}" (oczekiwano YYYY-MM-DD).`,
-    );
+    throw new TypeError(`Nieprawidłowy format daty: "${value}" (oczekiwano YYYY-MM-DD).`);
   }
   return {
     year: Number(match[1]),
@@ -46,9 +44,9 @@ function toEpochDay({ year, month, day }: DateParts): number {
 
 function epochDayToIsoDate(epochDay: number): IsoDate {
   const date = new Date(epochDay * MS_PER_DAY);
-  const year = String(date.getUTCFullYear()).padStart(4, '0');
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
+  const year = String(date.getUTCFullYear()).padStart(4, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}` as IsoDate;
 }
 

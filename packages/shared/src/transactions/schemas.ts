@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 import {
   amountSchema,
@@ -7,10 +7,10 @@ import {
   isoDateInputSchema,
   isoDateOutputSchema,
   pageSchema,
-} from '../common/schemas.js';
+} from "../common/schemas.js";
 
 /** Status potwierdzenia — lustro enuma `ConfirmationStatus` z bazy. */
-export const confirmationStatusSchema = z.enum(['PENDING', 'CONFIRMED', 'DECLINED']);
+export const confirmationStatusSchema = z.enum(["PENDING", "CONFIRMED", "DECLINED"]);
 
 // Bez `.default()` — schemat bazowy służy też do PATCH, gdzie domyślna
 // wartość nadpisałaby istniejący status przy każdej edycji notatki.
@@ -26,7 +26,7 @@ const transactionFieldsSchema = z.object({
 
 /** Body `POST /transactions`. Ręcznie wpisany wydatek jest domyślnie potwierdzony. */
 export const createTransactionSchema = transactionFieldsSchema.extend({
-  status: confirmationStatusSchema.default('CONFIRMED'),
+  status: confirmationStatusSchema.default("CONFIRMED"),
 });
 
 /** Body `PATCH /transactions/:id`. */

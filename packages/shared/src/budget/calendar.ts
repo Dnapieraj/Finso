@@ -2,7 +2,7 @@
 // z pakietu). Operuje na "indeksie miesiąca" (rok × 12 + miesiąc − 1),
 // bo przesuwanie o N miesięcy przez przełom roku to wtedy zwykłe dodawanie.
 
-import { isoDate, type IsoDate } from '../date.js';
+import { isoDate, type IsoDate } from "../date.js";
 
 /** Rok i miesiąc (1-12) daty kalendarzowej. */
 export function yearMonth(date: IsoDate): { year: number; month: number; day: number } {
@@ -35,7 +35,7 @@ export function clampedDayInMonth(monthIndex: number, day: number): IsoDate {
   const month = (monthIndex % 12) + 1;
   const clamped = Math.min(day, daysInMonth(monthIndex));
   return isoDate(
-    `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(clamped).padStart(2, '0')}`,
+    `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(clamped).padStart(2, "0")}`,
   );
 }
 

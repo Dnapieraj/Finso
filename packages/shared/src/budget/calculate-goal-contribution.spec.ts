@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from "vitest";
 
-import { grosze } from '../money.js';
-import { calculateGoalContribution } from './calculate-goal-contribution.js';
+import { grosze } from "../money.js";
+import { calculateGoalContribution } from "./calculate-goal-contribution.js";
 
-describe('calculateGoalContribution', () => {
-  it('dzieli brakującą kwotę równo na pozostałe okresy, zaokrąglając w górę', () => {
+describe("calculateGoalContribution", () => {
+  it("dzieli brakującą kwotę równo na pozostałe okresy, zaokrąglając w górę", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(120_000), currentAmount: grosze(0) },
       12,
@@ -15,7 +15,7 @@ describe('calculateGoalContribution', () => {
     expect(result.isOverdue).toBe(false);
   });
 
-  it('brzeg: reszta z dzielenia — ceil(), nie floor() ani round()', () => {
+  it("brzeg: reszta z dzielenia — ceil(), nie floor() ani round()", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(10_000), currentAmount: grosze(0) },
       3,
@@ -26,7 +26,7 @@ describe('calculateGoalContribution', () => {
     expect(result.contributionPerPeriod).toBe(3_334);
   });
 
-  it('bez reszty: ceil() nie dokłada nic, gdy dzieli się równo', () => {
+  it("bez reszty: ceil() nie dokłada nic, gdy dzieli się równo", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(90_000), currentAmount: grosze(0) },
       3,
@@ -35,7 +35,7 @@ describe('calculateGoalContribution', () => {
     expect(result.contributionPerPeriod).toBe(30_000);
   });
 
-  it('cel już osiągnięty (currentAmount === targetAmount)', () => {
+  it("cel już osiągnięty (currentAmount === targetAmount)", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(50_000), currentAmount: grosze(50_000) },
       5,
@@ -46,7 +46,7 @@ describe('calculateGoalContribution', () => {
     expect(result.isOverdue).toBe(false);
   });
 
-  it('cel przekroczony (currentAmount > targetAmount) też liczy się jako osiągnięty', () => {
+  it("cel przekroczony (currentAmount > targetAmount) też liczy się jako osiągnięty", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(50_000), currentAmount: grosze(60_000) },
       5,
@@ -56,7 +56,7 @@ describe('calculateGoalContribution', () => {
     expect(result.alreadyReached).toBe(true);
   });
 
-  it('brzeg: termin dziś (periodsRemaining = 0), cel nieosiągnięty — cała brakująca kwota naraz', () => {
+  it("brzeg: termin dziś (periodsRemaining = 0), cel nieosiągnięty — cała brakująca kwota naraz", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(100_000), currentAmount: grosze(40_000) },
       0,
@@ -67,7 +67,7 @@ describe('calculateGoalContribution', () => {
     expect(result.contributionPerPeriod).toBe(60_000);
   });
 
-  it('brzeg: termin w przeszłości (periodsRemaining < 0) traktowany tak samo jak 0', () => {
+  it("brzeg: termin w przeszłości (periodsRemaining < 0) traktowany tak samo jak 0", () => {
     const result = calculateGoalContribution(
       { targetAmount: grosze(100_000), currentAmount: grosze(40_000) },
       -3,

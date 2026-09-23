@@ -1,8 +1,8 @@
-import type { IsoDate } from '../date.js';
-import type { Grosze } from '../money.js';
+import type { IsoDate } from "../date.js";
+import type { Grosze } from "../money.js";
 
 /** Poziom ryzyka zaplanowanego zakupu — patrz JSDoc {@link simulatePurchase}. */
-export type RiskLevel = 'safe' | 'tight' | 'over';
+export type RiskLevel = "safe" | "tight" | "over";
 
 /** Okres budżetowy. `end` jest inclusive (ostatni dzień okresu, nie dzień po). */
 export interface BudgetPeriod {

@@ -1,10 +1,10 @@
-import { daysBetween, isOnOrBefore, type IsoDate } from '../date.js';
-import { grosze } from '../money.js';
+import { daysBetween, isOnOrBefore, type IsoDate } from "../date.js";
+import { grosze } from "../money.js";
 import type {
   BudgetPeriod,
   CalculateAvailableBalanceInput,
   CalculateAvailableBalanceOutput,
-} from './types.js';
+} from "./types.js";
 
 /**
  * Ile użytkownik może swobodnie wydać do końca bieżącego okresu
@@ -21,9 +21,7 @@ export function calculateAvailableBalance(
   const fixedCommitments = grosze(
     input.remainingFixedCommitments.reduce((sum, c) => sum + c.amount, 0),
   );
-  const goalContributions = grosze(
-    input.goalContributions.reduce((sum, g) => sum + g.amount, 0),
-  );
+  const goalContributions = grosze(input.goalContributions.reduce((sum, g) => sum + g.amount, 0));
 
   const availableBalance = grosze(
     input.periodIncome - fixedCommitments - goalContributions - input.alreadySpent,
