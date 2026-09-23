@@ -24,21 +24,16 @@ describe("relativeLuminance", () => {
   });
 
   it("weights green far more than blue", () => {
-    expect(relativeLuminance("#00FF00")).toBeGreaterThan(
-      relativeLuminance("#0000FF") * 9,
-    );
+    expect(relativeLuminance("#00FF00")).toBeGreaterThan(relativeLuminance("#0000FF") * 9);
   });
 
   it("accepts lowercase hex", () => {
     expect(relativeLuminance("#ffffff")).toBe(1);
   });
 
-  it.each(["#FFF", "FFFFFF", "#GGGGGG", "#FFFFFFFF", "red", ""])(
-    "rejects %j",
-    (value) => {
-      expect(() => relativeLuminance(unchecked(value))).toThrow(RangeError);
-    },
-  );
+  it.each(["#FFF", "FFFFFF", "#GGGGGG", "#FFFFFFFF", "red", ""])("rejects %j", (value) => {
+    expect(() => relativeLuminance(unchecked(value))).toThrow(RangeError);
+  });
 });
 
 describe("contrastRatio", () => {
@@ -51,9 +46,7 @@ describe("contrastRatio", () => {
   });
 
   it("does not depend on argument order", () => {
-    expect(contrastRatio("#3D5A2E", "#F5F6F1")).toBe(
-      contrastRatio("#F5F6F1", "#3D5A2E"),
-    );
+    expect(contrastRatio("#3D5A2E", "#F5F6F1")).toBe(contrastRatio("#F5F6F1", "#3D5A2E"));
   });
 
   it("is not rounded, so a borderline grey fails AA", () => {
@@ -64,11 +57,7 @@ describe("contrastRatio", () => {
   });
 
   it("rejects malformed colors on either side", () => {
-    expect(() => contrastRatio(unchecked("#FFF"), "#000000")).toThrow(
-      RangeError,
-    );
-    expect(() => contrastRatio("#000000", unchecked("#FFF"))).toThrow(
-      RangeError,
-    );
+    expect(() => contrastRatio(unchecked("#FFF"), "#000000")).toThrow(RangeError);
+    expect(() => contrastRatio("#000000", unchecked("#FFF"))).toThrow(RangeError);
   });
 });

@@ -8,11 +8,7 @@ import { colors } from "./palette.ts";
 const TEXT = 4.5;
 const NON_TEXT = 3;
 
-type Pair = readonly [
-  foreground: ColorToken,
-  background: ColorToken,
-  minimum: number,
-];
+type Pair = readonly [foreground: ColorToken, background: ColorToken, minimum: number];
 
 const REQUIRED_CONTRAST: readonly Pair[] = [
   // Body text on every surface it can sit on.
@@ -61,14 +57,9 @@ describe.each(THEMES)("%s palette", (themeName) => {
     expect(scale[token]).toMatch(/^#[0-9A-F]{6}$/);
   });
 
-  it.each(REQUIRED_CONTRAST)(
-    "%s on %s reaches %d:1",
-    (foreground, background, minimum) => {
-      expect(
-        contrastRatio(scale[foreground], scale[background]),
-      ).toBeGreaterThanOrEqual(minimum);
-    },
-  );
+  it.each(REQUIRED_CONTRAST)("%s on %s reaches %d:1", (foreground, background, minimum) => {
+    expect(contrastRatio(scale[foreground], scale[background])).toBeGreaterThanOrEqual(minimum);
+  });
 
   it("keeps the three affordability levels visually distinct", () => {
     const levels = [scale.safe, scale.caution, scale.risk];
@@ -82,13 +73,7 @@ describe.each(THEMES)("%s palette", (themeName) => {
   });
 
   it("uses five different chart colors", () => {
-    const chart = [
-      scale.chart1,
-      scale.chart2,
-      scale.chart3,
-      scale.chart4,
-      scale.chart5,
-    ];
+    const chart = [scale.chart1, scale.chart2, scale.chart3, scale.chart4, scale.chart5];
     expect(new Set(chart).size).toBe(chart.length);
   });
 });

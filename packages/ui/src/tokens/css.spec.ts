@@ -87,10 +87,7 @@ describe("themeToCss", () => {
 
 describe("src/styles/theme.css", () => {
   it("matches the tokens it is generated from", () => {
-    const committed = readFileSync(
-      new URL("../styles/theme.css", import.meta.url),
-      "utf8",
-    );
+    const committed = readFileSync(new URL("../styles/theme.css", import.meta.url), "utf8");
     // Git on Windows may check the file out with CRLF line endings.
     expect(
       committed.replace(/\r\n/g, "\n"),
