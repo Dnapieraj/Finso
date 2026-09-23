@@ -40,6 +40,7 @@ i **wyjaśniaj decyzje architektoniczne**. Chcę rozumieć kod, nie tylko go mie
 | Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo), Bricolage Grotesque (display) + Hanken Grotesk (tekst, kwoty) |
 | Tokeny designu | **W `@vireo/ui`**, źródło prawdy w `tokens.ts` (współdzielone z mobile) |
 | Dark mode | **Systemowy domyślnie** + klasa `.dark`/`.light` pod przyszły przełącznik |
+| Auth w web | **BFF w Next.js**: przeglądarka woła tylko Next (`/api/*`), tokeny w ciasteczkach httpOnly, JS ich nie widzi. API bez zmian (Bearer), mobile używa Bearer bezpośrednio |
 
 ## Stack
 
