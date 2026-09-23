@@ -15,6 +15,16 @@ export const nestConfig = tseslint.config(...baseConfig, {
       __dirname: "readonly",
       module: "readonly",
     },
+    parserOptions: {
+      // Nest's DI reads constructor parameter types from the
+      // `design:paramtypes` metadata that tsc emits. A type-only import is
+      // erased, so the metadata degrades to `Function` and injection fails
+      // at runtime. With these flags `consistent-type-imports` knows that
+      // imports referenced in decorated signatures are runtime values and
+      // stops rewriting them to `import type`.
+      emitDecoratorMetadata: true,
+      experimentalDecorators: true,
+    },
   },
   rules: {
     "@typescript-eslint/no-empty-function": [
