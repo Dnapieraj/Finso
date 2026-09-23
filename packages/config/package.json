@@ -8,8 +8,7 @@
     "./eslint/next": "./eslint/next.js",
     "./eslint/nest": "./eslint/nest.js",
     "./prettier": "./prettier.config.js",
-    "./typescript/base.json": "./typescript/base.json",
-    "./tailwind/preset.css": "./tailwind/preset.css"
+    "./typescript/base.json": "./typescript/base.json"
   },
   "dependencies": {
     "@eslint/js": "^9.39.5",
@@ -18,14 +17,10 @@
   },
   "peerDependencies": {
     "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.5",
-    "tailwindcss": "^4.3.3"
+    "eslint-config-next": "^16.3.5"
   },
   "peerDependenciesMeta": {
     "eslint-config-next": {
-      "optional": true
-    },
-    "tailwindcss": {
       "optional": true
     }
   }
