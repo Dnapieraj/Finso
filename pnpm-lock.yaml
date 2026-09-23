@@ -135,6 +135,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@vireo/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@vireo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
