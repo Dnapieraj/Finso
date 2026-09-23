@@ -71,7 +71,12 @@ zanim wybierzesz obejście.
 
 ### Pieniądze
 - Kwoty **zawsze jako liczby całkowite w groszach** (Int), nigdy Float
-- Konwersja na format wyświetlania (`Intl.NumberFormat`) tylko w warstwie prezentacji
+- Konwersja na format wyświetlania **tylko przez `formatMoney` z `@vireo/shared`**
+  (moduł `src/format/`), wywoływaną w warstwie prezentacji (web, mobile).
+  Nie używaj `Intl.NumberFormat` do kwot w komponentach — Hermes formatuje
+  inaczej niż V8. Silnik (`budget/`) nie importuje `format/` (pilnuje ESLint)
+- Pełne złote (`whole`) zawsze z jawnym kierunkiem: `'down'` dla środków
+  do wydania, `'up'` dla kosztów
 - Przy dzieleniu kwot (np. na dni) — jawna reguła zaokrąglania, zawsze w dół
   na korzyść bezpieczeństwa użytkownika, i test na to
 
