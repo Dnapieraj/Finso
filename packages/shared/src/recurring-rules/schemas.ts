@@ -116,4 +116,4 @@ export type CreateRecurringRuleInput = z.infer<typeof createRecurringRuleSchema>
 /** Zmiany reguły. */
 export type UpdateRecurringRuleInput = z.infer<typeof updateRecurringRuleSchema>;
 /** Reguła w odpowiedzi API. */
-export type RecurringRuleDto = z.infer<typeof recurringRuleSchema>;
+export type RecurringRule = z.infer<typeof recurringRuleSchema>;

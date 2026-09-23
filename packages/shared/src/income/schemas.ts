@@ -119,7 +119,7 @@ export type CreateIncomeSourceInput = z.infer<typeof createIncomeSourceSchema>;
 /** Zmiany źródła dochodu. */
 export type UpdateIncomeSourceInput = z.infer<typeof updateIncomeSourceSchema>;
 /** Źródło dochodu w odpowiedzi API. */
-export type IncomeSourceDto = z.infer<typeof incomeSourceSchema>;
+export type IncomeSource = z.infer<typeof incomeSourceSchema>;
 /** Dane nowego wpływu. */
 export type CreateIncomeEntryInput = z.infer<typeof createIncomeEntrySchema>;
 /** Zmiany wpływu. */
@@ -127,6 +127,6 @@ export type UpdateIncomeEntryInput = z.infer<typeof updateIncomeEntrySchema>;
 /** Filtry listy wpływów. */
 export type ListIncomeEntriesQuery = z.infer<typeof listIncomeEntriesQuerySchema>;
 /** Wpływ w odpowiedzi API. */
-export type IncomeEntryDto = z.infer<typeof incomeEntrySchema>;
+export type IncomeEntry = z.infer<typeof incomeEntrySchema>;
 /** Strona wpływów. */
 export type IncomeEntryPage = z.infer<typeof incomeEntryPageSchema>;

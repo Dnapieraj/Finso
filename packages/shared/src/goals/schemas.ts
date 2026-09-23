@@ -40,4 +40,4 @@ export type CreateGoalInput = z.infer<typeof createGoalSchema>;
 /** Zmiany celu. */
 export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
 /** Cel w odpowiedzi API. */
-export type GoalDto = z.infer<typeof goalSchema>;
+export type Goal = z.infer<typeof goalSchema>;

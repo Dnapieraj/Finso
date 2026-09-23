@@ -29,4 +29,4 @@ export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 /** Zmiany kategorii. */
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
 /** Kategoria w odpowiedzi API. */
-export type CategoryDto = z.infer<typeof categorySchema>;
+export type Category = z.infer<typeof categorySchema>;

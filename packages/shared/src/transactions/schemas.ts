@@ -60,6 +60,6 @@ export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 /** Filtry listy transakcji. */
 export type ListTransactionsQuery = z.infer<typeof listTransactionsQuerySchema>;
 /** Transakcja w odpowiedzi API. */
-export type TransactionDto = z.infer<typeof transactionSchema>;
+export type Transaction = z.infer<typeof transactionSchema>;
 /** Strona transakcji. */
 export type TransactionPage = z.infer<typeof transactionPageSchema>;
