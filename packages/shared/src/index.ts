@@ -1,6 +1,7 @@
 // Punkt wejścia @vireo/shared. Zero importów z NestJS, React czy Prisma.
 
 export * from "./money.js";
+export * from "./format/format-money.js";
 export * from "./date.js";
 export * from "./budget/types.js";
 export * from "./budget/calculate-available-balance.js";
