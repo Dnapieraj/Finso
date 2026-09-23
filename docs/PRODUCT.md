@@ -85,6 +85,25 @@ Finso łączy jedno z drugim:
 15. Wielowalutowość
 16. Eksport PDF/CSV, raporty roczne
 
+### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
+
+**`simulatePurchase` liczy wpływ zakupu na każdy zagrożony cel NIEZALEŻNIE,
+nie jako jeden spójny podział deficytu między cele.** Przy dwóch aktywnych
+celach i zakupie, który tworzy niedobór, symulator pokaże PEŁNE opóźnienie
+dla KAŻDEGO celu z osobna (liczone tak, jakby to on jeden wchłonął cały
+deficyt, capped do własnego wkładu zaplanowanego w tym okresie) — nie jeden
+scenariusz, w którym deficyt jest realistycznie rozdzielony między cele.
+
+Przykład: deficyt 1300 zł, cel "Wakacje" miał dostać 1000 zł w tym okresie,
+cel "Poduszka" 800 zł. Apka pokaże "Wakacje +31 dni" ORAZ "Poduszka +29 dni"
+jednocześnie — te liczby się nie sumują do realnego stanu budżetu (brakuje
+1300 zł, nie 1800 zł).
+
+Świadomy wybór: dużo prostszy do policzenia i przetestowania niż
+proporcjonalna atrybucja deficytu między celami. Zaakceptowany na MVP.
+Do rewizji w Fazie 2, jeśli feedback użytkowników pokaże, że to myli.
+(Implementacja: `packages/shared/src/budget/types.ts`, JSDoc `GoalImpact`.)
+
 ---
 
 ## 4. Stack — pełna specyfikacja
