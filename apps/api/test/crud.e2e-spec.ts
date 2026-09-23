@@ -328,12 +328,48 @@ describe('Moduły CRUD (e2e)', () => {
       expect(manual.body.status).toBe('CONFIRMED');
     });
 
-    it('usunięcie źródła usuwa jego historię wpływów', async () => {
+    it('źródło bez wpływów da się usunąć', async () => {
+      const source = await post('/income/sources', { name: 'Pomyłka', kind: 'IRREGULAR' });
+      await del(`/income/sources/${source.body.id}`).expect(204);
+    });
+
+    it('źródła z wpływami nie da się usunąć — historia zostaje, trzeba zarchiwizować', async () => {
       const source = await post('/income/sources', { name: 'Zlecenia', kind: 'IRREGULAR' });
       await post('/income/entries', { incomeSourceId: source.body.id, amount: 1, date: '2026-09-10' });
 
-      await del(`/income/sources/${source.body.id}`).expect(204);
-      expect((await get('/income/entries').expect(200)).body.items).toEqual([]);
+      await del(`/income/sources/${source.body.id}`).expect(409);
+      expect((await get('/income/entries').expect(200)).body.items).toHaveLength(1);
+      await patch(`/income/sources/${source.body.id}`, { isActive: false }).expect(200);
+    });
+
+    it('wpływy w koszu też blokują usunięcie źródła (inaczej kaskada skasowałaby kosz)', async () => {
+      const source = await post('/income/sources', { name: 'Zlecenia', kind: 'IRREGULAR' });
+      const entry = await post('/income/entries', {
+        incomeSourceId: source.body.id,
+        amount: 1,
+        date: '2026-09-10',
+      });
+      await del(`/income/entries/${entry.body.id}`).expect(204);
+
+      await del(`/income/sources/${source.body.id}`).expect(409);
+    });
+
+    it('usunięcie wpływu jest miękkie i odwracalne', async () => {
+      const source = await post('/income/sources', { name: 'Zlecenia', kind: 'IRREGULAR' });
+      const entry = await post('/income/entries', {
+        incomeSourceId: source.body.id,
+        amount: 1,
+        date: '2026-09-10',
+      });
+      const id = entry.body.id as string;
+
+      await del(`/income/entries/${id}`).expect(204);
+      await get(`/income/entries/${id}`).expect(404);
+      await patch(`/income/entries/${id}`, { amount: 2 }).expect(404);
+      expect((await db.incomeEntry.findUniqueOrThrow({ where: { id } })).deletedAt).not.toBeNull();
+
+      await post(`/income/entries/${id}/restore`).expect(200);
+      await get(`/income/entries/${id}`).expect(200);
     });
   });
 });

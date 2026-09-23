@@ -14,6 +14,7 @@ import type { Db } from '../prisma/prisma.module.js';
 import { PRISMA } from '../prisma/prisma.module.js';
 
 const UNIQUE_VIOLATION = 'P2002';
+const FOREIGN_KEY_VIOLATION = 'P2003';
 
 @Injectable()
 export class IncomeSourcesService {
@@ -64,12 +65,25 @@ export class IncomeSourcesService {
   }
 
   /**
-   * Twarde usunięcie RAZEM z historią wpływów (onDelete: Cascade) —
-   * na wypadek pomyłki przy dodawaniu. Zmiana pracy to `isActive: false`,
-   * wtedy historia zostaje w raportach.
+   * Twarde usunięcie — tylko źródła bez wpływów (np. dodanego przez
+   * pomyłkę). Źródło z historią się archiwizuje (`isActive: false`).
+   * Pilnuje tego baza (FK z onDelete: NoAction), nie ten kod: widzi też
+   * wpływy w koszu, których soft-delete extension nam nie pokaże.
    */
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.incomeSource.delete({ where: { id, userId } });
+    try {
+      await this.db.incomeSource.delete({ where: { id, userId } });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === FOREIGN_KEY_VIOLATION
+      ) {
+        throw new ConflictException(
+          'Income source has income entries (possibly deleted) — archive it with isActive: false',
+        );
+      }
+      throw error;
+    }
   }
 }
 

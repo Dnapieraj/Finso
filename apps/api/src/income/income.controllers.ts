@@ -63,7 +63,7 @@ export class IncomeSourcesController {
     return this.sources.update(user.id, id, body);
   }
 
-  /** Usuwa źródło razem z historią wpływów. Do archiwizacji służy `isActive: false`. */
+  /** Tylko źródło bez wpływów (409 w przeciwnym razie). Do archiwizacji służy `isActive: false`. */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
@@ -108,9 +108,16 @@ export class IncomeEntriesController {
     return this.entries.update(user.id, id, body);
   }
 
+  /** Miękkie usunięcie — do cofnięcia przez POST /income/entries/:id/restore. */
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
     return this.entries.remove(user.id, id);
+  }
+
+  @Post(':id/restore')
+  @ZodResponse({ status: HttpStatus.OK, type: IncomeEntryDto })
+  restore(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<IncomeEntry> {
+    return this.entries.restore(user.id, id);
   }
 }

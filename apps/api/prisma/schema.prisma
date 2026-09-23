@@ -199,7 +199,12 @@ model IncomeEntry {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   incomeSourceId String
-  incomeSource   IncomeSource @relation(fields: [incomeSourceId], references: [id], onDelete: Cascade)
+  /// NoAction, nie Cascade: wpływ to fakt finansowy, więc usunięcie źródła
+  /// nie może po cichu skasować historii (także tej w koszu). Źródło z
+  /// wpływami się archiwizuje (isActive: false). NoAction (a nie Restrict)
+  /// sprawdza więzy na końcu instrukcji, więc kaskada przy usunięciu
+  /// całego konta nadal kasuje wpływy i źródła w jednym DELETE.
+  incomeSource   IncomeSource @relation(fields: [incomeSourceId], references: [id], onDelete: NoAction)
 
   amount Int
   /// Data kalendarzowa (bez czasu/strefy) — patrz uzasadnienie przy Transaction.date.
@@ -207,10 +212,14 @@ model IncomeEntry {
 
   status ConfirmationStatus @default(PENDING)
 
+  /// Jak Transaction: wpływ to fakt finansowy — usunięcie da się cofnąć.
+  deletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([userId, date])
+  /// Kolejność jak w Transaction — patrz komentarz przy tamtym indeksie.
+  @@index([userId, deletedAt, date])
   @@index([incomeSourceId])
 }
 

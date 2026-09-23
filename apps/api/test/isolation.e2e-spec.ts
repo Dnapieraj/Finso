@@ -100,6 +100,7 @@ describe('Izolacja danych między użytkownikami (e2e)', () => {
       patch: { amount: 1 },
       snapshot: (d, id) => d.incomeEntry.findUnique({ where: { id } }),
       paginated: true,
+      restorable: true,
     },
     {
       name: 'recurring rules',

@@ -37,6 +37,7 @@ describe('OpenAPI (e2e)', () => {
         '/income/sources/{id}',
         '/income/entries',
         '/income/entries/{id}',
+        '/income/entries/{id}/restore',
         '/recurring-rules',
         '/recurring-rules/{id}',
         '/users/me',

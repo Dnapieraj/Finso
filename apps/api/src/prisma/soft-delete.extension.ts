@@ -20,12 +20,13 @@ export function toSoftDelete<W>(where: W): { where: W; data: { deletedAt: Date }
 }
 
 /**
- * Modele z miękkim usuwaniem. $extends() zwraca NOWY klient (nie
+ * Modele z miękkim usuwaniem (który model i dlaczego: docs/PRODUCT.md,
+ * sekcja "Usuwanie danych"). $extends() zwraca NOWY klient (nie
  * mutuje instancji, na której go wywołujemy) — dlatego to osobna
  * funkcja, a nie coś wpięte prosto w konstruktor PrismaService.
  *
  * Każde findMany/findFirst/findUnique/count/aggregate/groupBy na
- * Transaction i Goal dostaje wymuszony filtr `deletedAt: null`.
+ * Transaction, Goal i IncomeEntry dostaje wymuszony filtr `deletedAt: null`.
  * delete/deleteMany nigdy nie trafiają do bazy jako DELETE — zamieniają
  * się w update ustawiający deletedAt. update/updateMany celowo NIE są
  * filtrowane — inaczej przywrócenie skasowanego rekordu byłoby
@@ -114,6 +115,46 @@ export function withSoftDelete<T extends PrismaClient>(client: T) {
         },
         async deleteMany({ args }) {
           return client.goal.updateMany(toSoftDelete(args.where));
+        },
+      },
+      incomeEntry: {
+        async findMany({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findFirst({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findFirstOrThrow({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findUnique({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findUniqueOrThrow({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async count({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async aggregate({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async groupBy({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async delete({ args }) {
+          return client.incomeEntry.update(toSoftDelete(args.where));
+        },
+        async deleteMany({ args }) {
+          return client.incomeEntry.updateMany(toSoftDelete(args.where));
         },
       },
     },

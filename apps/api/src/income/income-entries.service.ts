@@ -57,17 +57,30 @@ export class IncomeEntriesService {
     return toIncomeEntry(row);
   }
 
-  /** Najczęstsza zmiana: potwierdzenie spodziewanego wpływu, często z inną kwotą. */
+  /**
+   * Najczęstsza zmiana: potwierdzenie spodziewanego wpływu, często z inną
+   * kwotą. `deletedAt: null` — wpływów z kosza nie edytujemy (patrz
+   * TransactionsService.update).
+   */
   async update(userId: string, id: string, input: UpdateIncomeEntryInput): Promise<IncomeEntry> {
     const row = await this.db.incomeEntry.update({
-      where: { id, userId },
+      where: { id, userId, deletedAt: null },
       data: { ...input, date: input.date && fromIsoDate(input.date) },
     });
     return toIncomeEntry(row);
   }
 
+  /** Miękkie usunięcie — extension zamienia `delete` na ustawienie deletedAt. */
   async remove(userId: string, id: string): Promise<void> {
-    await this.db.incomeEntry.delete({ where: { id, userId } });
+    await this.db.incomeEntry.delete({ where: { id, userId, deletedAt: null } });
+  }
+
+  async restore(userId: string, id: string): Promise<IncomeEntry> {
+    const row = await this.db.incomeEntry.update({
+      where: { id, userId, deletedAt: { not: null } },
+      data: { deletedAt: null },
+    });
+    return toIncomeEntry(row);
   }
 }
 
