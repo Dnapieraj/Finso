@@ -9,8 +9,5 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
-    // Etap 0: szkielet bez logiki biznesowej, więc jeszcze brak testów.
-    // Usunąć, gdy pojawią się pierwsze *.spec.ts.
-    passWithNoTests: true,
   },
 });
