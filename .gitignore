@@ -32,3 +32,8 @@ pnpm-debug.log*
 
 # Expo (dla przyszłego apps/mobile)
 .expo/
+
+# Prisma — wygenerowany klient (odtwarzany przez `prisma generate`,
+# uruchamiany automatycznie w postinstall). Bez środkowego "/" celowo —
+# ma łapać na dowolnej głębokości (apps/api/src/generated, ...).
+generated/

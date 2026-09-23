@@ -5,5 +5,7 @@ packages:
 # Next.js (apps/web) potrzebuje natywnych zależności (sharp, unrs-resolver)
 # z build scriptami — jawnie zezwalamy im na budowanie przy instalacji.
 allowBuilds:
+  '@prisma/engines': true
+  prisma: true
   sharp: false
   unrs-resolver: false

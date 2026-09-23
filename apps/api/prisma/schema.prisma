@@ -1,0 +1,259 @@
+// Schemat danych Finso.
+//
+// Prisma 7 nie ma już silnika zapytań w Rust — wymaga driver adaptera
+// (patrz src/prisma/prisma.service.ts) i nie trzyma connection stringa
+// tutaj. URL bazy i ścieżki migracji są w ../prisma.config.ts.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- Enumy -------------------------------------------------------------
+
+enum SubscriptionPlan {
+  FREE
+  PLUS
+}
+
+enum ConfirmationStatus {
+  PENDING
+  CONFIRMED
+  DECLINED
+}
+
+enum IncomeSourceKind {
+  REGULAR
+  IRREGULAR
+}
+
+enum RecurringRuleKind {
+  INCOME
+  EXPENSE
+}
+
+enum RecurrenceFrequency {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+// --- User + sesje --------------------------------------------------------
+
+model User {
+  id           String @id @default(uuid(7))
+  email        String @unique
+  passwordHash String
+
+  plan     SubscriptionPlan @default(FREE)
+  /// Kod waluty ISO 4217, np. "PLN".
+  currency String           @default("PLN") @db.Char(3)
+  /// Nazwa strefy czasowej IANA, np. "Europe/Warsaw" — używana do liczenia
+  /// "dnia" (dzień wypłaty, dzienny limit) w silniku budżetu.
+  timezone String           @default("Europe/Warsaw")
+
+  revenueCatId     String? @unique
+  stripeCustomerId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens  RefreshToken[]
+  categories     Category[]
+  recurringRules RecurringRule[]
+  incomeSources  IncomeSource[]
+  incomeEntries  IncomeEntry[]
+  transactions   Transaction[]
+  goals          Goal[]
+}
+
+model RefreshToken {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Nigdy nie zapisujemy surowego tokena — tylko jego hash (tak jak hasła).
+  tokenHash String    @unique
+  expiresAt DateTime
+  /// Ustawione = token unieważniony (wylogowanie, rotacja, podejrzenie
+  /// przejęcia sesji). Brak osobnego "soft delete" — to pole już nim jest.
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// --- Kategorie i reguły cykliczności --------------------------------------
+
+model Category {
+  id String @id @default(uuid(7))
+
+  /// null = kategoria systemowa, współdzielona przez wszystkich użytkowników.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name  String
+  icon  String
+  color String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions   Transaction[]
+  recurringRules RecurringRule[]
+
+  @@index([userId])
+}
+
+model RecurringRule {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Czy reguła dotyczy dochodu (IncomeSource) czy wydatku (Transaction).
+  kind RecurringRuleKind
+  name String?
+
+  frequency  RecurrenceFrequency
+  /// Co ile jednostek `frequency` (np. frequency=WEEKLY, interval=2 = co 2 tygodnie).
+  interval   Int                 @default(1)
+  /// Kotwica dla MONTHLY/YEARLY (1-31). Miesiące krótsze niż kotwica —
+  /// przycinanie do ostatniego dnia miesiąca liczy packages/shared, nie baza.
+  dayOfMonth Int?
+  /// Kotwica dla WEEKLY (0 = niedziela ... 6 = sobota).
+  dayOfWeek  Int?
+
+  /// Oczekiwana kwota — może się różnić od faktycznej (podwyżka ceny,
+  /// zmienny dochód), stąd "inna kwota" przy potwierdzaniu w UI.
+  expectedAmount Int?
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  /// Wyłączona reguła (np. anulowana subskrypcja) to nie to samo co
+  /// usunięta — historyczne transakcje mają zachować do niej odniesienie.
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incomeSource IncomeSource?
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+// --- Dochody -------------------------------------------------------------
+
+model IncomeSource {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name String
+  kind IncomeSourceKind
+
+  /// Dla REGULAR: stała, oczekiwana kwota. Dla IRREGULAR: null — prognozę
+  /// liczy packages/shared z historii IncomeEntry (mediana, percentyl).
+  expectedAmount Int?
+
+  recurringRuleId String?        @unique
+  recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+
+  /// Archiwizacja (np. zmiana pracy) ≠ usunięcie — historia wpływów ma
+  /// zostać widoczna w raportach, więc to flaga, nie soft delete.
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  incomeEntries IncomeEntry[]
+
+  @@index([userId])
+}
+
+model IncomeEntry {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  incomeSourceId String
+  incomeSource   IncomeSource @relation(fields: [incomeSourceId], references: [id], onDelete: Cascade)
+
+  amount Int
+  /// Data kalendarzowa (bez czasu/strefy) — patrz uzasadnienie przy Transaction.date.
+  date   DateTime @db.Date
+
+  status ConfirmationStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([incomeSourceId])
+}
+
+// --- Wydatki ---------------------------------------------------------------
+
+model Transaction {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  recurringRuleId String?
+  recurringRule   RecurringRule? @relation(fields: [recurringRuleId], references: [id], onDelete: SetNull)
+
+  amount     Int
+  /// Data kalendarzowa, bez komponentu czasu/strefy — "wydatek z 15 marca"
+  /// to zawsze konkretny dzień w kalendarzu użytkownika, nie moment w UTC.
+  /// Unika klasycznego buga "przesunięcie o dzień" przy konwersji stref.
+  date       DateTime @db.Date
+  note       String?
+  receiptUrl String?
+
+  status ConfirmationStatus @default(CONFIRMED)
+
+  /// Transakcja finansowa nie znika bez śladu jednym klikiem — użytkownik
+  /// może cofnąć usunięcie. Twarde kasowanie tylko kaskadowo przy
+  /// usunięciu całego konta (RODO).
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, date])
+  @@index([categoryId])
+  @@index([recurringRuleId])
+}
+
+// --- Cele ------------------------------------------------------------------
+
+model Goal {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name          String
+  targetAmount  Int
+  currentAmount Int      @default(0)
+  targetDate    DateTime @db.Date
+
+  /// Jak przy Transaction: użytkownik może odzyskać przypadkowo
+  /// usunięty cel, zamiast bezpowrotnie tracić postęp.
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}

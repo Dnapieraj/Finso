@@ -28,6 +28,7 @@ export const baseConfig = tseslint.config(
       "**/.turbo/**",
       "**/node_modules/**",
       "**/coverage/**",
+      "**/generated/**",
     ],
   },
   eslintConfigPrettier,
