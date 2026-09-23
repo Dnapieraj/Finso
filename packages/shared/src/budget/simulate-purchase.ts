@@ -71,12 +71,9 @@ export function simulatePurchase(
 }
 
 /**
- * Uwaga: gałąź `dailyAllowanceBefore <= 0` nie jest pokryta żadnym
- * zatwierdzonym testem (we wszystkich naszych scenariuszach jest
- * dodatnie) — to czysto defensywny fallback, żeby nie dzielić przez
- * zero i nie zwrócić NaN, gdyby budżet wszedł tam z zerowym zapasem
- * jeszcze przed zakupem. Wart dopisania testu, gdy się pojawi realny
- * przypadek użycia.
+ * `dailyAllowanceBefore <= 0` (np. budżet już wcześniej tak ciasny, że
+ * dzienna kwota rundowała do zera): traktujemy to jako 'tight' zamiast
+ * dzielić przez zero — patrz test "budżet już przed zakupem tak ciasny...".
  */
 function calculateRiskLevel(
   canAfford: boolean,

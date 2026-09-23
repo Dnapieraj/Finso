@@ -109,6 +109,21 @@ describe('calculateAvailableBalance', () => {
     expect(result.dailyAllowance).toBe(1_000);
   });
 
+  it('brzeg: asOf przed period.start — daysRemaining to cały okres, nie okres + dni sprzed startu', () => {
+    const result = calculateAvailableBalance({
+      periodIncome: grosze(0),
+      period: { start: isoDate('2026-09-05'), end: isoDate('2026-09-10') },
+      asOf: isoDate('2026-09-01'),
+      remainingFixedCommitments: [],
+      goalContributions: [],
+      alreadySpent: grosze(0),
+    });
+
+    // 5-10 września włącznie = 6 dni. Gdyby liczyć od asOf (01.09) zamiast
+    // od period.start, wyszłoby 10 dni — źle, okres jeszcze się nie zaczął.
+    expect(result.daysRemaining).toBe(6);
+  });
+
   it('brzeg: okres już się skończył (asOf po period.end) — 0 dni, 0 dziennie, niezależnie od salda', () => {
     const result = calculateAvailableBalance({
       periodIncome: grosze(1_000),

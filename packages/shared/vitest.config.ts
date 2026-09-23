@@ -4,7 +4,18 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["src/**/*.spec.ts"],
-    // Etap 0: pusty pakiet, logika budżetu (i jej testy) wchodzą w etapie 2.
     passWithNoTests: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"],
+      include: ["src/**/*.ts"],
+      exclude: ["src/**/*.spec.ts"],
+      thresholds: {
+        lines: 100,
+        functions: 100,
+        branches: 100,
+        statements: 100,
+      },
+    },
   },
 });

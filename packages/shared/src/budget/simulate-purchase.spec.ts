@@ -71,6 +71,35 @@ describe('simulatePurchase', () => {
     expect(result.riskLevel).toBe('over');
   });
 
+  it('brzeg: budżet już przed zakupem tak ciasny, że dailyAllowance rundował do zera — mimo że stać, to "tight", nie dzielenie przez zero', () => {
+    const input: SimulatePurchaseInput = {
+      periodIncome: grosze(5),
+      period: { start: isoDate('2026-09-01'), end: isoDate('2026-09-30') },
+      asOf: isoDate('2026-09-01'),
+      remainingFixedCommitments: [],
+      goalContributions: [],
+      alreadySpent: grosze(0),
+      goals: [],
+    };
+    // availableBalance = 5, daysRemaining = 30 -> dailyAllowance PRZED
+    // zakupem = floor(5/30) = 0. Zakup za dokładnie 5 -> remainingAfter = 0,
+    // czyli wciąż "stać" (canAfford true), ale bez żadnego zapasu.
+
+    const result = simulatePurchase(input, grosze(5), 'cat-food');
+
+    expect(result.canAfford).toBe(true);
+    expect(result.riskLevel).toBe('tight');
+  });
+
+  it('brzeg: okres już się skończył — dailyAllowanceAfter to 0, nie dzielenie przez zero dni', () => {
+    const input = baseInput();
+    input.asOf = isoDate('2026-10-01'); // po period.end (2026-09-30)
+
+    const result = simulatePurchase(input, grosze(10_000), 'cat-food');
+
+    expect(result.dailyAllowanceAfter).toBe(0);
+  });
+
   it('respektuje własny tightThresholdRatio zamiast domyślnych 0.5', () => {
     const input = baseInput();
     // remainingAfter = 400000 - 50000 = 350000, dailyAllowanceAfter =
