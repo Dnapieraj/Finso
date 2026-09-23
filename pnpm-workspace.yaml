@@ -6,6 +6,7 @@ packages:
 # z build scriptami — jawnie zezwalamy im na budowanie przy instalacji.
 allowBuilds:
   '@prisma/engines': true
+  esbuild: true
   prisma: true
   sharp: false
   unrs-resolver: false
