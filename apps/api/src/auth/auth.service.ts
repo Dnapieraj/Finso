@@ -4,9 +4,11 @@ import { JwtService } from '@nestjs/jwt';
 import type { AuthSession, AuthTokens, LoginInput, RegisterInput } from '@vireo/shared';
 
 import type { Env } from '../config/env.js';
+import type { User } from '../generated/prisma/client.js';
 import { Prisma } from '../generated/prisma/client.js';
 import type { Db } from '../prisma/prisma.module.js';
 import { PRISMA } from '../prisma/prisma.module.js';
+import { toPublicUser } from '../users/public-user.js';
 import { PasswordService } from './password.service.js';
 import { RefreshTokenService } from './refresh-token.service.js';
 
@@ -83,18 +85,9 @@ export class AuthService {
     return this.refreshTokens.revoke(refreshToken);
   }
 
-  private async createSession(user: AuthSession['user']): Promise<AuthSession> {
+  private async createSession(user: User): Promise<AuthSession> {
     return {
-      // Serializer (ZodSerializerDto) i tak przytnie obiekt do schematu
-      // publicUserSchema, więc passwordHash nie wycieknie — ale wybieramy
-      // pola jawnie, żeby nie polegać na jednym zabezpieczeniu.
-      user: {
-        id: user.id,
-        email: user.email,
-        plan: user.plan,
-        currency: user.currency,
-        timezone: user.timezone,
-      },
+      user: toPublicUser(user),
       accessToken: await this.signAccessToken(user.id),
       refreshToken: await this.refreshTokens.issueForNewSession(user.id),
       accessTokenExpiresIn: this.accessTtl(),

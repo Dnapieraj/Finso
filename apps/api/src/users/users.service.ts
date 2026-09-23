@@ -1,9 +1,10 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import type { PublicUser } from '@vireo/shared';
+import type { PublicUser, UpdateMeInput } from '@vireo/shared';
 
 import { PasswordService } from '../auth/password.service.js';
 import type { Db } from '../prisma/prisma.module.js';
 import { PRISMA } from '../prisma/prisma.module.js';
+import { publicUserSelect, toPublicUser } from './public-user.js';
 
 @Injectable()
 export class UsersService {
@@ -18,14 +19,21 @@ export class UsersService {
    * klient wyczyścił sesję, a nie 404 sugerujące błąd po stronie API.
    */
   async getMe(userId: string): Promise<PublicUser> {
-    const user = await this.db.user.findUnique({
-      where: { id: userId },
-      select: { id: true, email: true, plan: true, currency: true, timezone: true },
-    });
+    const user = await this.db.user.findUnique({ where: { id: userId }, select: publicUserSelect });
     if (!user) {
       throw new UnauthorizedException();
     }
-    return user;
+    return toPublicUser(user);
+  }
+
+  /** Ustawienia wpływające na budżet: strefa czasowa i dzień startu okresu. */
+  async updateMe(userId: string, input: UpdateMeInput): Promise<PublicUser> {
+    const user = await this.db.user.update({
+      where: { id: userId },
+      data: input,
+      select: publicUserSelect,
+    });
+    return toPublicUser(user);
   }
 
   /**

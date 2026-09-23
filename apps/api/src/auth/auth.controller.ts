@@ -1,7 +1,8 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import type { AuthSession, AuthTokens } from '@vireo/shared';
-import { ZodSerializerDto } from 'nestjs-zod';
+import { ZodResponse } from 'nestjs-zod';
 
 import {
   AuthSessionDto,
@@ -18,6 +19,7 @@ import { Public } from './decorators.js';
  * ten wygasł) i wszystkie limitowane — to one są celem ataków słownikowych
  * i credential stuffingu.
  */
+@ApiTags('auth')
 @Public()
 @UseGuards(ThrottlerGuard)
 @Controller('auth')
@@ -25,21 +27,19 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   @Post('register')
-  @ZodSerializerDto(AuthSessionDto)
+  @ZodResponse({ status: HttpStatus.CREATED, type: AuthSessionDto })
   register(@Body() body: RegisterDto): Promise<AuthSession> {
     return this.auth.register(body);
   }
 
   @Post('login')
-  @HttpCode(HttpStatus.OK)
-  @ZodSerializerDto(AuthSessionDto)
+  @ZodResponse({ status: HttpStatus.OK, type: AuthSessionDto })
   login(@Body() body: LoginDto): Promise<AuthSession> {
     return this.auth.login(body);
   }
 
   @Post('refresh')
-  @HttpCode(HttpStatus.OK)
-  @ZodSerializerDto(AuthTokensDto)
+  @ZodResponse({ status: HttpStatus.OK, type: AuthTokensDto })
   refresh(@Body() body: RefreshTokenDto): Promise<AuthTokens> {
     return this.auth.refresh(body.refreshToken);
   }

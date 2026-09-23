@@ -49,6 +49,7 @@ describe('Auth (e2e)', () => {
           plan: 'FREE',
           currency: 'PLN',
           timezone: 'Europe/Warsaw',
+          periodStartDay: 1,
         },
         accessToken: expect.any(String),
         refreshToken: expect.any(String),

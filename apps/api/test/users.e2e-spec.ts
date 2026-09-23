@@ -11,7 +11,13 @@ async function seedUserData(db: PrismaClient, userId: string): Promise<void> {
     data: { userId, name: 'Własna', icon: 'star', color: '#123456' },
   });
   const rule = await db.recurringRule.create({
-    data: { userId, kind: 'INCOME', frequency: 'MONTHLY', dayOfMonth: 10 },
+    data: {
+      userId,
+      kind: 'INCOME',
+      frequency: 'MONTHLY',
+      dayOfMonth: 10,
+      startDate: new Date('2026-01-10'),
+    },
   });
   const source = await db.incomeSource.create({
     data: { userId, name: 'Pensja', kind: 'REGULAR', expectedAmount: 800_000, recurringRuleId: rule.id },
@@ -79,6 +85,7 @@ describe('Users (e2e)', () => {
         plan: 'FREE',
         currency: 'PLN',
         timezone: 'Europe/Warsaw',
+        periodStartDay: 1,
       });
     });
   });
