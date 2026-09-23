@@ -46,6 +46,7 @@ describe('Izolacja danych między użytkownikami (e2e)', () => {
   const createRule = (owner: TestSession, kind: 'INCOME' | 'EXPENSE') =>
     post(owner, '/recurring-rules', {
       kind,
+      name: kind === 'EXPENSE' ? 'Czynsz' : null,
       frequency: 'MONTHLY',
       startDate: '2026-01-10',
       dayOfMonth: 10,
@@ -238,6 +239,7 @@ describe('Izolacja danych między użytkownikami (e2e)', () => {
       const bobsCategory = await post(bob, '/categories', { name: 'X', icon: 'x', color: '#000000' });
       const res = await http().post('/recurring-rules').set(as(alice)).send({
         kind: 'EXPENSE',
+        name: 'Czynsz',
         frequency: 'MONTHLY',
         startDate: '2026-01-10',
         dayOfMonth: 10,

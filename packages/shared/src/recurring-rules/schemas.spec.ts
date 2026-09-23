@@ -8,6 +8,7 @@ import {
 
 const monthlyExpense = {
   kind: 'EXPENSE',
+  name: 'Czynsz',
   frequency: 'MONTHLY',
   startDate: '2026-09-10',
   dayOfMonth: 10,
@@ -21,7 +22,6 @@ describe('createRecurringRuleSchema', () => {
   it('przyjmuje miesięczny wydatek i uzupełnia wartości domyślne', () => {
     expect(createRecurringRuleSchema.parse(monthlyExpense)).toEqual({
       ...monthlyExpense,
-      name: null,
       interval: 1,
       dayOfWeek: null,
       categoryId: null,
@@ -68,6 +68,22 @@ describe('createRecurringRuleSchema', () => {
     expect(issuesOf(result)).toEqual(['expectedAmount:required_for_expense']);
   });
 
+  it('wydatek bez nazwy jest odrzucany — to ją użytkownik widzi na liście', () => {
+    const { name: _name, ...unnamed } = monthlyExpense;
+    const result = createRecurringRuleSchema.safeParse(unnamed);
+    expect(issuesOf(result)).toEqual(['name:required_for_expense']);
+  });
+
+  it('dochód nie wymaga nazwy — nazwę ma podpięte źródło dochodu', () => {
+    const result = createRecurringRuleSchema.safeParse({
+      kind: 'INCOME',
+      frequency: 'MONTHLY',
+      startDate: '2026-01-10',
+      dayOfMonth: 10,
+    });
+    expect(result.success).toBe(true);
+  });
+
   it('dochód nie może mieć kategorii', () => {
     const result = createRecurringRuleSchema.safeParse({
       ...monthlyExpense,
@@ -89,10 +105,24 @@ describe('updateRecurringRuleSchema', () => {
 });
 
 describe('recurringRuleShapeSchema', () => {
+  it('PATCH name: null na regule wydatku jest odrzucany', () => {
+    const merged = {
+      kind: 'EXPENSE',
+      name: null,
+      frequency: 'MONTHLY',
+      dayOfMonth: 10,
+      dayOfWeek: null,
+      expectedAmount: 100,
+      categoryId: null,
+    };
+    expect(recurringRuleShapeSchema.safeParse(merged).success).toBe(false);
+  });
+
   it('waliduje stan po scaleniu PATCH ze stanem z bazy', () => {
     // W bazie: MONTHLY z dayOfMonth. PATCH: frequency=WEEKLY, bez dayOfWeek.
     const merged = {
       kind: 'EXPENSE',
+      name: 'Czynsz',
       frequency: 'WEEKLY',
       dayOfMonth: 10,
       dayOfWeek: null,

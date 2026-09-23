@@ -19,6 +19,7 @@ export const recurrenceFrequencySchema = z.enum(['WEEKLY', 'MONTHLY', 'YEARLY'])
  */
 const shapeFieldsSchema = z.object({
   kind: recurringRuleKindSchema,
+  name: z.string().nullable(),
   frequency: recurrenceFrequencySchema,
   dayOfMonth: z.number().int().min(1).max(31).nullable(),
   dayOfWeek: z.number().int().min(0).max(6).nullable(),
@@ -34,6 +35,9 @@ type ShapeFields = z.infer<typeof shapeFieldsSchema>;
  * - MONTHLY/YEARLY → wymaga `dayOfMonth`, bez `dayOfWeek`
  *   (miesiąc dla YEARLY bierze się ze `startDate`)
  * - EXPENSE → wymaga `expectedAmount` (bez kwoty nie ma czego odjąć z budżetu)
+ *   i `name` (reguła wydatku JEST zobowiązaniem — pokazujemy ją na liście
+ *   i w breakdownie budżetu). Reguła INCOME nazwy nie potrzebuje: to tylko
+ *   harmonogram, a nazwę ma podpięte pod nią źródło dochodu.
  * - INCOME → bez `categoryId` (kategorie opisują wydatki)
  *
  * Komunikaty to stabilne klucze, nie zdania — tłumaczy je klient.
@@ -51,6 +55,9 @@ function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
   }
   if (rule.kind === 'EXPENSE' && rule.expectedAmount === null) {
     issue('expectedAmount', 'required_for_expense');
+  }
+  if (rule.kind === 'EXPENSE' && rule.name === null) {
+    issue('name', 'required_for_expense');
   }
   if (rule.kind === 'INCOME' && rule.categoryId !== null) {
     issue('categoryId', 'not_allowed_for_income');

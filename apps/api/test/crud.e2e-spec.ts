@@ -263,6 +263,16 @@ describe('Moduły CRUD (e2e)', () => {
       expect(ok.body).toMatchObject({ frequency: 'WEEKLY', dayOfWeek: 1, dayOfMonth: null });
     });
 
+    it('reguła wydatku musi mieć nazwę — także po PATCH', async () => {
+      const { name: _name, ...unnamed } = monthly;
+      const created = await post('/recurring-rules', unnamed).expect(400);
+      expect(issuePaths(created)).toEqual(['name:required_for_expense']);
+
+      const rule = await post('/recurring-rules', monthly).expect(201);
+      const res = await patch(`/recurring-rules/${rule.body.id}`, { name: null }).expect(400);
+      expect(issuePaths(res)).toEqual(['name:required_for_expense']);
+    });
+
     it('wyłączenie reguły zamiast usunięcia', async () => {
       const rule = await post('/recurring-rules', monthly).expect(201);
       const res = await patch(`/recurring-rules/${rule.body.id}`, { isActive: false }).expect(200);

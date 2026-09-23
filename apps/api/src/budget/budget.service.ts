@@ -116,8 +116,9 @@ export class BudgetService {
           : [
               {
                 id: rule.id,
-                // Pusty label = reguła bez nazwy; klient pokazuje wtedy
-                // ogólny tekst z własnego katalogu tłumaczeń.
+                // Nazwa reguły wydatku jest wymagana od walidacji API
+                // (recurringRuleShapeSchema); kolumna jest nullable tylko
+                // dla reguł INCOME, więc `??` to wyłącznie obrona typów.
                 label: rule.name ?? '',
                 expectedAmount: grosze(rule.expectedAmount),
                 isActive: rule.isActive,

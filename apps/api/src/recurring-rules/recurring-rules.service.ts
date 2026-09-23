@@ -54,6 +54,7 @@ export class RecurringRulesService {
 
     const shape = recurringRuleShapeSchema.safeParse({
       kind: existing.kind,
+      name: input.name !== undefined ? input.name : existing.name,
       frequency: input.frequency ?? existing.frequency,
       dayOfMonth: input.dayOfMonth !== undefined ? input.dayOfMonth : existing.dayOfMonth,
       dayOfWeek: input.dayOfWeek !== undefined ? input.dayOfWeek : existing.dayOfWeek,
