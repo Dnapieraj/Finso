@@ -5,6 +5,7 @@ import { ZodSerializerInterceptor } from 'nestjs-zod';
 
 import { AppController } from './app.controller.js';
 import { AuthModule } from './auth/auth.module.js';
+import { BudgetModule } from './budget/budget.module.js';
 import { CategoriesModule } from './categories/categories.module.js';
 import { CommonModule } from './common/common.module.js';
 import { PrismaNotFoundFilter } from './common/prisma-not-found.filter.js';
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module.js';
     GoalsModule,
     IncomeModule,
     RecurringRulesModule,
+    BudgetModule,
   ],
   controllers: [AppController],
   providers: [
