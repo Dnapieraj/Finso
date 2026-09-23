@@ -1,0 +1,13 @@
+{
+  "extends": "@vireo/config/typescript/base.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "ES2022"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "paths": {
+      "@vireo/ui/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}
