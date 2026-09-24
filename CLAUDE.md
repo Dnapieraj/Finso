@@ -75,6 +75,9 @@ i **wyjaśniaj decyzje architektoniczne**.
 | Formatowanie kwot | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import) |
 | Płatności | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu |
 | Kwoty | Int w groszach |
+| Style w mobile | **NativeWind 4 + Tailwind 3.4 tylko w `apps/mobile`** (NativeWind 4 nie działa z Tailwind v4; web zostaje na v4). Konfiguracja Tailwind generowana z `@vireo/ui/tokens`. Przejście na NativeWind 5, gdy wyjdzie stabilny |
+| Fonty w mobile | `@expo-google-fonts/bricolage-grotesque` + `@expo-google-fonts/hanken-grotesk` przez `expo-font` |
+| Klient API | W `@vireo/shared/api` (osobna ścieżka importu): czysty TS na `fetch`, odpowiedzi walidowane schematami Zod wspólnymi z API, tokeny przez wstrzykiwany `TokenStore` (mobile: `expo-secure-store`) |
 
 ## Stack
 
@@ -93,8 +96,11 @@ finso/
 
 Stan serwera (mobile): **TanStack Query**
 Formularze (mobile): **React Hook Form + Zod**
-Testy: **Vitest** (jednostkowe + coverage wymuszony w `pnpm test` dla shared),
-**Supertest** (API e2e, wymaga Docker + `pnpm db:up`), **Playwright** (ścieżki w mobile/web)
+Testy: **Vitest** (jednostkowe w shared/ui/api + coverage wymuszony w `pnpm test` dla shared),
+**Jest przez `jest-expo` + `@testing-library/react-native`** (jednostkowe/komponentowe w mobile —
+Vitest słabo obsługuje React Native), **Supertest** (API e2e, wymaga Docker + `pnpm db:up`),
+**Playwright** (wyłącznie web — nie testuje natywnych aplikacji). Narzędzie e2e dla mobile
+(np. Maestro) wybieramy przy pierwszych ekranach funkcjonalnych
 Płatności: **RevenueCat** (wyłącznie mobile)
 
 **Zanim zainstalujesz bibliotekę — sprawdź aktualną wersję i kompatybilność
