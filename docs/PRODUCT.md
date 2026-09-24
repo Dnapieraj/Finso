@@ -218,7 +218,7 @@ Bez logowania, bez TanStack Query, bez formularzy i bez wywołań API.
 | Build/deploy | **EAS Build** + **EAS Submit** |
 
 ### Płatności
-- **RevenueCat** — warstwa nad Apple IAP + Google Play Billing + Stripe
+- **RevenueCat** — warstwa nad Apple IAP + Google Play Billing
 - **Krytyczne:** subskrypcja sprzedawana w appce mobilnej **musi** iść przez Apple IAP / Google Billing (prowizja 15–30%). Nie da się tego obejść Stripe'em wewnątrz appki. RevenueCat to ujednolica i daje jedno źródło prawdy o statusie subskrypcji w backendzie (webhooki).
 - ~~Web: Stripe Checkout~~ — **porzucone**: web nie ma logowania, więc nie ma do czego przypisać zakupu. Subskrypcje sprzedajemy wyłącznie w aplikacji (RevenueCat). Web pokazuje cennik i kieruje do sklepów.
 
@@ -295,6 +295,7 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - **Przegląd prawny** polityki prywatności i regulaminu (`apps/web/src/messages/legal/`) — obecne teksty to szkice
 - Założenia do potwierdzenia przy wyborze hostingu: serwery w UE, kopie zapasowe nadpisywane w ciągu 30 dni
 - Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
+- **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
 
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 
