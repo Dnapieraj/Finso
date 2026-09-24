@@ -1,8 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // @vireo/ui ships TypeScript source, so Next has to compile it like app code.
-  transpilePackages: ["@vireo/ui"],
+  // @vireo/tokens and @vireo/ui ship TypeScript source, so Next compiles them like app code.
+  transpilePackages: ["@vireo/tokens", "@vireo/ui"],
 };
 
 export default nextConfig;

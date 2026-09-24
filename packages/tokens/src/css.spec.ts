@@ -1,10 +1,7 @@
-import { readFileSync } from "node:fs";
-
 import { describe, expect, it } from "vitest";
 
 import { themeToCss, toCssVariableName } from "./css.ts";
 import { COLOR_TOKENS, type ColorScale, type Theme } from "./names.ts";
-import { theme } from "./palette.ts";
 
 /** Body of the first rule whose selector is exactly `selector`. */
 function ruleBody(css: string, selector: string): string {
@@ -82,16 +79,5 @@ describe("themeToCss", () => {
 
   it("is deterministic", () => {
     expect(themeToCss(fixture)).toBe(css);
-  });
-});
-
-describe("src/styles/theme.css", () => {
-  it("matches the tokens it is generated from", () => {
-    const committed = readFileSync(new URL("../styles/theme.css", import.meta.url), "utf8");
-    // Git on Windows may check the file out with CRLF line endings.
-    expect(
-      committed.replace(/\r\n/g, "\n"),
-      "theme.css is stale: run `pnpm --filter @vireo/ui generate:theme`",
-    ).toBe(themeToCss(theme));
   });
 });

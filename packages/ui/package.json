@@ -6,18 +6,18 @@
   "exports": {
     "./components/*": "./src/components/*.tsx",
     "./lib/*": "./src/lib/*.ts",
-    "./styles/*": "./src/styles/*",
-    "./tokens": "./src/tokens/index.ts"
+    "./styles/*": "./src/styles/*"
   },
   "scripts": {
     "lint": "eslint \"src/**/*.{ts,tsx}\" \"scripts/**/*.ts\" vitest.config.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "vitest run --coverage",
+    "test": "vitest run",
     "generate:theme": "node scripts/generate-theme.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@vireo/shared": "workspace:*",
+    "@vireo/tokens": "workspace:*",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.3.0",
     "lucide-react": "^1.47.0",

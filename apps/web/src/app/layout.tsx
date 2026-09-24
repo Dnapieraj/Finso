@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 
-import { theme } from "@vireo/ui/tokens";
+import { theme } from "@vireo/tokens";
 
 import { siteUrl } from "@/content/site";
 import { pl } from "@/messages/pl";

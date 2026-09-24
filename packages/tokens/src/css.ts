@@ -35,7 +35,7 @@ export function themeToCss(theme: Theme): string {
   ];
 
   return `/*
- * Generated from src/tokens by \`pnpm --filter @vireo/ui generate:theme\`.
+ * Generated from @vireo/tokens by \`pnpm --filter @vireo/ui generate:theme\`.
  * Do not edit by hand: change the tokens and regenerate.
  */
 

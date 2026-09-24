@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@vireo/shared": "workspace:*",
+    "@vireo/tokens": "workspace:*",
     "@vireo/ui": "workspace:*",
     "lucide-react": "^1.47.0",
     "next": "16.3.5",

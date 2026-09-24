@@ -1,0 +1,11 @@
+{
+  "extends": "@vireo/config/typescript/base.json",
+  "compilerOptions": {
+    // Pure data and math: no DOM, no Node, no React, so web and mobile can both use it.
+    "lib": ["ES2022"],
+    "types": [],
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src", "vitest.config.ts"]
+}
