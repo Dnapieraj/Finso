@@ -85,3 +85,34 @@ jobs:
           name: playwright-report
           path: apps/web/playwright-report/
           retention-days: 7
+
+  mobile-bundle:
+    name: Mobile bundle (Expo export)
+    runs-on: ubuntu-latest
+    env:
+      # Inlined into the bundle at build time; the value only has to be valid here.
+      EXPO_PUBLIC_API_URL: http://localhost:3000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Mobile imports @vireo/shared from dist/.
+      - name: Build mobile dependencies
+        run: pnpm turbo run build --filter=mobile^...
+
+      # Bundles through Metro, Babel and NativeWind like a real build, which
+      # catches resolution errors that unit tests never load.
+      - name: Export Android bundle
+        run: pnpm --filter mobile exec expo export --platform android --output-dir dist
