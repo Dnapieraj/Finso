@@ -1,9 +1,9 @@
 import { cn } from "@vireo/ui/lib/utils";
 
+import { containerClass } from "@/components/site/classes";
 import { pl } from "@/messages/pl";
 
 import { PhoneMockup } from "./phone-mockup";
-import { containerClass } from "./section";
 import { StoreButtons } from "./store-buttons";
 
 const t = pl.hero;

@@ -5,7 +5,7 @@ import { cn } from "@vireo/ui/lib/utils";
 import { legalLinks } from "@/content/links";
 import { pl } from "@/messages/pl";
 
-import { containerClass, textLinkClass } from "./section";
+import { containerClass, textLinkClass } from "./classes";
 
 const t = pl.footer;
 

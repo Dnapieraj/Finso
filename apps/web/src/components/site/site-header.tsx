@@ -4,14 +4,14 @@ import { cn } from "@vireo/ui/lib/utils";
 
 import { pl } from "@/messages/pl";
 
-import { containerClass, textLinkClass } from "./section";
+import { containerClass, textLinkClass } from "./classes";
 
 const t = pl.header;
 
 const navItems = [
-  { href: "#wyrozniki", label: t.nav.features },
-  { href: "#jak-to-dziala", label: t.nav.howItWorks },
-  { href: "#cennik", label: t.nav.pricing },
+  { href: "/#wyrozniki", label: t.nav.features },
+  { href: "/#jak-to-dziala", label: t.nav.howItWorks },
+  { href: "/#cennik", label: t.nav.pricing },
 ] as const;
 
 export function SiteHeader() {
