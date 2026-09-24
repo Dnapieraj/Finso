@@ -276,17 +276,26 @@ Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez Revenue
 
 | Etap | Co | Przybliżony czas |
 |---|---|---|
-| 0 | Setup monorepo, CI, Prisma schema, migracje | 2–3 dni |
-| 1 | API: auth + CRUD transakcji/celów + testy | 1–2 tyg. |
-| 2 | **Silnik budżetu** w `packages/shared` + testy jednostkowe | 1 tydz. |
-| 3–5 | Design system Vireo (`@vireo/ui`), `formatMoney` — **zrobione** | — |
-| 6 | **Web: strona wizytówkowa** — hero, wyróżniki, jak działa, cennik, sklepy, dokumenty prawne, SEO | kilka dni |
+| 0 | Setup monorepo, wspólny config, CI — **zrobione** | 2–3 dni |
+| 1–2 | Model danych: schema Prisma, soft delete, docker-compose, migracje, seed kategorii — **zrobione** | — |
+| 3 | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione** | 1 tydz. |
+| 4 | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione** | 1–2 tyg. |
+| 5 | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione** | — |
+| 6 | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3) | kilka dni |
 | 7 | **Mobile: cała aplikacja** — Expo + NativeWind, komponenty RN, auth, dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
 | 8 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
 
+_Numeracja etapów 0–6 odpowiada historii commitów (np. „etap 3” = silnik budżetu, „etap 5a” = tokeny).
+Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
+
+**Do zrobienia przed publikacją (etap 8) — placeholdery w `apps/web`:**
+- Przyciski „Pobierz z App Store / Google Play” zamienić na **oficjalne grafiki sklepów** (wymagają ich wytyczne marketingowe Apple i Google) — `apps/web/src/components/landing/store-buttons.tsx`
+- Linki do sklepów zamiast `#` — `apps/web/src/content/links.ts`
+- Domena `https://finso.app` i e-mail `kontakt@finso.app` to placeholdery — podmienić na prawdziwe
+
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 
-**Kluczowa rada:** silnik liczenia budżetu (etap 2) napisz jako **czystą funkcję w `packages/shared`, bez zależności od frameworka, pokrytą testami**. Web i mobile tylko ją wywołują. To jest sedno appki i to najlepiej wygląda w portfolio.
+**Kluczowa rada:** silnik liczenia budżetu (etap 3) napisz jako **czystą funkcję w `packages/shared`, bez zależności od frameworka, pokrytą testami**. Web i mobile tylko ją wywołują. To jest sedno appki i to najlepiej wygląda w portfolio.
 
 ---
 
