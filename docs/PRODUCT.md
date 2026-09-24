@@ -281,7 +281,7 @@ Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez Revenue
 | 3 | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione** | 1 tydz. |
 | 4 | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione** | 1–2 tyg. |
 | 5 | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione** | — |
-| 6 | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3) | kilka dni |
+| 6 | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**) | kilka dni |
 | 7 | **Mobile: cała aplikacja** — Expo + NativeWind, komponenty RN, auth, dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
 | 8 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
 
@@ -291,7 +291,10 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 **Do zrobienia przed publikacją (etap 8) — placeholdery w `apps/web`:**
 - Przyciski „Pobierz z App Store / Google Play” zamienić na **oficjalne grafiki sklepów** (wymagają ich wytyczne marketingowe Apple i Google) — `apps/web/src/components/landing/store-buttons.tsx`
 - Linki do sklepów zamiast `#` — `apps/web/src/content/links.ts`
-- Domena `https://finso.app` i e-mail `kontakt@finso.app` to placeholdery — podmienić na prawdziwe
+- Domena `https://finso.app`, e-mail `kontakt@finso.app` i administrator danych (`[Administrator — do uzupełnienia]`) to placeholdery — podmienić w `apps/web/src/content/site.ts`
+- **Przegląd prawny** polityki prywatności i regulaminu (`apps/web/src/messages/legal/`) — obecne teksty to szkice
+- Założenia do potwierdzenia przy wyborze hostingu: serwery w UE, kopie zapasowe nadpisywane w ciągu 30 dni
+- Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
 
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 
