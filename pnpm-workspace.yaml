@@ -7,10 +7,12 @@ packages:
 # z build scriptami — jawnie zezwalamy im na budowanie przy instalacji.
 allowBuilds:
   # Telemetria swagger-ui-dist — nie chcemy, żeby instalacja coś wysyłała.
-  '@scarf/scarf': false
-  '@prisma/engines': true
+  "@scarf/scarf": false
+  "@prisma/engines": true
   argon2: true
   esbuild: true
   prisma: true
   sharp: false
   unrs-resolver: false
+  # Native file watcher used by Expo tooling; ships prebuilt binaries per OS.
+  "@parcel/watcher": false
