@@ -29,7 +29,7 @@ const credentials = { email: "ola@example.com", password: "tajne-haslo-123" };
 
 /** TokenStore kept in memory; `saved` shows what the client stored. */
 function memoryTokenStore(initial: AuthTokens | null = oldTokens) {
-  const store = {
+  const store: TokenStore & { saved: AuthTokens | null } = {
     saved: initial,
     getAccessToken: () => Promise.resolve(store.saved?.accessToken ?? null),
     getRefreshToken: () => Promise.resolve(store.saved?.refreshToken ?? null),
@@ -41,7 +41,7 @@ function memoryTokenStore(initial: AuthTokens | null = oldTokens) {
       store.saved = null;
       return Promise.resolve();
     },
-  } satisfies TokenStore & { saved: AuthTokens | null };
+  };
   return store;
 }
 
@@ -163,6 +163,27 @@ describe("createApiClient", () => {
     expect(refreshes).toHaveLength(1);
   });
 
+  it("retries without refreshing when another request already refreshed the session", async () => {
+    const tokens = memoryTokenStore();
+    let calls = 0;
+    const { api, fetch } = setup(
+      {
+        "GET /users/me": () => {
+          calls += 1;
+          if (calls > 1) return jsonResponse(200, me);
+          tokens.saved = newTokens; // another request rotated the tokens meanwhile
+          return jsonResponse(401);
+        },
+      },
+      tokens,
+    );
+
+    await expect(api.users.me()).resolves.toEqual(me);
+
+    expect(fetch.mock.calls.some(([url]) => url.endsWith("/auth/refresh"))).toBe(false);
+    expect(sentRequest(fetch, 1).headers.get("Authorization")).toBe("Bearer access-new");
+  });
+
   it("clears the session and calls onSessionExpired when the refresh is rejected", async () => {
     const { api, tokens, onSessionExpired } = setup({
       "GET /users/me": [jsonResponse(401)],
@@ -176,6 +197,21 @@ describe("createApiClient", () => {
     expect(tokens.saved).toBeNull();
     expect(onSessionExpired).toHaveBeenCalledOnce();
   });
+
+  it.each([429, 500])(
+    "keeps the session when the refresh fails with %i instead of 401",
+    async (status) => {
+      const { api, tokens, onSessionExpired } = setup({
+        "GET /users/me": [jsonResponse(401)],
+        "POST /auth/refresh": [jsonResponse(status)],
+      });
+
+      await expect(api.users.me()).rejects.toMatchObject({ kind: "http", status });
+
+      expect(tokens.saved).toEqual(oldTokens);
+      expect(onSessionExpired).not.toHaveBeenCalled();
+    },
+  );
 
   it("gives up after one retry instead of refreshing in a loop", async () => {
     const { api, fetch, onSessionExpired } = setup({
