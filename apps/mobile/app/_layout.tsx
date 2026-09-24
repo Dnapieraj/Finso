@@ -15,6 +15,8 @@ import { useColorScheme, View } from "react-native";
 
 import { theme } from "@vireo/tokens";
 
+// Imported for its side effect: it validates EXPO_PUBLIC_API_URL at startup.
+import "../src/api";
 import { queryClient } from "../src/query-client";
 import { themeVars } from "../src/theme";
 

@@ -4,6 +4,7 @@
  */
 export const pl = {
   start: {
+    wordmark: "Finso",
     tagline: "Czy stać cię na to teraz?",
   },
 } as const;
