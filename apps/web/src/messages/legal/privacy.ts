@@ -30,6 +30,8 @@ export const privacyPolicy = {
       ],
     },
     {
+      // TODO: update this list and "odbiorcy" when receipt photos
+      // (Transaction.receiptUrl + file storage) or Google/Apple sign-in ship.
       id: "dane",
       title: "Jakie dane zbieramy",
       blocks: [
