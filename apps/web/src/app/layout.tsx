@@ -3,6 +3,7 @@ import { Bricolage_Grotesque, Hanken_Grotesk } from "next/font/google";
 
 import { theme } from "@vireo/ui/tokens";
 
+import { siteUrl } from "@/content/site";
 import { pl } from "@/messages/pl";
 
 import "@vireo/ui/styles/globals.css";
@@ -21,7 +22,10 @@ const body = Hanken_Grotesk({
   display: "swap",
 });
 
+// Defaults for pages without their own metadata (e.g. the 404). metadataBase
+// turns the relative canonical and Open Graph URLs of every page absolute.
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: pl.meta.title,
   description: pl.meta.description,
   openGraph: {
