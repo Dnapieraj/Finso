@@ -166,6 +166,11 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - Sekrety tylko w zmiennych środowiskowych
 - `DELETE /users/me` usuwa konto kaskadowo — wywoływane z appki mobilnej,
   strona web tylko opisuje jak to zrobić + e-mail kontaktowy
+- **Usuwanie konta w `apps/mobile` (etap 7) MUSI dokładnie odpowiadać ścieżce
+  ze strony `/usuwanie-konta`** (`apps/web/src/messages/legal/delete-account.ts`):
+  zakładka Ustawienia → „Usuń konto” → potwierdzenie hasłem → konto i wszystkie
+  dane usunięte od razu. Zmiana jednej strony wymaga zmiany drugiej w tym samym
+  etapie (wymóg Google Play: strona musi opisywać realny proces)
 
 ## Jak ze mną pracujesz
 
@@ -175,7 +180,11 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 4. Błędne polecenie z mojej strony — powiedz mi to
 5. **Testy pokazujesz mi do akceptacji, zanim napiszesz implementację** —
    zawsze, nie tylko przy silniku budżetu (logika, API, web, mobile).
-   Implementację zaczynasz dopiero po mojej akceptacji
+   Implementację zaczynasz dopiero po mojej akceptacji.
+   Dotyczy też **zmian schemy Prisma i migracji**: przed zmianą pokazujesz
+   testy nowego zachowania i SQL migracji. Gdy zmiana nie wprowadza nowego
+   zachowania (np. usunięcie nieużywanej kolumny), pokazujesz SQL i wskazujesz
+   istniejące testy, które ją obejmują
 6. Przed zamknięciem etapu: `pnpm lint`, `pnpm typecheck`, `pnpm test`
    (dla API dodatkowo `pnpm --filter api test:e2e`, wymaga `pnpm db:up`)
 
