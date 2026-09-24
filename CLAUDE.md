@@ -1,152 +1,181 @@
 # CLAUDE.md — Finso
 
 Ten plik czytasz automatycznie przy każdej sesji. Trzymaj się go.
+**Edytuj TYLKO plik wewnątrz repozytorium (finso/CLAUDE.md).** Nie twórz
+ani nie edytuj kopii poza repo — to już raz spowodowało rozjazd.
 
 ## Projekt
 
-**Finso** — menadżer finansów osobistych: **aplikacja iOS + Android**
-(`apps/mobile`) i **strona wizytówkowa** (`apps/web`).
-Marka parasolowa: **Vireo** (w przyszłości kolejne produkty w tym samym monorepo).
+**Finso** — menadżer finansów osobistych. Marka parasolowa: **Vireo**.
 
 **Pozycjonowanie:** Finso odpowiada na pytanie „czy stać mnie na to TERAZ",
 zanim użytkownik wyda pieniądze. Nie raportuje przeszłości jak inne appki.
 
 **Wyróżniki:**
 1. Symulator decyzji — planowany wydatek → ile zostanie, wpływ na cele
-2. Nieregularne dochody — budżet z prognozy i zmienności, nie ze stałej pensji
+2. Nieregularne dochody — budżet z prognozy i zmienności
 3. Detektor subskrypcji — powtarzające się płatności, podwyżki, martwe subskrypcje
 4. Wspólne wydatki — należności od znajomych widoczne w budżecie
 
 Pełna specyfikacja: `docs/PRODUCT.md`
-Jeśli PRODUCT.md i CLAUDE.md się różnią — **CLAUDE.md wygrywa** (jest aktualniejszy).
+
+## PODZIAŁ RÓL — kluczowa zasada architektury (zmiana z 23.09.2026)
+
+Pierwotnie web miał być pełną aplikacją (dashboard, logowanie przez BFF,
+Stripe), a mobile jej portem. 23.09.2026 kierunek odwrócono: cała
+aplikacja powstaje w mobile, web został wizytówką, a BFF i Stripe
+wycofano (commity `7810a8e`, `1717378`, `70e6981`).
+
+**`apps/mobile` to CAŁA aplikacja.** Logowanie, rejestracja, Dashboard,
+symulator „czy mnie stać", dodawanie wydatków, cele, historia, ustawienia,
+usuwanie konta, subskrypcje (RevenueCat) — wszystko tu.
+
+**`apps/web` to WYŁĄCZNIE strona marketingowa/wizytówkowa.** Statyczna,
+bez logowania, bez backendu logiki biznesowej. Zawiera:
+- Stronę główną: hero, wyróżniki produktu, jak appka działa
+- Cennik (Free / Plus) z przyciskiem do sklepów — **żadnych płatności na webie**
+- Przyciski „Pobierz z App Store" / „Pobierz z Google Play"
+- Politykę prywatności i regulamin
+- Statyczną instrukcję usuwania konta + e-mail kontaktowy
+  (wymóg Google Play — konto realnie usuwa się w appce mobilnej
+  przez DELETE /users/me, strona tylko to opisuje)
+
+**Nie dodawaj do web:** logowania, Dashboardu, żadnego stanu użytkownika,
+Stripe, TanStack Query do prywatnych danych. Jeśli coś z tego się pojawia
+w planie dla web — to błąd, zatrzymaj się i zapytaj.
 
 ## Kontekst o mnie
 
-Jestem frontend developerem uczącym się full-stacku. Buduj **krok po kroku**
-i **wyjaśniaj decyzje architektoniczne**. Chcę rozumieć kod, nie tylko go mieć.
+Frontend developer uczący się full-stacku. Buduj **krok po kroku**
+i **wyjaśniaj decyzje architektoniczne**.
 
-## Podjęte decyzje (nie pytaj o nie ponownie)
+## Podjęte decyzje
 
 | Decyzja | Wybór |
 |---|---|
-| Scope pakietów wewnętrznych | **`@vireo/*`** (np. `@vireo/shared`, `@vireo/ui`, `@vireo/config`) |
-| Commity | **Osobny commit na każdy logiczny krok**, Conventional Commits |
-| Next.js | **16** (najnowsza stabilna) |
-| Prymitywy shadcn/ui | **Base UI** (nie Radix) |
-| Expo | **SDK 57** (nie 56 — ma znaną regresję pamięci Hermes) |
-| Prisma | **7** — klient generowany do własnego katalogu, driver adapter dla Postgres |
-| NestJS | **11** |
-| Auth | **Własna implementacja w NestJS**: argon2 + JWT (access + refresh). Nie Lucia (porzucona), nie Auth.js |
-| Kwoty | **Int w groszach** |
-| Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo), Bricolage Grotesque (display) + Hanken Grotesk (tekst, kwoty) |
-| Tokeny designu | **W `@vireo/ui`**, źródło prawdy w `tokens.ts` (współdzielone z mobile) |
-| Dark mode | **Systemowy domyślnie** + klasa `.dark`/`.light` pod przyszły przełącznik |
-| Rola `apps/web` | **Wyłącznie strona wizytówkowa**: hero, wyróżniki, jak działa, cennik, linki do App Store / Google Play, polityka prywatności, regulamin, usuwanie konta. Bez logowania, bez danych użytkownika, bez wywołań API |
-| Rola `apps/mobile` | **Cała aplikacja**: auth, dashboard, symulator, wydatki, cele, historia, onboarding, paywall |
-| Płatności | **Tylko RevenueCat** (Apple IAP + Google Play Billing). Bez Stripe — web niczego nie sprzedaje, kieruje do sklepów |
+| Scope pakietów wewnętrznych | `@vireo/*` |
+| Commity | Osobny commit na każdy logiczny krok, Conventional Commits |
+| Next.js (web) | 16 |
+| Prymitywy shadcn/ui | Base UI |
+| Expo (mobile) | SDK 57 |
+| Prisma | 7, klient generowany do własnego katalogu, driver adapter Postgres |
+| NestJS | 11 |
+| Auth | Własna implementacja: argon2 + JWT (access + refresh z rotacją) |
+| Transport tokenów | JSON body; mobile: expo-secure-store. **Web nie obsługuje sesji użytkownika**, więc httpOnly cookie przez Next.js BFF jest NIEUŻYWANE po zmianie kierunku — usuń, jeśli zostało zaimplementowane |
+| Okres budżetowy | `User.periodStartDay` (dzień od wypłaty), nie kalendarzowy miesiąc |
+| Dochód/zobowiązania w budżecie | Liczone per wystąpienie (potwierdzone + oczekiwane × (wystąpienia − potwierdzone)) |
+| RecurringRule.label | Wymagane dla reguł wydatków, opcjonalne dla reguł dochodu |
+| Limity planu FREE | Zapisane, ale egzekwowane dopiero w etapie płatności |
+| Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo) |
+| Fonty | **Bricolage Grotesque** (nagłówki, `--font-display`) + **Hanken Grotesk** (tekst i kwoty, `--font-body`), oba z `latin-ext` dla polskich znaków |
+| Kolory design systemu | Hex, nie oklch (kompatybilność z React Native) |
+| Formatowanie kwot | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import) |
+| Płatności | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu |
+| Kwoty | Int w groszach |
 
 ## Stack
 
 ```
 finso/
 ├── apps/
-│   ├── api/          NestJS 11 + Prisma 7 + PostgreSQL
-│   ├── web/          Next.js 16 (App Router) + Tailwind v4 + shadcn/ui (Base UI) — strona wizytówkowa, statyczna
-│   └── mobile/       Expo SDK 57 + Expo Router + NativeWind — cała aplikacja
+│   ├── api/          NestJS 11 + Prisma 7 + PostgreSQL — wspólne dla web i mobile
+│   ├── web/           Next.js 16 — WYŁĄCZNIE strona statyczna/marketingowa
+│   └── mobile/        Expo SDK 57 + Expo Router + NativeWind — CAŁA appka
 ├── packages/
-│   ├── shared/       @vireo/shared — typy, schematy Zod, CZYSTA logika budżetu
-│   ├── ui/           @vireo/ui — design system Vireo (tokeny, motyw, komponenty)
-│   └── config/       @vireo/config — eslint, tsconfig, prettier
+│   ├── shared/        @vireo/shared — typy, Zod, silnik budżetu (budget/), formatMoney (format/)
+│   ├── ui/             @vireo/ui — design system Vireo (tokeny w hex, komponenty)
+│   └── config/         @vireo/config — eslint (w tym react-hooks), tsconfig, prettier
 └── turbo.json
 ```
 
-Monorepo: **Turborepo + pnpm workspaces**
 Stan serwera (mobile): **TanStack Query**
 Formularze (mobile): **React Hook Form + Zod**
-Testy: **Vitest** (jednostkowe), **Supertest** (API e2e), **Playwright** (web e2e)
-Płatności: **RevenueCat** (mobile). Web tylko pokazuje cennik
+Testy: **Vitest** (jednostkowe + coverage wymuszony w `pnpm test` dla shared),
+**Supertest** (API e2e, wymaga Docker + `pnpm db:up`), **Playwright** (ścieżki w mobile/web)
+Płatności: **RevenueCat** (wyłącznie mobile)
 
-**Zanim zainstalujesz dowolną bibliotekę — sprawdź jej aktualną wersję
-i kompatybilność z resztą stacku.** Jeśli coś jest niekompatybilne
-(np. NativeWind z Tailwind v4, jakaś biblioteka z Expo SDK 57) — powiedz mi,
-zanim wybierzesz obejście.
+**Zanim zainstalujesz bibliotekę — sprawdź aktualną wersję i kompatybilność
+z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 
 ## Zasady kodu — nienegocjowalne
 
 ### Pieniądze
-- Kwoty **zawsze jako liczby całkowite w groszach** (Int), nigdy Float
-- Konwersja na format wyświetlania **tylko przez `formatMoney` z `@vireo/shared`**
-  (moduł `src/format/`), wywoływaną w warstwie prezentacji (web, mobile).
-  Nie używaj `Intl.NumberFormat` do kwot w komponentach — Hermes formatuje
-  inaczej niż V8. Silnik (`budget/`) nie importuje `format/` (pilnuje ESLint)
-- Pełne złote (`whole`) zawsze z jawnym kierunkiem: `'down'` dla środków
-  do wydania, `'up'` dla kosztów
-- Przy dzieleniu kwot (np. na dni) — jawna reguła zaokrąglania, zawsze w dół
-  na korzyść bezpieczeństwa użytkownika, i test na to
+- Int w groszach, nigdy Float
+- Formatowanie WYŁĄCZNIE przez `formatMoney` z `@vireo/shared/format/`
+- `budget/` nigdy nie importuje `format/` (wymuszone przez ESLint)
+- Zaokrąglanie zawsze w stronę bezpieczną dla użytkownika, kierunek jawny
+  w wywołaniu (`whole: 'down' | 'up'`)
 
 ### Daty
-- Przechowuj w UTC, prezentuj w strefie użytkownika
-- Logika „dnia" (dzień wypłaty, dzienny limit) liczona w strefie użytkownika —
-  testy na zmianę czasu letniego/zimowego
+- `@db.Date` dla dat kalendarzowych (transakcje, wpływy, terminy celów) —
+  nie `DateTime`, żeby uniknąć przesunięć o dzień przy zmianie stref
+- `createdAt`/`updatedAt` jako zwykłe `DateTime` (Postgres `timestamptz`, UTC)
+- Logika „dnia" (okres budżetowy, dzienny limit) liczona w strefie
+  użytkownika — testy na DST i lata przestępne obowiązkowe
 
 ### TypeScript
-- Tryb `strict` włączony
-- **Zero `any`.** Jeśli nie znasz typu, użyj `unknown` i zawęź
-- Typy współdzielone mieszkają w `@vireo/shared`, nie duplikuj ich
+- Tryb `strict`, zero `any`
+- Typy współdzielone w `@vireo/shared`, nie duplikuj
 
 ### Logika biznesowa
-- Silnik budżetu w `@vireo/shared` to **czysty TypeScript** —
-  zero importów z NestJS, React, Prisma
-- Wejście: dane. Wyjście: wyliczenia. Bez efektów ubocznych
-- Każda funkcja eksportowana ma JSDoc
+- Silnik budżetu w `@vireo/shared/budget/` — czysty TypeScript, zero
+  importów z NestJS, React, Prisma, `format/`
+- `pnpm test` w `@vireo/shared` zawsze pilnuje coverage (nie tylko
+  osobna komenda `test:cov`)
+- Testy PRZED implementacją dla logiki budżetu i formatowania
+- Przypadki brzegowe obowiązkowe: zerowy dochód, ujemne saldo, termin
+  celu w przeszłości, pusta historia, rok przestępny, DST, reszta
+  z dzielenia groszy
 
-### Testy
-- **Testy piszesz PRZED implementacją** dla logiki budżetu
-- Pokaż mi testy do akceptacji zanim napiszesz kod
-- Przypadki brzegowe obowiązkowo: zerowy dochód, ujemne saldo,
-  termin celu w przeszłości, pusta historia, rok przestępny, zmiana DST
-- Nigdy nie oznaczaj zadania jako gotowe, jeśli testy nie przechodzą
+### Usuwanie danych — trzy różne mechanizmy, celowo
+- `Transaction`, `Goal`: soft delete (`deletedAt`) — dane finansowe nie znikają
+- `IncomeSource`: `isActive: false` (archiwizacja) — jeśli ma powiązane
+  wpływy, nie da się usunąć, tylko zarchiwizować
+- `RecurringRule`: twarde usunięcie — ale transakcje już z niej powstałe zostają
+- Wszystkie zapytania i wyliczenia budżetu MUSZĄ pomijać rekordy usunięte/nieaktywne
 
-### UI
-- Dark mode od początku, nie jako dodatek
-- Mobile-first
-- Każdy ekran aplikacji (mobile) ma stany: loading (skeleton), error, empty
-- Strona web jest statyczna (SSG): metadane SEO i OG, szybkie ładowanie,
-  te same wymagania dostępności co aplikacja
-- Dostępność: nawigacja klawiaturą, aria-labels, kontrast WCAG AA
-- Interfejs po polsku, ale kod (nazwy zmiennych, komentarze) po angielsku.
-  Teksty UI trzymaj w jednym miejscu, żeby dało się później dodać inne języki
-- Nie zostawiaj domyślnego wyglądu shadcn — design system Vireo
+### UI (mobile jako główny cel)
+- Dark mode od początku
+- Stany: loading (skeleton), error, empty w każdym widoku
+- WCAG AA: tekst 4,5:1, obramowania pól i ramki focusu 3:1
+- Interfejs po polsku, kod po angielsku
+- Design system Vireo — nie domyślny wygląd shadcn
+
+### Web (strona wizytówkowa) — SEO
+- Każda podstrona generowana statycznie (SSG), bez wywołań API w runtime
+- Metadane na każdej podstronie: `title`, `description`, Open Graph
+  (`og:title`, `og:description`, `og:locale` = `pl_PL`), `lang="pl"`
+- `sitemap.xml` (`app/sitemap.ts`) ze wszystkimi podstronami
+- `robots.txt` (`app/robots.ts`) wskazujący sitemapę
+- Absolutne URL-e z `metadataBase`; do publikacji domena to placeholder
+  `https://finso.app`, e-mail kontaktowy `kontakt@finso.app`
 
 ### Bezpieczeństwo
-- Hasła: **argon2**
-- Rate limiting na endpointach auth
-- Walidacja wejścia Zod na granicy API — zawsze
-- Każde zapytanie do bazy filtrowane po `userId` zalogowanego użytkownika —
-  użytkownik nigdy nie widzi cudzych danych (test e2e na to)
-- Sekrety tylko w zmiennych środowiskowych, nigdy w kodzie ani w commitach
-- Użytkownik musi móc usunąć konto z danymi (wymóg App Store + RODO) — w aplikacji.
-  Google Play wymaga dodatkowo strony web z instrukcją usunięcia konta bez
-  instalowania aplikacji (`apps/web`, `/usuwanie-konta`: instrukcja + e-mail)
+- Hasła: argon2
+- Rate limiting na `/auth/*`
+- Walidacja Zod na granicy API zawsze
+- Każde zapytanie filtrowane po `userId` — test e2e, że użytkownik A
+  nie widzi/nie edytuje danych użytkownika B
+- Sekrety tylko w zmiennych środowiskowych
+- `DELETE /users/me` usuwa konto kaskadowo — wywoływane z appki mobilnej,
+  strona web tylko opisuje jak to zrobić + e-mail kontaktowy
 
 ## Jak ze mną pracujesz
 
-1. **Pytaj, zanim założysz.** Jeśli czegoś nie jesteś pewien — zapytaj
-2. **Nie generuj całego projektu naraz.** Jeden etap, potem stop
-3. **Po każdym etapie zatrzymaj się** i wyjaśnij co zrobiłeś i dlaczego
-4. Jeśli moje polecenie jest błędne technicznie — powiedz mi to
-5. Przed zakończeniem etapu uruchom: `pnpm lint`, `pnpm typecheck`, `pnpm test`
-   (w `@vireo/shared` `pnpm test` pilnuje też 100% coverage).
-   Jeśli etap dotyka API — dodatkowo `pnpm --filter api test:e2e`.
-   To osobny krok: wymaga Dockera z Postgresem (`pnpm db:up`), dlatego nie
-   wchodzi w `pnpm test`. Testy e2e same tworzą i migrują bazę `finso_test`.
+1. Pytaj, zanim założysz
+2. Jeden etap na raz, potem stop
+3. Po etapie: wyjaśnij co i dlaczego
+4. Błędne polecenie z mojej strony — powiedz mi to
+5. **Testy pokazujesz mi do akceptacji, zanim napiszesz implementację** —
+   zawsze, nie tylko przy silniku budżetu (logika, API, web, mobile).
+   Implementację zaczynasz dopiero po mojej akceptacji
+6. Przed zamknięciem etapu: `pnpm lint`, `pnpm typecheck`, `pnpm test`
+   (dla API dodatkowo `pnpm --filter api test:e2e`, wymaga `pnpm db:up`)
 
 ## Czego NIE robić
 
-- Nie dodawaj bibliotek spoza stacku bez zapytania mnie
-- Nie pisz integracji bankowej (Open Banking) — to Faza 3
-- Nie dodawaj do `apps/web` logowania, wywołań API ani funkcji aplikacji —
-  to strona wizytówkowa
-- Nie pomijaj testów, „bo to prosta funkcja"
-- Nie wyłączaj reguł lintera ani nie dodawaj `@ts-ignore`, żeby coś przeszło
-- Nie pisz komentarzy typu `// increment counter` — komentuj *dlaczego*, nie *co*
+- Nie dodawaj funkcjonalności appki (logowanie, dane użytkownika, płatności) do `apps/web`
+- Nie dodawaj bibliotek spoza stacku bez pytania
+- Nie pisz integracji bankowej — Faza 3
+- Nie pomijaj testów
+- Nie wyłączaj reguł lintera ani `@ts-ignore`, żeby coś przeszło
