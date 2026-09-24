@@ -153,6 +153,14 @@ export const pl = {
       "Subskrypcję Plus kupisz wyłącznie w aplikacji — płatność obsługuje App Store lub Google Play. Anulujesz ją w każdej chwili w ustawieniach sklepu.",
     storesLabel: "Pobierz Finso",
   },
+  legal: {
+    updated: "Ostatnia aktualizacja:",
+  },
+  notFound: {
+    title: "Nie ma takiej strony",
+    body: "Adres mógł się zmienić albo zawierać literówkę.",
+    backHome: "Wróć na stronę główną",
+  },
   footer: {
     tagline: "Finso to produkt marki Vireo.",
     legalLabel: "Informacje prawne",
