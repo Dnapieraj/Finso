@@ -1,10 +1,25 @@
-import { pl } from "@/messages/pl";
+import { Features } from "@/components/landing/features";
+import { Hero } from "@/components/landing/hero";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { Pricing } from "@/components/landing/pricing";
+import { SiteFooter } from "@/components/landing/site-footer";
+import { SiteHeader } from "@/components/landing/site-header";
 
-// Placeholder until the landing page sections land in the next commit.
+/*
+ * Fully static: no data fetching, no request-time APIs and no client
+ * components, so Next prerenders the whole page to HTML at build time.
+ */
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-md px-4 py-10">
-      <h1 className="font-heading text-3xl font-bold tracking-tight">{pl.meta.title}</h1>
-    </main>
+    <>
+      <SiteHeader />
+      <main id="tresc" tabIndex={-1} className="flex-1 outline-none">
+        <Hero />
+        <Features />
+        <HowItWorks />
+        <Pricing />
+      </main>
+      <SiteFooter />
+    </>
   );
 }
