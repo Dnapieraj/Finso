@@ -70,12 +70,12 @@ i **wyjaśniaj decyzje architektoniczne**.
 | Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo) |
 | Fonty | **Bricolage Grotesque** (nagłówki, `--font-display`) + **Hanken Grotesk** (tekst i kwoty, `--font-body`), oba z `latin-ext` dla polskich znaków |
 | Kolory design systemu | Hex, nie oklch (kompatybilność z React Native) |
-| Tokeny designu | W `@vireo/ui`: źródło prawdy w `src/tokens/` (współdzielone z mobile), `theme.css` generowany z nich (`generate:theme`), nie edytowany ręcznie |
+| Tokeny designu | **Źródło prawdy: `@vireo/tokens`** — czysty TypeScript bez Reacta (paleta hex, kontrast, generator zmiennych CSS), używany przez web i mobile. `@vireo/ui` generuje z nich `theme.css` (`generate:theme`, nie edytowany ręcznie). Mobile NIE zależy od `@vireo/ui` (webowy React + react-dom = duplikat Reacta w aplikacji Expo) |
 | Dark mode | Systemowy domyślnie (`prefers-color-scheme`) + klasa `.dark`/`.light` pod przyszły przełącznik |
 | Formatowanie kwot | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import) |
 | Płatności | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu |
 | Kwoty | Int w groszach |
-| Style w mobile | **NativeWind 4 + Tailwind 3.4 tylko w `apps/mobile`** (NativeWind 4 nie działa z Tailwind v4; web zostaje na v4). Konfiguracja Tailwind generowana z `@vireo/ui/tokens`. Przejście na NativeWind 5, gdy wyjdzie stabilny |
+| Style w mobile | **NativeWind 4 + Tailwind 3.4 tylko w `apps/mobile`** (NativeWind 4 nie działa z Tailwind v4; web zostaje na v4). Konfiguracja Tailwind czyta kolory z `@vireo/tokens`. Przejście na NativeWind 5, gdy wyjdzie stabilny |
 | Fonty w mobile | `@expo-google-fonts/bricolage-grotesque` + `@expo-google-fonts/hanken-grotesk` przez `expo-font` |
 | Klient API | W `@vireo/shared/api` (osobna ścieżka importu): czysty TS na `fetch`, odpowiedzi walidowane schematami Zod wspólnymi z API, tokeny przez wstrzykiwany `TokenStore` (mobile: `expo-secure-store`) |
 
@@ -89,7 +89,8 @@ finso/
 │   └── mobile/        Expo SDK 57 + Expo Router + NativeWind — CAŁA appka
 ├── packages/
 │   ├── shared/        @vireo/shared — typy, Zod, silnik budżetu (budget/), formatMoney (format/)
-│   ├── ui/             @vireo/ui — design system Vireo (tokeny w hex, komponenty)
+│   ├── tokens/         @vireo/tokens — tokeny designu Vireo (hex), źródło prawdy dla web i mobile
+│   ├── ui/             @vireo/ui — webowy design system Vireo (theme.css z tokenów, komponenty)
 │   └── config/         @vireo/config — eslint (w tym react-hooks), tsconfig, prettier
 └── turbo.json
 ```
