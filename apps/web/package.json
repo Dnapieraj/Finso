@@ -6,8 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "typecheck": "next typegen && tsc --noEmit -p tsconfig.json"
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"e2e/**/*.ts\" playwright.config.ts",
+    "typecheck": "next typegen && tsc --noEmit -p tsconfig.json",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@vireo/shared": "workspace:*",
@@ -18,6 +19,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
