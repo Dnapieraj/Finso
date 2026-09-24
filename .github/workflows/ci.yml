@@ -14,19 +14,22 @@ concurrency:
 env:
   DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
 
+# TODO(2026-10): ubuntu-latest moves to Ubuntu 26 from 19 Oct 2026. Check that
+# both jobs stay green (especially `playwright install --with-deps chromium`);
+# pin `ubuntu-24.04` temporarily if the new image breaks them.
 jobs:
   ci:
     name: Lint, typecheck, test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "pnpm"
@@ -35,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Cache Turborepo
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .turbo
           key: turbo-${{ runner.os }}-${{ github.sha }}
@@ -50,13 +53,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: "pnpm"
@@ -77,7 +80,7 @@ jobs:
 
       - name: Upload report on failure
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: apps/web/playwright-report/
