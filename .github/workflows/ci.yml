@@ -8,6 +8,12 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# prisma.config.ts requires DATABASE_URL even for `prisma generate` (run on
+# install), which never connects. CI has no .env, so it gets a dummy URL;
+# jobs that need a real database must set their own.
+env:
+  DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+
 jobs:
   ci:
     name: Lint, typecheck, test
