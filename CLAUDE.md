@@ -186,7 +186,16 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
    zachowania (np. usunięcie nieużywanej kolumny), pokazujesz SQL i wskazujesz
    istniejące testy, które ją obejmują
 6. Przed zamknięciem etapu: `pnpm lint`, `pnpm typecheck`, `pnpm test`
-   (dla API dodatkowo `pnpm --filter api test:e2e`, wymaga `pnpm db:up`)
+   (dla API dodatkowo `pnpm --filter api test:e2e`, wymaga `pnpm db:up`;
+   dla web `pnpm --filter web test:e2e`)
+7. **Wypychasz sam, automatycznie** (`git push`) po każdym commicie, gdy
+   lint, typecheck i testy przechodzą lokalnie. Po wypchnięciu sprawdzasz
+   wynik GitHub Actions (`gh run watch`) i zgłaszasz, jeśli jest czerwony.
+   Nie wypychasz, gdy cokolwiek lokalnie nie przechodzi
+8. **CI nie ma pliku `.env`.** Każda zmienna środowiskowa potrzebna przy
+   instalacji, buildzie lub testach musi być ustawiona jawnie w
+   `.github/workflows/ci.yml` (sekrety przez GitHub Secrets, nigdy w pliku).
+   Nowa zmienna w `.env.example` = sprawdź, czy CI jej nie potrzebuje
 
 ## Czego NIE robić
 
