@@ -38,3 +38,41 @@ jobs:
 
       - name: Lint, typecheck, test
         run: pnpm turbo run lint typecheck test
+
+  web-e2e:
+    name: Web e2e (Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Web imports @vireo/shared from dist/, so its dependencies are built
+      # first; the Playwright web server then builds and starts web itself.
+      - name: Build web dependencies
+        run: pnpm turbo run build --filter=web^...
+
+      - name: Install Chromium
+        run: pnpm --filter web exec playwright install --with-deps chromium
+
+      - name: Run Playwright
+        run: pnpm --filter web test:e2e
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
