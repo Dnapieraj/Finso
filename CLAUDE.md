@@ -18,6 +18,7 @@ zanim użytkownik wyda pieniądze. Nie raportuje przeszłości jak inne appki.
 4. Wspólne wydatki — należności od znajomych widoczne w budżecie
 
 Pełna specyfikacja: `docs/PRODUCT.md`
+Jeśli PRODUCT.md i CLAUDE.md się różnią — **CLAUDE.md wygrywa** (jest aktualniejszy).
 
 ## PODZIAŁ RÓL — kluczowa zasada architektury (zmiana z 23.09.2026)
 
@@ -69,6 +70,8 @@ i **wyjaśniaj decyzje architektoniczne**.
 | Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo) |
 | Fonty | **Bricolage Grotesque** (nagłówki, `--font-display`) + **Hanken Grotesk** (tekst i kwoty, `--font-body`), oba z `latin-ext` dla polskich znaków |
 | Kolory design systemu | Hex, nie oklch (kompatybilność z React Native) |
+| Tokeny designu | W `@vireo/ui`: źródło prawdy w `src/tokens/` (współdzielone z mobile), `theme.css` generowany z nich (`generate:theme`), nie edytowany ręcznie |
+| Dark mode | Systemowy domyślnie (`prefers-color-scheme`) + klasa `.dark`/`.light` pod przyszły przełącznik |
 | Formatowanie kwot | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import) |
 | Płatności | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu |
 | Kwoty | Int w groszach |
@@ -120,6 +123,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 ### Logika biznesowa
 - Silnik budżetu w `@vireo/shared/budget/` — czysty TypeScript, zero
   importów z NestJS, React, Prisma, `format/`
+- Każda funkcja eksportowana ma JSDoc
 - `pnpm test` w `@vireo/shared` zawsze pilnuje coverage (nie tylko
   osobna komenda `test:cov`)
 - Testy PRZED implementacją dla logiki budżetu i formatowania
@@ -136,6 +140,9 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 
 ### UI (mobile jako główny cel)
 - Dark mode od początku
+- Mobile-first
+- Teksty UI w jednym miejscu (web: `src/messages/pl.ts`), żeby dało się
+  później dodać inne języki
 - Stany: loading (skeleton), error, empty w każdym widoku
 - WCAG AA: tekst 4,5:1, obramowania pól i ramki focusu 3:1
 - Interfejs po polsku, kod po angielsku
@@ -178,4 +185,6 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - Nie dodawaj bibliotek spoza stacku bez pytania
 - Nie pisz integracji bankowej — Faza 3
 - Nie pomijaj testów
+- Nigdy nie oznaczaj zadania jako gotowe, jeśli testy nie przechodzą
+- Nie pisz komentarzy typu `// increment counter` — komentuj *dlaczego*, nie *co*
 - Nie wyłączaj reguł lintera ani `@ts-ignore`, żeby coś przeszło
