@@ -166,6 +166,32 @@ describe('Moduły CRUD (e2e)', () => {
       ]);
     });
 
+    // Dashboard pokazuje ostatnie faktyczne wydatki — te, które liczy silnik
+    // budżetu (tylko CONFIRMED), bez oczekujących i odrzuconych.
+    it('filtruje po statusie — tylko moje potwierdzone', async () => {
+      const mine: string[] = [];
+      for (const status of ['CONFIRMED', 'PENDING', 'DECLINED', 'CONFIRMED']) {
+        const res = await post('/transactions', { amount: 100, date: '2026-09-12', status }).expect(201);
+        if (status === 'CONFIRMED') mine.push(res.body.id as string);
+      }
+      // Potwierdzony wydatek kogoś innego nie może trafić do mojej listy.
+      const other = await registerUser(app);
+      await http()
+        .post('/transactions')
+        .set({ Authorization: `Bearer ${other.accessToken}` })
+        .send({ amount: 100, date: '2026-09-12' })
+        .expect(201);
+
+      const res = await get('/transactions').query({ status: 'CONFIRMED' }).expect(200);
+      const items = res.body.items as { id: string; status: string }[];
+      expect(items.map((t) => t.id).sort()).toEqual([...mine].sort());
+      expect(items.every((t) => t.status === 'CONFIRMED')).toBe(true);
+    });
+
+    it('odrzuca nieznany status w filtrze', async () => {
+      await get('/transactions').query({ status: 'DONE' }).expect(400);
+    });
+
     it('usunięcie jest miękkie i odwracalne', async () => {
       const tx = await post('/transactions', { amount: 100, date: '2026-09-12' });
       const id = tx.body.id as string;

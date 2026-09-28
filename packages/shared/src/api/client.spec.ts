@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthTokens } from "../auth/schemas.js";
-import { ApiError, createApiClient, type TokenStore } from "./client.js";
+import { ApiError, createApiClient, type ApiClient, type TokenStore } from "./client.js";
 
 const BASE_URL = "https://api.finso.test";
 
@@ -322,6 +322,88 @@ describe("createApiClient", () => {
 
     expect(sentRequest(fetch, 0).body).toEqual({ refreshToken: "refresh-old" });
     expect(tokens.saved).toBeNull();
+  });
+
+  describe("dashboard reads", () => {
+    const budget = {
+      period: { start: "2026-09-10", end: "2026-10-09" },
+      asOf: "2026-09-28",
+      availableBalance: 123_456,
+      daysRemaining: 12,
+      dailyAllowance: 10_288,
+      breakdown: {
+        periodIncome: 500_000,
+        fixedCommitments: 150_000,
+        goalContributions: 50_000,
+        alreadySpent: 176_544,
+      },
+      fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
+      goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+    };
+    const goal = {
+      id: "01923b6e-0000-7000-8000-000000000010",
+      name: "Wakacje",
+      targetAmount: 400_000,
+      currentAmount: 100_000,
+      targetDate: "2027-06-01",
+    };
+    const category = {
+      id: "01923b6e-0000-7000-8000-000000000020",
+      name: "Jedzenie",
+      icon: "food",
+      color: "#4d7c0f",
+      isSystem: true,
+    };
+    const transaction = {
+      id: "01923b6e-0000-7000-8000-000000000030",
+      amount: 4_590,
+      date: "2026-09-27",
+      categoryId: category.id,
+      recurringRuleId: null,
+      note: null,
+      status: "CONFIRMED",
+    };
+
+    it.each([
+      ["budget.current", "GET /budget/current", budget, (api: ApiClient) => api.budget.current()],
+      ["goals.list", "GET /goals", [goal], (api: ApiClient) => api.goals.list()],
+      ["categories.list", "GET /categories", [category], (api: ApiClient) => api.categories.list()],
+    ] as const)(
+      "%s validates the response against the shared schema",
+      async (_name, route, body, call) => {
+        const { api } = setup({ [route]: [jsonResponse(200, body)] });
+
+        await expect(call(api)).resolves.toEqual(body);
+      },
+    );
+
+    it("budget.current rejects a summary that breaks the schema", async () => {
+      const { api } = setup({
+        "GET /budget/current": [jsonResponse(200, { ...budget, availableBalance: 12.5 })],
+      });
+
+      await expect(api.budget.current()).rejects.toMatchObject({ kind: "invalid-response" });
+    });
+
+    it("transactions.list sends the filters as a query string and returns the page", async () => {
+      const page = { items: [transaction], nextCursor: null };
+      const { api, fetch } = setup({ "GET /transactions": [jsonResponse(200, page)] });
+
+      await expect(api.transactions.list({ status: "CONFIRMED", limit: 5 })).resolves.toEqual(page);
+
+      const url = new URL(sentRequest(fetch, 0).url);
+      expect(Object.fromEntries(url.searchParams)).toEqual({ status: "CONFIRMED", limit: "5" });
+    });
+
+    it("transactions.list without filters sends no query string", async () => {
+      const { api, fetch } = setup({
+        "GET /transactions": [jsonResponse(200, { items: [], nextCursor: null })],
+      });
+
+      await api.transactions.list();
+
+      expect(sentRequest(fetch, 0).url).toBe(`${BASE_URL}/transactions`);
+    });
   });
 
   it("joins the base URL and path without a double slash", async () => {

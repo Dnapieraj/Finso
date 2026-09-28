@@ -1,4 +1,15 @@
-import type { DeleteAccountInput, LoginInput, PublicUser, RegisterInput } from "@vireo/shared";
+import type {
+  BudgetSummary,
+  Category,
+  DeleteAccountInput,
+  Goal,
+  ListTransactionsQuery,
+  LoginInput,
+  PublicUser,
+  RegisterInput,
+  Transaction,
+  TransactionPage,
+} from "@vireo/shared";
 import type { ApiClient } from "@vireo/shared/api";
 
 export const testUser: PublicUser = {
@@ -9,6 +20,62 @@ export const testUser: PublicUser = {
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
 };
+
+/** Day 19 of 30; 1234,56 zł left for 12 days → 102,88 zł a day. */
+export const testBudget: BudgetSummary = {
+  period: { start: "2026-09-10", end: "2026-10-09" },
+  asOf: "2026-09-28",
+  availableBalance: 123_456,
+  daysRemaining: 12,
+  dailyAllowance: 10_288,
+  breakdown: {
+    periodIncome: 500_000,
+    fixedCommitments: 150_000,
+    goalContributions: 50_000,
+    alreadySpent: 176_544,
+  },
+  fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
+  goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+};
+
+/** 1000 zł saved of 4000 zł (25%), due next June. */
+export function testGoal(overrides: Partial<Goal> = {}): Goal {
+  return {
+    id: "01923b6e-0000-7000-8000-000000000010",
+    name: "Wakacje",
+    targetAmount: 400_000,
+    currentAmount: 100_000,
+    targetDate: "2027-06-01",
+    ...overrides,
+  };
+}
+
+export const testCategory: Category = {
+  id: "01923b6e-0000-7000-8000-000000000020",
+  name: "Jedzenie",
+  icon: "food",
+  color: "#4d7c0f",
+  isSystem: true,
+};
+
+/** 45,90 zł on food, yesterday. */
+export function testTransaction(overrides: Partial<Transaction> = {}): Transaction {
+  return {
+    id: "01923b6e-0000-7000-8000-000000000030",
+    amount: 4_590,
+    date: "2026-09-27",
+    categoryId: testCategory.id,
+    recurringRuleId: null,
+    note: null,
+    status: "CONFIRMED",
+    ...overrides,
+  };
+}
+
+/** A one-page transaction list, for `mockResolvedValueOnce`. */
+export function transactionPage(items: Transaction[]): TransactionPage {
+  return { items, nextCursor: null };
+}
 
 /**
  * Stand-in for `src/api`, mocked in screen tests. The real client
@@ -24,6 +91,20 @@ export const fakeApi = {
   users: {
     me: jest.fn(() => Promise.resolve(testUser)),
     deleteMe: jest.fn((_input: DeleteAccountInput) => Promise.resolve()),
+  },
+  budget: {
+    current: jest.fn(() => Promise.resolve(testBudget)),
+  },
+  goals: {
+    list: jest.fn(() => Promise.resolve([testGoal()])),
+  },
+  categories: {
+    list: jest.fn(() => Promise.resolve([testCategory])),
+  },
+  transactions: {
+    list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
+      Promise.resolve(transactionPage([testTransaction()])),
+    ),
   },
 } satisfies ApiClient;
 

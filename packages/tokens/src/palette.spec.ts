@@ -42,6 +42,8 @@ const REQUIRED_CONTRAST: readonly Pair[] = [
   ["input", "card", NON_TEXT],
   ["ring", "background", NON_TEXT],
   ["ring", "card", NON_TEXT],
+  // Progress bar fill on its track (budget period, goals).
+  ["primary", "muted", NON_TEXT],
   // Chart marks against the card they are drawn on.
   ["chart1", "card", NON_TEXT],
   ["chart2", "card", NON_TEXT],
