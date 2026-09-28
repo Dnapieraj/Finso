@@ -23,9 +23,11 @@ export function ProgressBar({
       accessibilityRole="progressbar"
       accessibilityLabel={label}
       accessibilityValue={{ min: 0, max, now, text: valueText }}
-      className="h-2.5 overflow-hidden rounded-full bg-muted"
+      className="h-2.5 flex-row overflow-hidden rounded-full bg-muted"
     >
-      <View className="h-full rounded-full bg-primary" style={{ width: `${ratio * 100}%` }} />
+      {/* Two flex parts instead of a "NN%" width string. */}
+      <View className="rounded-full bg-primary" style={{ flex: ratio }} />
+      <View style={{ flex: 1 - ratio }} />
     </View>
   );
 }

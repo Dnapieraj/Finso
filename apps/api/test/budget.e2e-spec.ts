@@ -1,11 +1,11 @@
-import type { INestApplication } from "@nestjs/common";
+import type { BudgetSummary } from "@vireo/shared";
 import request from "supertest";
 
 import type { Clock } from "../src/common/clock.js";
 import { CLOCK } from "../src/common/clock.js";
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { TestSession } from "./helpers.js";
-import { createTestApp, createTestDb, registerUser, resetDb } from "./helpers.js";
+import type { TestApp, TestSession } from "./helpers.js";
+import { createTestApp, createTestDb, idOf, registerUser, resetDb } from "./helpers.js";
 
 /**
  * Logikę liczenia testuje @vireo/shared. Tu sprawdzamy klejenie: że API
@@ -29,7 +29,7 @@ class TestClock implements Clock {
 const clock = new TestClock();
 
 describe("Budget (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
   let me: TestSession;
 
@@ -37,8 +37,8 @@ describe("Budget (e2e)", () => {
   const as = (session: TestSession) => ({ Authorization: `Bearer ${session.accessToken}` });
   const post = (session: TestSession, path: string, body: object) =>
     http().post(path).set(as(session)).send(body).expect(201);
-  const current = (session: TestSession = me) =>
-    http().get("/budget/current").set(as(session)).expect(200);
+  const current = async (session: TestSession = me) =>
+    (await http().get("/budget/current").set(as(session)).expect(200)).body as BudgetSummary;
 
   /**
    * Typowy użytkownik: pensja 8000 zł 10. dnia, czynsz 2500 zł 10. dnia,
@@ -57,7 +57,7 @@ describe("Budget (e2e)", () => {
       name: "Pensja",
       kind: "REGULAR",
       expectedAmount: 800_000,
-      recurringRuleId: salaryRule.body.id,
+      recurringRuleId: idOf(salaryRule),
     });
     const rent = await post(session, "/recurring-rules", {
       kind: "EXPENSE",
@@ -73,7 +73,7 @@ describe("Budget (e2e)", () => {
       targetDate: "2026-11-30",
     });
     await post(session, "/transactions", { amount: 1_299, date: "2026-09-20" });
-    return { rentRuleId: rent.body.id, goalId: goal.body.id };
+    return { rentRuleId: idOf(rent), goalId: idOf(goal) };
   }
 
   beforeAll(async () => {
@@ -95,8 +95,8 @@ describe("Budget (e2e)", () => {
 
   describe("GET /budget/current", () => {
     it("nowy użytkownik: zerowy dochód, zero do wydania", async () => {
-      const res = await current();
-      expect(res.body).toEqual({
+      const summary = await current();
+      expect(summary).toEqual({
         period: { start: "2026-09-01", end: "2026-09-30" },
         asOf: "2026-09-23",
         availableBalance: 0,
@@ -111,10 +111,10 @@ describe("Budget (e2e)", () => {
     it("typowy miesiąc: dochód − czynsz − rata celu − wydatki", async () => {
       const { goalId } = await seedTypicalUser(me);
 
-      const res = await current();
+      const summary = await current();
       // Rata celu: 100 000 / 3 okresy (wrz, paź, lis) → ceil = 33 334.
       // 800 000 − 250 000 − 33 334 − 1 299 = 515 367; /8 dni → floor 64 420.
-      expect(res.body).toMatchObject({
+      expect(summary).toMatchObject({
         availableBalance: 515_367,
         daysRemaining: 8,
         dailyAllowance: 64_420,
@@ -137,50 +137,59 @@ describe("Budget (e2e)", () => {
         recurringRuleId: rentRuleId,
       });
 
-      const res = await current();
-      expect(res.body.fixedCommitments).toEqual([]);
-      expect(res.body.breakdown.alreadySpent).toBe(251_299);
-      expect(res.body.availableBalance).toBe(515_367);
+      const summary = await current();
+      expect(summary.fixedCommitments).toEqual([]);
+      expect(summary.breakdown.alreadySpent).toBe(251_299);
+      expect(summary.availableBalance).toBe(515_367);
     });
 
     it("usunięta transakcja przestaje się liczyć, przywrócona wraca", async () => {
       const tx = await post(me, "/transactions", { amount: 10_000, date: "2026-09-20" });
-      expect((await current()).body.breakdown.alreadySpent).toBe(10_000);
+      expect((await current()).breakdown.alreadySpent).toBe(10_000);
 
-      await http().delete(`/transactions/${tx.body.id}`).set(as(me)).expect(204);
-      expect((await current()).body.breakdown.alreadySpent).toBe(0);
+      await http()
+        .delete(`/transactions/${idOf(tx)}`)
+        .set(as(me))
+        .expect(204);
+      expect((await current()).breakdown.alreadySpent).toBe(0);
 
-      await http().post(`/transactions/${tx.body.id}/restore`).set(as(me)).expect(200);
-      expect((await current()).body.breakdown.alreadySpent).toBe(10_000);
+      await http()
+        .post(`/transactions/${idOf(tx)}/restore`)
+        .set(as(me))
+        .expect(200);
+      expect((await current()).breakdown.alreadySpent).toBe(10_000);
     });
 
     it("usunięty wpływ przestaje się liczyć do dochodu", async () => {
       const source = await post(me, "/income/sources", { name: "Zlecenia", kind: "IRREGULAR" });
       const entry = await post(me, "/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 150_000,
         date: "2026-09-05",
       });
-      expect((await current()).body.breakdown.periodIncome).toBe(150_000);
+      expect((await current()).breakdown.periodIncome).toBe(150_000);
 
-      await http().delete(`/income/entries/${entry.body.id}`).set(as(me)).expect(204);
-      expect((await current()).body.breakdown.periodIncome).toBe(0);
+      await http()
+        .delete(`/income/entries/${idOf(entry)}`)
+        .set(as(me))
+        .expect(204);
+      expect((await current()).breakdown.periodIncome).toBe(0);
     });
 
     it("okres liczony od dnia wypłaty użytkownika", async () => {
       await http().patch("/users/me").set(as(me)).send({ periodStartDay: 10 }).expect(200);
 
-      const res = await current();
-      expect(res.body.period).toEqual({ start: "2026-09-10", end: "2026-10-09" });
-      expect(res.body.daysRemaining).toBe(17); // 23.09–09.10 włącznie
+      const summary = await current();
+      expect(summary.period).toEqual({ start: "2026-09-10", end: "2026-10-09" });
+      expect(summary.daysRemaining).toBe(17); // 23.09–09.10 włącznie
     });
 
     it("dane innego użytkownika nie wpływają na budżet", async () => {
       const other = await registerUser(app);
       await seedTypicalUser(other);
 
-      const res = await current(me);
-      expect(res.body.breakdown).toEqual({
+      const summary = await current(me);
+      expect(summary.breakdown).toEqual({
         periodIncome: 0,
         fixedCommitments: 0,
         goalContributions: 0,
@@ -192,9 +201,9 @@ describe("Budget (e2e)", () => {
   describe('"dziś" w strefie użytkownika', () => {
     it("30.09 22:30 UTC: w Warszawie to już 1.10 — nowy okres", async () => {
       clock.set("2026-09-30T22:30:00Z");
-      const res = await current();
-      expect(res.body.asOf).toBe("2026-10-01");
-      expect(res.body.period).toEqual({ start: "2026-10-01", end: "2026-10-31" });
+      const summary = await current();
+      expect(summary.asOf).toBe("2026-10-01");
+      expect(summary.period).toEqual({ start: "2026-10-01", end: "2026-10-31" });
     });
 
     it("ten sam moment w Nowym Jorku to jeszcze 30.09 — ostatni dzień okresu", async () => {
@@ -205,16 +214,16 @@ describe("Budget (e2e)", () => {
         .expect(200);
       clock.set("2026-09-30T22:30:00Z");
 
-      const res = await current();
-      expect(res.body.asOf).toBe("2026-09-30");
-      expect(res.body.daysRemaining).toBe(1);
+      const summary = await current();
+      expect(summary.asOf).toBe("2026-09-30");
+      expect(summary.daysRemaining).toBe(1);
     });
 
     it("po zmianie czasu na zimowy (25.10 22:30 UTC) w Warszawie to wciąż 25.10", async () => {
       clock.set("2026-10-25T22:30:00Z");
-      const res = await current();
-      expect(res.body.asOf).toBe("2026-10-25");
-      expect(res.body.daysRemaining).toBe(7); // 25–31.10
+      const summary = await current();
+      expect(summary.asOf).toBe("2026-10-25");
+      expect(summary.daysRemaining).toBe(7); // 25–31.10
     });
   });
 
@@ -227,7 +236,7 @@ describe("Budget (e2e)", () => {
         icon: "bag",
         color: "#336699",
       });
-      categoryId = category.body.id;
+      categoryId = idOf(category);
     });
 
     it("drobny zakup: stać, ryzyko safe, pokazuje stan przed i po", async () => {
@@ -292,7 +301,7 @@ describe("Budget (e2e)", () => {
       await http()
         .post("/budget/simulate")
         .set(as(me))
-        .send({ amount: 100, categoryId: foreign.body.id })
+        .send({ amount: 100, categoryId: idOf(foreign) })
         .expect(400);
     });
   });

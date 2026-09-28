@@ -4,7 +4,9 @@ import { fakeApi } from "./helpers/fake-api";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
-jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").fakeApi }));
+jest.mock("../src/api", () => ({
+  api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
+}));
 
 beforeEach(resetSecureStore);
 

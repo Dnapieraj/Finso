@@ -7,7 +7,7 @@ import { withSoftDelete } from "./soft-delete.extension.js";
 export const PRISMA = Symbol("PRISMA");
 
 /** Typ klienta z aktywnym rozszerzeniem soft-delete. */
-export type Db = ReturnType<typeof withSoftDelete<PrismaService>>;
+export type Db = ReturnType<typeof withSoftDelete>;
 
 /**
  * PRISMA_TOKEN_RATIONALE: PrismaService (surowy PrismaClient, patrzy na

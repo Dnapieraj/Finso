@@ -1,8 +1,7 @@
-import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { TestSession } from "./helpers.js";
+import type { TestApp, TestSession, ValidationErrorBody } from "./helpers.js";
 import { createTestApp, createTestDb, registerUser, resetDb } from "./helpers.js";
 
 /**
@@ -30,7 +29,7 @@ interface ResourceCase {
 }
 
 describe("Izolacja danych między użytkownikami (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
   let alice: TestSession;
   let bob: TestSession;
@@ -144,7 +143,9 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
 
     it("lista Alice nie zawiera zasobu Boba", async () => {
       const res = await http().get(resource.path).set(as(alice)).expect(200);
-      const items = (resource.paginated ? res.body.items : res.body) as { id: string }[];
+      const items = resource.paginated
+        ? (res.body as { items: { id: string }[] }).items
+        : (res.body as { id: string }[]);
       expect(items.map((item) => item.id)).not.toContain(bobsId);
     });
 
@@ -188,7 +189,7 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
     // przyjąłby cudze id bez błędu.
     const expectUnknownReference = (res: request.Response, field: string) => {
       expect(res.status).toBe(400);
-      expect(res.body.errors).toEqual([
+      expect((res.body as ValidationErrorBody).errors).toEqual([
         expect.objectContaining({ code: "unknown_reference", path: [field] }),
       ]);
     };
@@ -284,7 +285,7 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
         .query({ categoryId: bobsCategory })
         .set(as(alice))
         .expect(200);
-      expect(res.body.items).toEqual([]);
+      expect((res.body as { items: unknown[] }).items).toEqual([]);
     });
 
     it("filtr po źródle Boba nie zwraca wpływów Boba", async () => {
@@ -300,7 +301,7 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
         .query({ incomeSourceId: bobsSource })
         .set(as(alice))
         .expect(200);
-      expect(res.body.items).toEqual([]);
+      expect((res.body as { items: unknown[] }).items).toEqual([]);
     });
 
     it("kursor wskazujący transakcję Boba → 400", async () => {

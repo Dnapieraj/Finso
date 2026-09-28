@@ -37,7 +37,9 @@ export default function LoginScreen() {
             <FormAlert tone={signOutReason === "expired" ? "error" : "info"}>{notice}</FormAlert>
           ) : null
         }
-        onSubmit={(credentials) => login.mutate(credentials)}
+        onSubmit={(credentials) => {
+          login.mutate(credentials);
+        }}
       />
       <View className="items-center">
         <Link href="/register" replace className="py-3">

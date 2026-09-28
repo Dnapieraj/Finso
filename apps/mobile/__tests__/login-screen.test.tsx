@@ -5,7 +5,9 @@ import { fakeApi, pending } from "./helpers/fake-api";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
-jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").fakeApi }));
+jest.mock("../src/api", () => ({
+  api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
+}));
 
 beforeEach(resetSecureStore);
 
@@ -26,7 +28,9 @@ it("logs in with the normalised email and opens the app", async () => {
   await fillIn("  Ola@Example.com ", "tajne-haslo-123");
   await fireEvent.press(screen.getByRole("button", { name: "Zaloguj się" }));
 
-  await waitFor(() => expect(app).toHavePathname("/"));
+  await waitFor(() => {
+    expect(app).toHavePathname("/");
+  });
   expect(fakeApi.auth.login).toHaveBeenCalledWith({
     email: "ola@example.com",
     password: "tajne-haslo-123",
@@ -82,5 +86,7 @@ it("links to the register screen", async () => {
 
   await fireEvent.press(screen.getByRole("link", { name: "Nie masz konta? Załóż je" }));
 
-  await waitFor(() => expect(app).toHavePathname("/register"));
+  await waitFor(() => {
+    expect(app).toHavePathname("/register");
+  });
 });

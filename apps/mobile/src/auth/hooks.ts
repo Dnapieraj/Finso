@@ -9,7 +9,9 @@ import { session } from "../session";
 export function useLogin() {
   return useMutation({
     mutationFn: (input: LoginInput) => api.auth.login(input),
-    onSuccess: () => session.signedIn(),
+    onSuccess: () => {
+      session.signedIn();
+    },
   });
 }
 
@@ -17,7 +19,9 @@ export function useLogin() {
 export function useRegister() {
   return useMutation({
     mutationFn: (input: RegisterInput) => api.auth.register(input),
-    onSuccess: () => session.signedIn(),
+    onSuccess: () => {
+      session.signedIn();
+    },
   });
 }
 

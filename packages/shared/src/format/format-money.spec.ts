@@ -145,7 +145,7 @@ describe("formatMoney a Intl.NumberFormat pl-PL (wyrocznia)", () => {
     const abs = Math.abs(amount);
     const zloty = Math.trunc(abs / 100);
     const rest = String(abs % 100).padStart(2, "0");
-    return `${amount < 0 ? "-" : ""}${zloty}.${rest}`;
+    return `${amount < 0 ? "-" : ""}${String(zloty)}.${rest}`;
   };
 
   /** Deterministyczne kwoty od groszy do biliardów, obu znaków. */

@@ -1,3 +1,5 @@
+import type { Server } from "node:http";
+
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModuleBuilder } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
@@ -18,6 +20,34 @@ export function createTestDb(): PrismaClient {
   return new PrismaClient({ adapter: new PrismaPg({ connectionString: TEST_DATABASE_URL }) });
 }
 
+/** Aplikacja z typowanym serwerem HTTP — `getHttpServer()` nie zwraca `any`. */
+export type TestApp = INestApplication<Server>;
+
+/**
+ * `id` z odpowiedzi — najczęstszy odczyt w testach. Supertest typuje
+ * `res.body` jako `any`, więc testy rzutują je jawnie na oczekiwany typ.
+ */
+export function idOf(res: { body: unknown }): string {
+  return (res.body as { id: string }).id;
+}
+
+/** Odpowiedź 400 z ZodValidationPipe. */
+export interface ValidationErrorBody {
+  message: string;
+  errors: { code: string; path: (string | number)[]; message: string }[];
+}
+
+/**
+ * `expect.any(String)` jako `unknown`: sam matcher jest typowany jako
+ * `any`, co w literałach obiektów wyłącza sprawdzanie typów.
+ */
+export const anyString: unknown = expect.any(String);
+
+/** `expect.arrayContaining` jako `unknown` — z tego samego powodu co {@link anyString}. */
+export function arrayContaining(items: unknown[]): unknown {
+  return expect.arrayContaining(items);
+}
+
 /**
  * Buduje aplikację z prawdziwego AppModule — te same globalne guardy,
  * pipe'y i interceptory co na produkcji. `customize` pozwala nadpisać
@@ -25,9 +55,9 @@ export function createTestDb(): PrismaClient {
  */
 export async function createTestApp(
   customize: (builder: TestingModuleBuilder) => TestingModuleBuilder = (b) => b,
-): Promise<INestApplication> {
+): Promise<TestApp> {
   const moduleRef = await customize(Test.createTestingModule({ imports: [AppModule] })).compile();
-  const app = moduleRef.createNestApplication();
+  const app = moduleRef.createNestApplication<TestApp>();
   await app.init();
   return app;
 }
@@ -47,7 +77,7 @@ let emailCounter = 0;
 /** Unikalny e-mail na test — testy nie zależą od kolejności wykonania. */
 export function uniqueEmail(): string {
   emailCounter += 1;
-  return `user${emailCounter}-${Date.now()}@example.com`;
+  return `user${String(emailCounter)}-${String(Date.now())}@example.com`;
 }
 
 export const TEST_PASSWORD = "correct horse battery staple";
@@ -60,7 +90,7 @@ export interface TestSession {
 
 /** Rejestruje nowego użytkownika przez API i zwraca jego sesję. */
 export async function registerUser(
-  app: INestApplication,
+  app: TestApp,
   email = uniqueEmail(),
   password = TEST_PASSWORD,
 ): Promise<TestSession> {

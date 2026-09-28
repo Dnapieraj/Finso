@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClientOptions } from "@vireo/shared/api";
+import { createApiClient } from "@vireo/shared/api";
 
 import "../src/api";
 import { session } from "../src/session";
@@ -6,7 +6,9 @@ import { session } from "../src/session";
 jest.mock("@vireo/shared/api", () => ({ createApiClient: jest.fn(() => ({})) }));
 
 // Read at import time: `clearMocks` wipes call history before each test.
-const [options] = jest.mocked(createApiClient).mock.calls[0] as [ApiClientOptions];
+const firstCall = jest.mocked(createApiClient).mock.calls[0];
+if (!firstCall) throw new Error("src/api.ts did not create the API client");
+const [options] = firstCall;
 
 it("ends the session with reason 'expired' when the API client gives up on refreshing", () => {
   session.signedIn();

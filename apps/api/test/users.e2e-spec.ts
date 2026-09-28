@@ -1,8 +1,7 @@
-import type { INestApplication } from "@nestjs/common";
 import request from "supertest";
 
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { TestSession } from "./helpers.js";
+import type { TestApp, TestSession } from "./helpers.js";
 import { createTestApp, createTestDb, registerUser, resetDb, TEST_PASSWORD } from "./helpers.js";
 
 /** Zakłada użytkownikowi po jednym wierszu w każdej tabeli z danymi. */
@@ -58,7 +57,7 @@ async function countUserRows(db: PrismaClient, userId: string): Promise<Record<s
 }
 
 describe("Users (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
 
   beforeAll(async () => {

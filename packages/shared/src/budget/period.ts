@@ -27,7 +27,7 @@ export function todayInTimeZone(instant: Date, timeZone: string): IsoDate {
   );
   // isoDate() waliduje wynik — gdyby Intl kiedyś nie zwrócił którejś
   // części, dostaniemy wyjątek, a nie cicho błędną datę.
-  return isoDate(`${parts.year}-${parts.month}-${parts.day}`);
+  return isoDate(`${String(parts.year)}-${String(parts.month)}-${String(parts.day)}`);
 }
 
 /**

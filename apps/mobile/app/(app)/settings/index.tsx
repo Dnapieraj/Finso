@@ -46,11 +46,18 @@ export default function SettingsScreen() {
         variant="outline"
         loading={logout.isPending}
         loadingLabel={t.loggingOut}
-        onPress={() => logout.mutate()}
+        onPress={() => {
+          logout.mutate();
+        }}
       >
         {t.logout}
       </Button>
-      <Button variant="destructive" onPress={() => router.push("/settings/delete-account")}>
+      <Button
+        variant="destructive"
+        onPress={() => {
+          router.push("/settings/delete-account");
+        }}
+      >
         {t.deleteAccount}
       </Button>
     </Screen>

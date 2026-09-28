@@ -15,7 +15,7 @@ async function main(): Promise<void> {
 
   try {
     await seedSystemCategories(prisma);
-    console.log(`Seed: ${SYSTEM_CATEGORIES.length} kategorii systemowych gotowych.`);
+    console.log(`Seed: ${String(SYSTEM_CATEGORIES.length)} kategorii systemowych gotowych.`);
   } finally {
     await prisma.$disconnect();
   }

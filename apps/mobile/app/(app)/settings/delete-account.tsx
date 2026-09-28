@@ -64,7 +64,12 @@ export default function DeleteAccountScreen() {
       >
         {t.submit}
       </Button>
-      <Button variant="ghost" onPress={() => router.back()}>
+      <Button
+        variant="ghost"
+        onPress={() => {
+          router.back();
+        }}
+      >
         {t.cancel}
       </Button>
     </Screen>

@@ -1,18 +1,20 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import type { INestApplication } from "@nestjs/common";
 import pg from "pg";
+import type { Transaction } from "@vireo/shared";
 import request from "supertest";
 
 import { SYSTEM_CATEGORIES, seedSystemCategories } from "../prisma/system-categories.js";
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { TestSession } from "./helpers.js";
+import type { TestApp, TestSession } from "./helpers.js";
 import { createTestApp, createTestDb, registerUser, resetDb } from "./helpers.js";
 import { TEST_DATABASE_URL } from "./test-env.js";
 
 /** Id kategorii systemowych sprzed poprawki — tak je zapisywał stary seed. */
-const LEGACY_IDS: Record<string, string> = {
+type SystemCategoryName = (typeof SYSTEM_CATEGORIES)[number]["name"];
+
+const LEGACY_IDS: Record<SystemCategoryName, string> = {
   Jedzenie: "cat-jedzenie",
   Transport: "cat-transport",
   Mieszkanie: "cat-mieszkanie",
@@ -23,7 +25,11 @@ const LEGACY_IDS: Record<string, string> = {
   Inne: "cat-inne",
 };
 
-const newId = (name: string) => SYSTEM_CATEGORIES.find((c) => c.name === name)!.id;
+function newId(name: SystemCategoryName): string {
+  const category = SYSTEM_CATEGORIES.find((c) => c.name === name);
+  if (!category) throw new Error(`Brak kategorii systemowej ${name}`);
+  return category.id;
+}
 
 /**
  * Wykonuje prawdziwy plik migracji na bazie testowej. global-setup nałożył
@@ -46,7 +52,7 @@ async function runCategoryIdMigration(): Promise<void> {
 }
 
 describe("Seed kategorii systemowych (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
   let me: TestSession;
 
@@ -95,7 +101,7 @@ describe("Seed kategorii systemowych (e2e)", () => {
       .send({ amount: 4_590, date: "2026-09-27", categoryId: newId("Jedzenie") })
       .expect(201);
 
-    expect(res.body.categoryId).toBe(newId("Jedzenie"));
+    expect((res.body as Transaction).categoryId).toBe(newId("Jedzenie"));
   });
 
   describe("migracja id kategorii systemowych na UUID", () => {
@@ -107,7 +113,7 @@ describe("Seed kategorii systemowych (e2e)", () => {
     async function seedLegacyData() {
       await db.category.createMany({
         data: SYSTEM_CATEGORIES.map(({ name, icon, color }) => ({
-          id: LEGACY_IDS[name]!,
+          id: LEGACY_IDS[name],
           name,
           icon,
           color,

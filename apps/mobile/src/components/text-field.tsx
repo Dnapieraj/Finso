@@ -43,7 +43,9 @@ export function TextField({
           autoCapitalize="none"
           autoCorrect={false}
           secureTextEntry={secure && !revealed}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            setFocused(true);
+          }}
           onBlur={(event) => {
             setFocused(false);
             input.onBlur?.(event);
@@ -53,7 +55,9 @@ export function TextField({
         {secure && (
           <Pressable
             accessibilityRole="button"
-            onPress={() => setRevealed((value) => !value)}
+            onPress={() => {
+              setRevealed((value) => !value);
+            }}
             className="min-h-12 justify-center px-4"
           >
             <Text className="font-sans-semibold text-sm text-primary">

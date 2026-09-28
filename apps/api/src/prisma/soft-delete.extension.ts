@@ -9,7 +9,7 @@ import type { PrismaClient } from "../generated/prisma/client.js";
  * Client (który wymaga bazy, żeby cokolwiek wykonać).
  */
 export function excludeDeleted<W extends object | undefined>(where: W): W & { deletedAt: null } {
-  return { ...where, deletedAt: null } as W & { deletedAt: null };
+  return { ...where, deletedAt: null };
 }
 
 /** Zamienia argumenty `delete`/`deleteMany` na argumenty `update`/`updateMany`. */
@@ -31,7 +31,7 @@ export function toSoftDelete<W>(where: W): { where: W; data: { deletedAt: Date }
  * niemożliwe (własny warunek `deletedAt: null` blokowałby trafienie
  * w wiersz, który właśnie ma deletedAt ustawione).
  */
-export function withSoftDelete<T extends PrismaClient>(client: T) {
+export function withSoftDelete(client: PrismaClient) {
   return client.$extends({
     name: "soft-delete",
     query: {

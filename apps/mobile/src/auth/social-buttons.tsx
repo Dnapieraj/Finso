@@ -25,7 +25,9 @@ export function SocialButtons() {
           background is the pair that flips with the theme and passes AA. */}
       <Pressable
         accessibilityRole="button"
-        onPress={() => setPressed("Apple")}
+        onPress={() => {
+          setPressed("Apple");
+        }}
         className="min-h-12 flex-row items-center justify-center gap-3 rounded-xl bg-foreground px-4 active:opacity-80"
       >
         <AppleLogo color={colors.background} />
@@ -35,7 +37,9 @@ export function SocialButtons() {
       </Pressable>
       <Pressable
         accessibilityRole="button"
-        onPress={() => setPressed("Google")}
+        onPress={() => {
+          setPressed("Google");
+        }}
         className="min-h-12 flex-row items-center justify-center gap-3 rounded-xl border border-input bg-background px-4 active:opacity-80"
       >
         <GoogleLogo />

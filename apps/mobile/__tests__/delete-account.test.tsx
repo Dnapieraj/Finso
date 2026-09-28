@@ -8,7 +8,9 @@ import { readRepoFile } from "./helpers/read-repo-file";
 import { renderApp } from "./helpers/render-app";
 import { findTab } from "./helpers/tabs";
 
-jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").fakeApi }));
+jest.mock("../src/api", () => ({
+  api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
+}));
 
 beforeEach(resetSecureStore);
 
@@ -53,7 +55,9 @@ it("deletes the account right after password confirmation, as the web page says"
   await confirmWithPassword("tajne-haslo-123");
 
   // No extra dialog: the password is the confirmation, then deletion is immediate.
-  await waitFor(() => expect(app).toHavePathname("/login"));
+  await waitFor(() => {
+    expect(app).toHavePathname("/login");
+  });
   expect(fakeApi.users.deleteMe).toHaveBeenCalledWith({ password: "tajne-haslo-123" });
   expect(screen.getByRole("alert")).toHaveTextContent("Konto i wszystkie dane zostały usunięte.");
   expect(session.getState()).toEqual({ status: "signed-out", signOutReason: "deleted" });
@@ -98,6 +102,8 @@ it("can be abandoned with a cancel button that returns to settings", async () =>
 
   await fireEvent.press(screen.getByRole("button", { name: "Anuluj" }));
 
-  await waitFor(() => expect(app).toHavePathname("/settings"));
+  await waitFor(() => {
+    expect(app).toHavePathname("/settings");
+  });
   expect(fakeApi.users.deleteMe).not.toHaveBeenCalled();
 });

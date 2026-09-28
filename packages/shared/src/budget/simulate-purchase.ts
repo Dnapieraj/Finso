@@ -29,10 +29,8 @@ const DEFAULT_TIGHT_THRESHOLD_RATIO = 0.5;
 export function simulatePurchase(
   input: SimulatePurchaseInput,
   amountInGrosze: Grosze,
-  categoryId: string,
+  _categoryId: string,
 ): SimulatePurchaseOutput {
-  void categoryId;
-
   const before = calculateAvailableBalance(input);
   const remainingAfter = grosze(before.availableBalance - amountInGrosze);
   const dailyAllowanceAfter = grosze(
@@ -49,7 +47,7 @@ export function simulatePurchase(
   );
 
   // Ile faktycznie zabraknie po tym zakupie — 0, jeśli i tak starczyło.
-  const deficit = Math.max(0, -remainingAfter);
+  const deficit = Math.max(0, 0 - remainingAfter);
   const contributionByGoalId = new Map(
     input.goalContributions.map((line) => [line.goalId, line.amount]),
   );

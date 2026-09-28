@@ -43,8 +43,9 @@ type ShapeFields = z.infer<typeof shapeFieldsSchema>;
  * Komunikaty to stabilne klucze, nie zdania — tłumaczy je klient.
  */
 function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
-  const issue = (path: keyof ShapeFields, message: string) =>
+  const issue = (path: keyof ShapeFields, message: string) => {
     ctx.addIssue({ code: "custom", path: [path], message });
+  };
 
   if (rule.frequency === "WEEKLY") {
     if (rule.dayOfWeek === null) issue("dayOfWeek", "required_for_weekly");

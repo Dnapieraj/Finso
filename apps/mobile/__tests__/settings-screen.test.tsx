@@ -6,7 +6,9 @@ import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 import { findTab } from "./helpers/tabs";
 
-jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").fakeApi }));
+jest.mock("../src/api", () => ({
+  api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
+}));
 
 beforeEach(resetSecureStore);
 
@@ -48,7 +50,9 @@ it("logs out and returns to the login screen without a notice", async () => {
 
   await fireEvent.press(screen.getByRole("button", { name: "Wyloguj się" }));
 
-  await waitFor(() => expect(app).toHavePathname("/login"));
+  await waitFor(() => {
+    expect(app).toHavePathname("/login");
+  });
   expect(fakeApi.auth.logout).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole("alert")).not.toBeOnTheScreen();
 });

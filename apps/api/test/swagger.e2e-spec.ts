@@ -1,8 +1,8 @@
-import type { INestApplication } from "@nestjs/common";
 import type { OpenAPIObject } from "@nestjs/swagger";
 
 import { buildOpenApiDocument } from "../src/swagger.js";
-import { createTestApp } from "./helpers.js";
+import type { TestApp } from "./helpers.js";
+import { arrayContaining, createTestApp } from "./helpers.js";
 
 /**
  * Dokumentacja generuje się z tych samych schematów Zod, które walidują
@@ -10,7 +10,7 @@ import { createTestApp } from "./helpers.js";
  * a typy (grosze jako integer, daty jako format date) przeszły poprawnie.
  */
 describe("OpenAPI (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let doc: OpenAPIObject;
 
   beforeAll(async () => {
@@ -56,7 +56,7 @@ describe("OpenAPI (e2e)", () => {
         amount: { type: "integer", minimum: 0, exclusiveMinimum: true, maximum: 2_147_483_647 },
         date: { type: "string", format: "date" },
       },
-      required: expect.arrayContaining(["amount", "date"]),
+      required: arrayContaining(["amount", "date"]),
     });
   });
 

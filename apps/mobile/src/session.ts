@@ -22,9 +22,11 @@ export interface SessionState {
 
 /** The app's session: what the route guards read and the auth actions update. */
 export interface SessionStore {
-  getState(): SessionState;
+  // Function properties, not methods: they are passed unbound to
+  // useSyncExternalStore, and neither uses `this`.
+  getState: () => SessionState;
   /** Returns the unsubscribe function, as `useSyncExternalStore` expects. */
-  subscribe(listener: () => void): () => void;
+  subscribe: (listener: () => void) => () => void;
   /** Decides the status from the stored refresh token; called on app start. */
   restore(): Promise<void>;
   signedIn(): void;
@@ -101,7 +103,9 @@ export function createSessionStore({
 /** The app's single session. */
 export const session = createSessionStore({
   tokens: secureTokenStore,
-  onSignedOut: () => queryClient.clear(),
+  onSignedOut: () => {
+    queryClient.clear();
+  },
 });
 
 /** Current session state; re-renders when it changes. */

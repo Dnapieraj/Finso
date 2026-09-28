@@ -14,7 +14,9 @@ import {
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
-jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").fakeApi }));
+jest.mock("../src/api", () => ({
+  api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
+}));
 
 beforeEach(resetSecureStore);
 
@@ -224,7 +226,12 @@ it("pull to refresh reloads the budget, goals and expenses", async () => {
   // is simulated through the prop, as the RNTL docs suggest.
   const scroll = screen.getByTestId("dashboard-scroll");
   const { refreshControl } = scroll.props as { refreshControl: ReactElement<RefreshControlProps> };
-  await act(async () => refreshControl.props.onRefresh?.());
+  await act(async () => {
+    refreshControl.props.onRefresh?.();
+    // onRefresh returns void; the refetches settle on the following
+    // microtasks, which this async act scope waits out.
+    await Promise.resolve();
+  });
 
   expect(fakeApi.budget.current).toHaveBeenCalledTimes(1);
   expect(fakeApi.goals.list).toHaveBeenCalledTimes(1);

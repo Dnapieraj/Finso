@@ -25,7 +25,9 @@ export default function RegisterScreen() {
         submittingLabel={t.submitting}
         pending={register.isPending}
         error={register.error ? apiErrorMessage(register.error, "register") : null}
-        onSubmit={(credentials) => register.mutate(credentials)}
+        onSubmit={(credentials) => {
+          register.mutate(credentials);
+        }}
       />
       <View className="items-center">
         <Link href="/login" replace className="py-3">

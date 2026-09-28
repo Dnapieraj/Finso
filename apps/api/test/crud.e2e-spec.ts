@@ -1,12 +1,18 @@
-import type { INestApplication } from "@nestjs/common";
+import type {
+  IncomeEntry,
+  IncomeEntryPage,
+  RecurringRule,
+  Transaction,
+  TransactionPage,
+} from "@vireo/shared";
 import request from "supertest";
 
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { TestSession } from "./helpers.js";
-import { createTestApp, createTestDb, registerUser, resetDb } from "./helpers.js";
+import type { TestApp, TestSession, ValidationErrorBody } from "./helpers.js";
+import { anyString, createTestApp, createTestDb, idOf, registerUser, resetDb } from "./helpers.js";
 
 describe("Moduły CRUD (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
   let me: TestSession;
 
@@ -18,7 +24,7 @@ describe("Moduły CRUD (e2e)", () => {
   const del = (path: string) => http().delete(path).set(auth());
 
   const issuePaths = (res: request.Response) =>
-    (res.body.errors as { path: string[]; message: string }[]).map(
+    ((res.body as ValidationErrorBody).errors as { path: string[]; message: string }[]).map(
       (e) => `${e.path.join(".")}:${e.message}`,
     );
 
@@ -91,13 +97,13 @@ describe("Moduły CRUD (e2e)", () => {
       const tx = await post("/transactions", {
         amount: 100,
         date: "2026-09-12",
-        categoryId: category.body.id,
+        categoryId: idOf(category),
       });
 
-      await del(`/categories/${category.body.id}`).expect(204);
+      await del(`/categories/${idOf(category)}`).expect(204);
 
-      const res = await get(`/transactions/${tx.body.id}`).expect(200);
-      expect(res.body.categoryId).toBeNull();
+      const res = await get(`/transactions/${idOf(tx)}`).expect(200);
+      expect((res.body as Transaction).categoryId).toBeNull();
     });
   });
 
@@ -105,7 +111,7 @@ describe("Moduły CRUD (e2e)", () => {
     it("tworzy wydatek z domyślnym statusem CONFIRMED", async () => {
       const res = await post("/transactions", { amount: 4_999, date: "2026-09-12" }).expect(201);
       expect(res.body).toEqual({
-        id: expect.any(String),
+        id: anyString,
         amount: 4_999,
         date: "2026-09-12",
         categoryId: null,
@@ -128,7 +134,7 @@ describe("Moduły CRUD (e2e)", () => {
 
     it("przyjmuje 29 lutego w roku przestępnym", async () => {
       const res = await post("/transactions", { amount: 100, date: "2028-02-29" }).expect(201);
-      expect(res.body.date).toBe("2028-02-29");
+      expect((res.body as Transaction).date).toBe("2028-02-29");
     });
 
     it("PATCH zmienia tylko podane pola (nie resetuje statusu)", async () => {
@@ -137,7 +143,7 @@ describe("Moduły CRUD (e2e)", () => {
         date: "2026-09-12",
         status: "PENDING",
       });
-      const res = await patch(`/transactions/${tx.body.id}`, { note: "kawa" }).expect(200);
+      const res = await patch(`/transactions/${idOf(tx)}`, { note: "kawa" }).expect(200);
       expect(res.body).toMatchObject({ note: "kawa", status: "PENDING", amount: 100 });
     });
 
@@ -153,11 +159,12 @@ describe("Moduły CRUD (e2e)", () => {
         const res = await get("/transactions")
           .query({ limit: 2, ...(cursor ? { cursor } : {}) })
           .expect(200);
-        for (const item of res.body.items as { id: string; date: string }[]) {
+        const page = res.body as TransactionPage;
+        for (const item of page.items) {
           seen.push(item.id);
           seenDates.push(item.date);
         }
-        cursor = res.body.nextCursor ?? undefined;
+        cursor = page.nextCursor ?? undefined;
         pages += 1;
       } while (cursor);
 
@@ -173,7 +180,7 @@ describe("Moduły CRUD (e2e)", () => {
       const res = await get("/transactions")
         .query({ from: "2026-09-01", to: "2026-09-30" })
         .expect(200);
-      expect((res.body.items as { date: string }[]).map((t) => t.date)).toEqual([
+      expect((res.body as TransactionPage).items.map((t) => t.date)).toEqual([
         "2026-09-30",
         "2026-09-01",
       ]);
@@ -187,7 +194,7 @@ describe("Moduły CRUD (e2e)", () => {
         const res = await post("/transactions", { amount: 100, date: "2026-09-12", status }).expect(
           201,
         );
-        if (status === "CONFIRMED") mine.push(res.body.id as string);
+        if (status === "CONFIRMED") mine.push(idOf(res));
       }
       // Potwierdzony wydatek kogoś innego nie może trafić do mojej listy.
       const other = await registerUser(app);
@@ -198,7 +205,7 @@ describe("Moduły CRUD (e2e)", () => {
         .expect(201);
 
       const res = await get("/transactions").query({ status: "CONFIRMED" }).expect(200);
-      const items = res.body.items as { id: string; status: string }[];
+      const { items } = res.body as TransactionPage;
       expect(items.map((t) => t.id).sort()).toEqual([...mine].sort());
       expect(items.every((t) => t.status === "CONFIRMED")).toBe(true);
     });
@@ -209,30 +216,30 @@ describe("Moduły CRUD (e2e)", () => {
 
     it("usunięcie jest miękkie i odwracalne", async () => {
       const tx = await post("/transactions", { amount: 100, date: "2026-09-12" });
-      const id = tx.body.id as string;
+      const id = idOf(tx);
 
       await del(`/transactions/${id}`).expect(204);
       await get(`/transactions/${id}`).expect(404);
-      expect((await get("/transactions").expect(200)).body.items).toEqual([]);
+      expect(((await get("/transactions").expect(200)).body as TransactionPage).items).toEqual([]);
       // Wiersz nadal jest w bazie — tylko z deletedAt.
       expect((await db.transaction.findUniqueOrThrow({ where: { id } })).deletedAt).not.toBeNull();
 
       const restored = await post(`/transactions/${id}/restore`).expect(200);
-      expect(restored.body.id).toBe(id);
+      expect(idOf(restored)).toBe(id);
       await get(`/transactions/${id}`).expect(200);
     });
 
     it("nie da się edytować ani drugi raz usunąć transakcji z kosza", async () => {
       const tx = await post("/transactions", { amount: 100, date: "2026-09-12" });
-      await del(`/transactions/${tx.body.id}`).expect(204);
+      await del(`/transactions/${idOf(tx)}`).expect(204);
 
-      await patch(`/transactions/${tx.body.id}`, { amount: 1 }).expect(404);
-      await del(`/transactions/${tx.body.id}`).expect(404);
+      await patch(`/transactions/${idOf(tx)}`, { amount: 1 }).expect(404);
+      await del(`/transactions/${idOf(tx)}`).expect(404);
     });
 
     it("restore transakcji, która nie jest usunięta → 404", async () => {
       const tx = await post("/transactions", { amount: 100, date: "2026-09-12" });
-      await post(`/transactions/${tx.body.id}/restore`).expect(404);
+      await post(`/transactions/${idOf(tx)}/restore`).expect(404);
     });
 
     it("wydatek nie podepnie się pod regułę dochodu", async () => {
@@ -245,7 +252,7 @@ describe("Moduły CRUD (e2e)", () => {
       const res = await post("/transactions", {
         amount: 100,
         date: "2026-09-12",
-        recurringRuleId: rule.body.id,
+        recurringRuleId: idOf(rule),
       }).expect(400);
       expect(issuePaths(res)).toEqual(["recurringRuleId:unknown_reference"]);
     });
@@ -263,10 +270,10 @@ describe("Moduły CRUD (e2e)", () => {
 
     it("usunięcie jest miękkie i odwracalne", async () => {
       const goal = await post("/goals", { name: "W", targetAmount: 100, targetDate: "2027-01-01" });
-      await del(`/goals/${goal.body.id}`).expect(204);
+      await del(`/goals/${idOf(goal)}`).expect(204);
       expect((await get("/goals").expect(200)).body).toEqual([]);
 
-      await post(`/goals/${goal.body.id}/restore`).expect(200);
+      await post(`/goals/${idOf(goal)}/restore`).expect(200);
       expect((await get("/goals").expect(200)).body).toHaveLength(1);
     });
   });
@@ -290,7 +297,7 @@ describe("Moduły CRUD (e2e)", () => {
       const rule = await post("/recurring-rules", monthly).expect(201);
 
       // Sama zmiana na WEEKLY: w bazie zostaje dayOfMonth, brakuje dayOfWeek.
-      const res = await patch(`/recurring-rules/${rule.body.id}`, { frequency: "WEEKLY" }).expect(
+      const res = await patch(`/recurring-rules/${idOf(rule)}`, { frequency: "WEEKLY" }).expect(
         400,
       );
       expect(issuePaths(res)).toEqual([
@@ -298,7 +305,7 @@ describe("Moduły CRUD (e2e)", () => {
         "dayOfMonth:not_allowed_for_weekly",
       ]);
 
-      const ok = await patch(`/recurring-rules/${rule.body.id}`, {
+      const ok = await patch(`/recurring-rules/${idOf(rule)}`, {
         frequency: "WEEKLY",
         dayOfWeek: 1,
         dayOfMonth: null,
@@ -312,14 +319,14 @@ describe("Moduły CRUD (e2e)", () => {
       expect(issuePaths(created)).toEqual(["name:required_for_expense"]);
 
       const rule = await post("/recurring-rules", monthly).expect(201);
-      const res = await patch(`/recurring-rules/${rule.body.id}`, { name: null }).expect(400);
+      const res = await patch(`/recurring-rules/${idOf(rule)}`, { name: null }).expect(400);
       expect(issuePaths(res)).toEqual(["name:required_for_expense"]);
     });
 
     it("wyłączenie reguły zamiast usunięcia", async () => {
       const rule = await post("/recurring-rules", monthly).expect(201);
-      const res = await patch(`/recurring-rules/${rule.body.id}`, { isActive: false }).expect(200);
-      expect(res.body.isActive).toBe(false);
+      const res = await patch(`/recurring-rules/${idOf(rule)}`, { isActive: false }).expect(200);
+      expect((res.body as RecurringRule).isActive).toBe(false);
     });
   });
 
@@ -339,12 +346,10 @@ describe("Moduły CRUD (e2e)", () => {
         kind: "REGULAR",
         expectedAmount: 800_000,
       });
-      const res = await patch(`/income/sources/${source.body.id}`, { kind: "IRREGULAR" }).expect(
-        400,
-      );
+      const res = await patch(`/income/sources/${idOf(source)}`, { kind: "IRREGULAR" }).expect(400);
       expect(issuePaths(res)).toEqual(["expectedAmount:not_allowed_for_irregular"]);
 
-      await patch(`/income/sources/${source.body.id}`, {
+      await patch(`/income/sources/${idOf(source)}`, {
         kind: "IRREGULAR",
         expectedAmount: null,
       }).expect(200);
@@ -357,7 +362,7 @@ describe("Moduły CRUD (e2e)", () => {
         startDate: "2026-01-10",
         dayOfMonth: 10,
       });
-      const body = { kind: "REGULAR", expectedAmount: 100, recurringRuleId: rule.body.id };
+      const body = { kind: "REGULAR", expectedAmount: 100, recurringRuleId: idOf(rule) };
       await post("/income/sources", { ...body, name: "A" }).expect(201);
       await post("/income/sources", { ...body, name: "B" }).expect(409);
     });
@@ -365,64 +370,66 @@ describe("Moduły CRUD (e2e)", () => {
     it("wpływ domyślnie CONFIRMED; potwierdzenie innej kwoty przez PATCH", async () => {
       const source = await post("/income/sources", { name: "Zlecenia", kind: "IRREGULAR" });
       const entry = await post("/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 150_000,
         date: "2026-09-10",
         status: "PENDING",
       }).expect(201);
 
-      const res = await patch(`/income/entries/${entry.body.id}`, {
+      const res = await patch(`/income/entries/${idOf(entry)}`, {
         status: "CONFIRMED",
         amount: 142_000,
       }).expect(200);
       expect(res.body).toMatchObject({ status: "CONFIRMED", amount: 142_000 });
 
       const manual = await post("/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 1,
         date: "2026-09-11",
       });
-      expect(manual.body.status).toBe("CONFIRMED");
+      expect((manual.body as IncomeEntry).status).toBe("CONFIRMED");
     });
 
     it("źródło bez wpływów da się usunąć", async () => {
       const source = await post("/income/sources", { name: "Pomyłka", kind: "IRREGULAR" });
-      await del(`/income/sources/${source.body.id}`).expect(204);
+      await del(`/income/sources/${idOf(source)}`).expect(204);
     });
 
     it("źródła z wpływami nie da się usunąć — historia zostaje, trzeba zarchiwizować", async () => {
       const source = await post("/income/sources", { name: "Zlecenia", kind: "IRREGULAR" });
       await post("/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 1,
         date: "2026-09-10",
       });
 
-      await del(`/income/sources/${source.body.id}`).expect(409);
-      expect((await get("/income/entries").expect(200)).body.items).toHaveLength(1);
-      await patch(`/income/sources/${source.body.id}`, { isActive: false }).expect(200);
+      await del(`/income/sources/${idOf(source)}`).expect(409);
+      expect(
+        ((await get("/income/entries").expect(200)).body as IncomeEntryPage).items,
+      ).toHaveLength(1);
+      await patch(`/income/sources/${idOf(source)}`, { isActive: false }).expect(200);
     });
 
     it("wpływy w koszu też blokują usunięcie źródła (inaczej kaskada skasowałaby kosz)", async () => {
       const source = await post("/income/sources", { name: "Zlecenia", kind: "IRREGULAR" });
       const entry = await post("/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 1,
         date: "2026-09-10",
       });
-      await del(`/income/entries/${entry.body.id}`).expect(204);
+      await del(`/income/entries/${idOf(entry)}`).expect(204);
 
-      await del(`/income/sources/${source.body.id}`).expect(409);
+      await del(`/income/sources/${idOf(source)}`).expect(409);
     });
 
     it("usunięcie wpływu jest miękkie i odwracalne", async () => {
       const source = await post("/income/sources", { name: "Zlecenia", kind: "IRREGULAR" });
       const entry = await post("/income/entries", {
-        incomeSourceId: source.body.id,
+        incomeSourceId: idOf(source),
         amount: 1,
         date: "2026-09-10",
       });
-      const id = entry.body.id as string;
+      const id = idOf(entry);
 
       await del(`/income/entries/${id}`).expect(204);
       await get(`/income/entries/${id}`).expect(404);

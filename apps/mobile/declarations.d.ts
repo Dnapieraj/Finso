@@ -8,3 +8,11 @@ declare module "nativewind/preset" {
   const preset: Partial<Config>;
   export default preset;
 }
+
+// Expo inlines EXPO_PUBLIC_* at build time; Metro's typings leave process.env
+// as `any`, so the variables the app reads are declared here.
+declare namespace NodeJS {
+  interface ProcessEnv {
+    EXPO_PUBLIC_API_URL?: string;
+  }
+}

@@ -1,12 +1,16 @@
-import type { INestApplication } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { getOptionsToken } from "@nestjs/throttler";
 import request from "supertest";
 
 import type { PrismaClient } from "../src/generated/prisma/client.js";
+import type { AuthSession, AuthTokens } from "@vireo/shared";
+
+import type { TestApp, ValidationErrorBody } from "./helpers.js";
 import {
+  anyString,
   createTestApp,
   createTestDb,
+  idOf,
   registerUser,
   resetDb,
   TEST_PASSWORD,
@@ -16,7 +20,7 @@ import {
 const JWT_SECRET = "test-secret-that-is-at-least-32-characters-long";
 
 describe("Auth (e2e)", () => {
-  let app: INestApplication;
+  let app: TestApp;
   let db: PrismaClient;
 
   beforeAll(async () => {
@@ -44,15 +48,15 @@ describe("Auth (e2e)", () => {
 
       expect(res.body).toEqual({
         user: {
-          id: expect.any(String),
+          id: anyString,
           email: "nowy.user@example.com",
           plan: "FREE",
           currency: "PLN",
           timezone: "Europe/Warsaw",
           periodStartDay: 1,
         },
-        accessToken: expect.any(String),
-        refreshToken: expect.any(String),
+        accessToken: anyString,
+        refreshToken: anyString,
         accessTokenExpiresIn: 900,
       });
       expect(JSON.stringify(res.body)).not.toContain("argon2");
@@ -92,8 +96,11 @@ describe("Auth (e2e)", () => {
         .send({ email: uniqueEmail(), password: "krotkie" })
         .expect(400);
 
-      expect(res.body.message).toBe("Validation failed");
-      expect(res.body.errors[0]).toMatchObject({ code: "too_small", path: ["password"] });
+      expect((res.body as ValidationErrorBody).message).toBe("Validation failed");
+      expect((res.body as ValidationErrorBody).errors[0]).toMatchObject({
+        code: "too_small",
+        path: ["password"],
+      });
       expect(JSON.stringify(res.body)).not.toContain("krotkie");
     });
 
@@ -111,7 +118,7 @@ describe("Auth (e2e)", () => {
         .send({ email: uniqueEmail(), password: TEST_PASSWORD, plan: "PLUS" })
         .expect(201);
 
-      expect(res.body.user.plan).toBe("FREE");
+      expect((res.body as AuthSession).user.plan).toBe("FREE");
     });
   });
 
@@ -124,9 +131,9 @@ describe("Auth (e2e)", () => {
         .send({ email: "LOGIN@example.com", password: TEST_PASSWORD })
         .expect(200);
 
-      expect(res.body.user.email).toBe("login@example.com");
-      expect(res.body.accessToken).toEqual(expect.any(String));
-      expect(res.body.refreshToken).toEqual(expect.any(String));
+      expect((res.body as AuthSession).user.email).toBe("login@example.com");
+      expect((res.body as AuthTokens).accessToken).toEqual(anyString);
+      expect((res.body as AuthTokens).refreshToken).toEqual(anyString);
     });
 
     it("każde logowanie to nowa, niezależna sesja (rodzina tokenów)", async () => {
@@ -173,7 +180,7 @@ describe("Auth (e2e)", () => {
         .get("/users/me")
         .set("Authorization", `Bearer ${session.accessToken}`)
         .expect(200);
-      expect(res.body.id).toBe(session.user.id);
+      expect(idOf(res)).toBe(session.user.id);
     });
 
     it("odrzuca token podpisany innym kluczem", async () => {
@@ -223,14 +230,14 @@ describe("Auth (e2e)", () => {
         .expect(200);
 
       expect(res.body).toEqual({
-        accessToken: expect.any(String),
-        refreshToken: expect.any(String),
+        accessToken: anyString,
+        refreshToken: anyString,
         accessTokenExpiresIn: 900,
       });
-      expect(res.body.refreshToken).not.toBe(session.refreshToken);
+      expect((res.body as AuthTokens).refreshToken).not.toBe(session.refreshToken);
       await http()
         .get("/users/me")
-        .set("Authorization", `Bearer ${res.body.accessToken}`)
+        .set("Authorization", `Bearer ${(res.body as AuthTokens).accessToken}`)
         .expect(200);
     });
 
@@ -251,7 +258,7 @@ describe("Auth (e2e)", () => {
       const session = await registerUser(app);
       const tokenA = session.refreshToken;
       const rotated = await http().post("/auth/refresh").send({ refreshToken: tokenA }).expect(200);
-      const tokenB = rotated.body.refreshToken as string;
+      const tokenB = (rotated.body as AuthTokens).refreshToken;
 
       await http().post("/auth/refresh").send({ refreshToken: tokenA }).expect(401);
 
@@ -272,7 +279,7 @@ describe("Auth (e2e)", () => {
 
       await http()
         .post("/auth/refresh")
-        .send({ refreshToken: laptop.body.refreshToken })
+        .send({ refreshToken: (laptop.body as AuthTokens).refreshToken })
         .expect(200);
     });
 
@@ -323,7 +330,7 @@ describe("Auth (e2e)", () => {
       // Klient wylogowuje się aktualnym tokenem.
       await http()
         .post("/auth/logout")
-        .send({ refreshToken: rotated.body.refreshToken })
+        .send({ refreshToken: (rotated.body as AuthTokens).refreshToken })
         .expect(204);
 
       const active = await db.refreshToken.count({ where: { revokedAt: null } });
@@ -341,7 +348,7 @@ describe("Auth (e2e)", () => {
 
       await http()
         .post("/auth/refresh")
-        .send({ refreshToken: laptop.body.refreshToken })
+        .send({ refreshToken: (laptop.body as AuthTokens).refreshToken })
         .expect(200);
     });
 
@@ -353,7 +360,7 @@ describe("Auth (e2e)", () => {
 
 describe("Rate limiting /auth/* (e2e)", () => {
   const LIMIT = 3;
-  let app: INestApplication;
+  let app: TestApp;
 
   beforeAll(async () => {
     // Nadpisujemy opcje throttlera zamiast zmiennych środowiskowych:
@@ -369,7 +376,7 @@ describe("Rate limiting /auth/* (e2e)", () => {
     await app.close();
   });
 
-  it(`po ${LIMIT} próbach logowania zwraca 429`, async () => {
+  it(`po ${String(LIMIT)} próbach logowania zwraca 429`, async () => {
     const attempt = () =>
       request(app.getHttpServer())
         .post("/auth/login")
