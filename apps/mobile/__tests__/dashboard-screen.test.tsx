@@ -1,5 +1,7 @@
 import { ApiError } from "@vireo/shared/api";
-import { fireEvent, screen, within } from "expo-router/testing-library";
+import { act, fireEvent, screen, within } from "expo-router/testing-library";
+import type { ReactElement } from "react";
+import type { RefreshControlProps } from "react-native";
 
 import {
   fakeApi,
@@ -18,6 +20,16 @@ beforeEach(resetSecureStore);
 
 /** formatMoney puts no-break spaces between digit groups and before "zł". */
 const zl = (text: string) => text.replaceAll(" ", " ");
+
+/**
+ * Network errors and 5xx are retried twice (src/query-client.ts), so a
+ * section only shows its error once all three attempts have failed.
+ */
+function failAllAttempts(mock: jest.Mock, error: Error) {
+  mock.mockRejectedValueOnce(error).mockRejectedValueOnce(error).mockRejectedValueOnce(error);
+}
+/** Retries wait 1 s, then 2 s. */
+const AFTER_RETRIES = { timeout: 5000 };
 
 async function openDashboard() {
   await renderApp("/", { signedIn: true });
@@ -146,10 +158,12 @@ describe("goals", () => {
   });
 
   it("fails on its own: the budget stays visible", async () => {
-    fakeApi.goals.list.mockRejectedValueOnce(new ApiError("http", 500, "HTTP 500"));
+    failAllAttempts(fakeApi.goals.list, new ApiError("http", 500, "HTTP 500"));
     await openDashboard();
 
-    expect(await screen.findByText("Nie udało się wczytać celów.")).toBeOnTheScreen();
+    expect(
+      await screen.findByText("Nie udało się wczytać celów.", {}, AFTER_RETRIES),
+    ).toBeOnTheScreen();
     expect(screen.getByText(zl("1234 zł"))).toBeOnTheScreen();
   });
 });
@@ -189,10 +203,12 @@ describe("recent expenses", () => {
   });
 
   it("fails on its own with a retry", async () => {
-    fakeApi.transactions.list.mockRejectedValueOnce(new ApiError("network", null, "offline"));
+    failAllAttempts(fakeApi.transactions.list, new ApiError("network", null, "offline"));
     await openDashboard();
 
-    expect(await screen.findByText("Nie udało się wczytać wydatków.")).toBeOnTheScreen();
+    expect(
+      await screen.findByText("Nie udało się wczytać wydatków.", {}, AFTER_RETRIES),
+    ).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole("button", { name: "Spróbuj ponownie" }));
 
     expect(await screen.findByText("Jedzenie")).toBeOnTheScreen();
@@ -204,7 +220,11 @@ it("pull to refresh reloads the budget, goals and expenses", async () => {
   await screen.findByText("Jedzenie");
   jest.clearAllMocks();
 
-  await fireEvent(screen.getByTestId("dashboard-scroll"), "refresh");
+  // RN's ScrollView mock does not render its RefreshControl, so the pull
+  // is simulated through the prop, as the RNTL docs suggest.
+  const scroll = screen.getByTestId("dashboard-scroll");
+  const { refreshControl } = scroll.props as { refreshControl: ReactElement<RefreshControlProps> };
+  await act(async () => refreshControl.props.onRefresh?.());
 
   expect(fakeApi.budget.current).toHaveBeenCalledTimes(1);
   expect(fakeApi.goals.list).toHaveBeenCalledTimes(1);
