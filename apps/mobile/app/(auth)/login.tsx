@@ -1,13 +1,13 @@
 import { Link } from "expo-router";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 
 import { loginSchema } from "@vireo/shared";
 
 import { apiErrorMessage } from "../../src/auth/api-error-message";
+import { AuthScreen } from "../../src/auth/auth-screen";
 import { CredentialsForm } from "../../src/auth/credentials-form";
 import { useLogin } from "../../src/auth/hooks";
 import { FormAlert } from "../../src/components/form-alert";
-import { Screen } from "../../src/components/screen";
 import { pl } from "../../src/messages/pl";
 import { useSession } from "../../src/session";
 
@@ -24,7 +24,7 @@ export default function LoginScreen() {
       : null;
 
   return (
-    <Screen title={t.title}>
+    <AuthScreen title={t.title}>
       <CredentialsForm
         schema={loginSchema}
         passwordAutoComplete="current-password"
@@ -39,9 +39,11 @@ export default function LoginScreen() {
         }
         onSubmit={(credentials) => login.mutate(credentials)}
       />
-      <Link href="/register" replace className="self-center py-3">
-        <Text className="font-sans-semibold text-base text-primary">{t.toRegister}</Text>
-      </Link>
-    </Screen>
+      <View className="items-center">
+        <Link href="/register" replace className="py-3">
+          <Text className="font-sans-semibold text-base text-primary">{t.toRegister}</Text>
+        </Link>
+      </View>
+    </AuthScreen>
   );
 }

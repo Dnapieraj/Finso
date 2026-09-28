@@ -30,6 +30,11 @@ export const pl = {
     submitting: "Zakładanie konta…",
     toLogin: "Masz już konto? Zaloguj się",
   },
+  social: {
+    divider: "lub",
+    continueWith: (provider: string) => `Kontynuuj z ${provider}`,
+    comingSoon: (provider: string) => `Logowanie przez ${provider} będzie dostępne wkrótce.`,
+  },
   /** Shown on the login screen after the session ended without the user asking. */
   signOutNotice: {
     expired: "Sesja wygasła. Zaloguj się ponownie.",
