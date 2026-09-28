@@ -2,9 +2,11 @@
 
 export * from "./money.js";
 export * from "./format/format-money.js";
+export * from "./format/parse-money-input.js";
 export * from "./date.js";
 export * from "./budget/types.js";
 export * from "./budget/calculate-available-balance.js";
+export * from "./budget/apply-expense.js";
 export * from "./budget/simulate-purchase.js";
 export * from "./budget/calculate-goal-contribution.js";
 export * from "./budget/period.js";

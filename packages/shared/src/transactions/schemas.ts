@@ -57,6 +57,8 @@ export const transactionPageSchema = pageSchema(transactionSchema);
 
 /** Dane nowej transakcji. */
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
+/** Body `POST /transactions` przed walidacją — to, co wysyła klient (data jako tekst). */
+export type CreateTransactionRequest = z.input<typeof createTransactionSchema>;
 /** Zmiany transakcji. */
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 /** Filtry listy transakcji. */

@@ -13,7 +13,10 @@ import { categorySchema, type Category } from "../categories/schemas.js";
 import { goalSchema, type Goal } from "../goals/schemas.js";
 import {
   transactionPageSchema,
+  transactionSchema,
+  type CreateTransactionRequest,
   type ListTransactionsQuery,
+  type Transaction,
   type TransactionPage,
 } from "../transactions/schemas.js";
 import { publicUserSchema, type PublicUser } from "../users/schemas.js";
@@ -99,6 +102,10 @@ export interface ApiClient {
   readonly transactions: {
     /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
     list(query?: Partial<ListTransactionsQuery>): Promise<TransactionPage>;
+    /** Zapisuje wydatek i zwraca go z id nadanym przez API. */
+    create(input: CreateTransactionRequest): Promise<Transaction>;
+    /** Przenosi wydatek do kosza (miękkie usunięcie, da się przywrócić). */
+    remove(id: string): Promise<void>;
   };
 }
 
@@ -247,6 +254,14 @@ export function createApiClient({
     },
     transactions: {
       list: (query = {}) => read(`/transactions${queryString(query)}`, transactionPageSchema),
+      create: async (input) =>
+        parse(
+          await execute({ method: "POST", path: "/transactions", body: input }),
+          transactionSchema,
+        ),
+      async remove(id) {
+        await execute({ method: "DELETE", path: `/transactions/${encodeURIComponent(id)}` });
+      },
     },
   };
 }

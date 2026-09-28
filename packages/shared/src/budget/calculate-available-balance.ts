@@ -1,5 +1,5 @@
 import { daysBetween, isOnOrBefore, type IsoDate } from "../date.js";
-import { grosze } from "../money.js";
+import { grosze, type Grosze } from "../money.js";
 import type {
   BudgetPeriod,
   CalculateAvailableBalanceInput,
@@ -29,9 +29,7 @@ export function calculateAvailableBalance(
 
   const daysRemaining = calculateDaysRemaining(input.period, input.asOf);
 
-  const dailyAllowance = grosze(
-    daysRemaining === 0 ? 0 : Math.floor(availableBalance / daysRemaining),
-  );
+  const dailyAllowance = calculateDailyAllowance(availableBalance, daysRemaining);
 
   return {
     availableBalance,
@@ -44,6 +42,15 @@ export function calculateAvailableBalance(
       alreadySpent: input.alreadySpent,
     },
   };
+}
+
+/**
+ * Kwota na dzień: saldo podzielone na pozostałe dni, zaokrąglone w dół
+ * (w stronę -∞, więc pod kreską dług rośnie, a nie maleje). Po końcu
+ * okresu (0 dni) — 0. Reszta groszy z dzielenia zostaje w saldzie.
+ */
+export function calculateDailyAllowance(availableBalance: Grosze, daysRemaining: number): Grosze {
+  return grosze(daysRemaining === 0 ? 0 : Math.floor(availableBalance / daysRemaining));
 }
 
 /**
