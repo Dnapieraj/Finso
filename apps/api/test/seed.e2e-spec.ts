@@ -118,7 +118,12 @@ describe('Seed kategorii systemowych (e2e)', () => {
         data: { userId: me.user.id, name: 'Hobby', icon: 'star', color: '#123456' },
       });
       const food = await db.transaction.create({
-        data: { userId: me.user.id, amount: 4_590, date: new Date('2026-09-27'), categoryId: 'cat-jedzenie' },
+        data: {
+          userId: me.user.id,
+          amount: 4_590,
+          date: new Date('2026-09-27'),
+          categoryId: 'cat-jedzenie',
+        },
       });
       // W koszu też — po przywróceniu nie może wrócić bez kategorii.
       const trashed = await db.transaction.create({
@@ -131,7 +136,12 @@ describe('Seed kategorii systemowych (e2e)', () => {
         },
       });
       const hobby = await db.transaction.create({
-        data: { userId: me.user.id, amount: 2_000, date: new Date('2026-09-21'), categoryId: own.id },
+        data: {
+          userId: me.user.id,
+          amount: 2_000,
+          date: new Date('2026-09-21'),
+          categoryId: own.id,
+        },
       });
       const rule = await db.recurringRule.create({
         data: {
@@ -160,9 +170,9 @@ describe('Seed kategorii systemowych (e2e)', () => {
       expect(system.map((c) => c.id).sort()).toEqual(SYSTEM_CATEGORIES.map((c) => c.id).sort());
       expect(await categoryOf(food.id)).toBe(newId('Jedzenie'));
       expect(await categoryOf(trashed.id)).toBe(newId('Inne'));
-      expect((await db.recurringRule.findUniqueOrThrow({ where: { id: rule.id } })).categoryId).toBe(
-        newId('Transport'),
-      );
+      expect(
+        (await db.recurringRule.findUniqueOrThrow({ where: { id: rule.id } })).categoryId,
+      ).toBe(newId('Transport'));
       // Własne kategorie użytkownika zostają nietknięte.
       expect(await categoryOf(hobby.id)).toBe(own.id);
       await http().get('/categories').set(auth()).expect(200);
@@ -181,9 +191,9 @@ describe('Seed kategorii systemowych (e2e)', () => {
       // DELETE starych wierszy nie może zahaczyć o kategorie użytkownika.
       expect(await categoryOf(hobby.id)).toBe(own.id);
       expect(await db.category.findUnique({ where: { id: own.id } })).not.toBeNull();
-      expect((await db.recurringRule.findUniqueOrThrow({ where: { id: rule.id } })).categoryId).toBe(
-        newId('Transport'),
-      );
+      expect(
+        (await db.recurringRule.findUniqueOrThrow({ where: { id: rule.id } })).categoryId,
+      ).toBe(newId('Transport'));
     });
 
     it('na bazie bez starych id niczego nie zmienia', async () => {

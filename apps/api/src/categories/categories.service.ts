@@ -44,7 +44,8 @@ export class CategoriesService {
   }
 }
 
-function toCategory(row: CategoryRow): Category {
+/** Wiersz z bazy → odpowiedź API; eksport dla testu danych z seeda. */
+export function toCategory(row: CategoryRow): Category {
   return {
     id: row.id,
     name: row.name,
