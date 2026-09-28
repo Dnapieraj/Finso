@@ -37,6 +37,8 @@ export const listTransactionsQuerySchema = cursorPageQuerySchema.extend({
   from: isoDateInputSchema.optional(),
   to: isoDateInputSchema.optional(),
   categoryId: idSchema.optional(),
+  /** Np. `CONFIRMED` — tylko wydatki, które liczy silnik budżetu. */
+  status: confirmationStatusSchema.optional(),
 });
 
 /** Transakcja w odpowiedzi API. */

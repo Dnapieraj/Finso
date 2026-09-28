@@ -33,6 +33,7 @@ export class TransactionsService {
       where: {
         userId,
         categoryId: query.categoryId,
+        status: query.status,
         date: dateRange(
           query.from && fromIsoDate(query.from),
           query.to && fromIsoDate(query.to),
