@@ -47,10 +47,13 @@ describe("quick add", () => {
       expect(app).toHavePathname("/");
     });
     expect(fakeApi.transactions.create).toHaveBeenCalledWith({
-      amount: 4_590,
-      // "Today" in the user's time zone, as the budget computed it.
-      date: "2026-09-28",
-      categoryId: testCategory.id,
+      input: {
+        amount: 4_590,
+        // "Today" in the user's time zone, as the budget computed it.
+        date: "2026-09-28",
+        categoryId: testCategory.id,
+      },
+      idempotencyKey: "idempotency-key-1",
     });
   });
 
@@ -175,11 +178,30 @@ describe("optimistic update", () => {
     await fireEvent.press(within(alert).getByRole("button", { name: "Spróbuj ponownie" }));
 
     expect(fakeApi.transactions.create).toHaveBeenCalledTimes(2);
+    // The retry is the same expense: same body, same Idempotency-Key, so
+    // a save that did reach the server is not stored twice.
+    expect(fakeApi.transactions.create.mock.calls[1]).toEqual(
+      fakeApi.transactions.create.mock.calls[0],
+    );
     expect(fakeApi.transactions.create).toHaveBeenLastCalledWith({
-      amount: 4_590,
-      date: "2026-09-28",
-      categoryId: testCategory.id,
+      input: { amount: 4_590, date: "2026-09-28", categoryId: testCategory.id },
+      idempotencyKey: "idempotency-key-1",
     });
+  });
+
+  it("a new expense gets a new Idempotency-Key", async () => {
+    await openAddExpense();
+    await addExpense("45,90");
+    await fireEvent.press(await screen.findByRole("button", { name: "Dodaj wydatek" }));
+    await screen.findByRole("header", { name: "Nowy wydatek" });
+
+    await addExpense("12,00");
+
+    await waitFor(() => {
+      expect(fakeApi.transactions.create).toHaveBeenCalledTimes(2);
+    });
+    const keys = fakeApi.transactions.create.mock.calls.map(([draft]) => draft.idempotencyKey);
+    expect(keys).toEqual(["idempotency-key-1", "idempotency-key-2"]);
   });
 });
 

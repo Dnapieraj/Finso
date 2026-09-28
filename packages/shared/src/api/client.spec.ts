@@ -68,10 +68,25 @@ function fakeFetch(routes: Record<string, Route>) {
   });
 }
 
+/** Predictable ids instead of random ones: key-1, key-2, … */
+function sequentialUuid() {
+  let n = 0;
+  return () => {
+    n += 1;
+    return `0199a1b2-0000-7000-8000-00000000000${String(n)}`;
+  };
+}
+
 function setup(routes: Record<string, Route>, tokens = memoryTokenStore()) {
   const fetch = fakeFetch(routes);
   const onSessionExpired = vi.fn();
-  const api = createApiClient({ baseUrl: BASE_URL, tokens, fetch, onSessionExpired });
+  const api = createApiClient({
+    baseUrl: BASE_URL,
+    tokens,
+    fetch,
+    onSessionExpired,
+    randomUUID: sequentialUuid(),
+  });
   return { api, fetch, tokens, onSessionExpired };
 }
 
@@ -395,18 +410,77 @@ describe("createApiClient", () => {
       expect(Object.fromEntries(url.searchParams)).toEqual({ status: "CONFIRMED", limit: "5" });
     });
 
-    it("transactions.create posts the expense and validates the created transaction", async () => {
-      const { api, fetch } = setup({ "POST /transactions": [jsonResponse(201, transaction)] });
+    const input = { amount: 4_590, date: "2026-09-27", categoryId: category.id };
 
-      await expect(
-        api.transactions.create({ amount: 4_590, date: "2026-09-27", categoryId: category.id }),
-      ).resolves.toEqual(transaction);
+    it("transactions.draft gives one expense its own Idempotency-Key", () => {
+      const { api } = setup({});
 
-      expect(sentRequest(fetch, 0).body).toEqual({
-        amount: 4_590,
-        date: "2026-09-27",
-        categoryId: category.id,
+      expect(api.transactions.draft(input)).toEqual({
+        input,
+        idempotencyKey: "0199a1b2-0000-7000-8000-000000000001",
       });
+      // Another expense, another key.
+      expect(api.transactions.draft(input).idempotencyKey).toBe(
+        "0199a1b2-0000-7000-8000-000000000002",
+      );
+    });
+
+    it("transactions.create posts the draft with its Idempotency-Key", async () => {
+      const { api, fetch } = setup({ "POST /transactions": [jsonResponse(201, transaction)] });
+      const draft = api.transactions.draft(input);
+
+      await expect(api.transactions.create(draft)).resolves.toEqual(transaction);
+
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual(input);
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+    });
+
+    it("sending the same draft again (a retry) sends the same key", async () => {
+      const { api, fetch } = setup({
+        "POST /transactions": [
+          jsonResponse(500, { statusCode: 500, message: "Internal Server Error" }),
+          jsonResponse(201, transaction),
+        ],
+      });
+      const draft = api.transactions.draft(input);
+
+      await expect(api.transactions.create(draft)).rejects.toMatchObject({ status: 500 });
+      await api.transactions.create(draft);
+
+      expect(sentRequest(fetch, 0).headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+      expect(sentRequest(fetch, 1).headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+    });
+
+    it("keeps the key when the client refreshes the session and resends", async () => {
+      const { api, fetch } = setup({
+        "POST /transactions": [jsonResponse(401), jsonResponse(201, transaction)],
+        "POST /auth/refresh": [jsonResponse(200, newTokens)],
+      });
+      const draft = api.transactions.draft(input);
+
+      await api.transactions.create(draft);
+
+      const posts = fetch.mock.calls
+        .map((_call, n) => sentRequest(fetch, n))
+        .filter((sent) => sent.url.endsWith("/transactions"));
+      expect(posts.map((sent) => sent.headers.get("Idempotency-Key"))).toEqual([
+        draft.idempotencyKey,
+        draft.idempotencyKey,
+      ]);
+    });
+
+    it("uses crypto.randomUUID when no generator is passed", () => {
+      const randomUUID = vi.fn(() => "0199a1b2-0000-7000-8000-00000000abcd");
+      vi.stubGlobal("crypto", { randomUUID });
+      try {
+        const api = createApiClient({ baseUrl: BASE_URL, tokens: memoryTokenStore() });
+        expect(api.transactions.draft(input).idempotencyKey).toBe(
+          "0199a1b2-0000-7000-8000-00000000abcd",
+        );
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it("transactions.remove deletes the expense and resolves the 204 without a body", async () => {

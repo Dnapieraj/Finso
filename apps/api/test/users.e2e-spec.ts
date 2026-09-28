@@ -40,6 +40,18 @@ async function seedUserData(db: PrismaClient, userId: string): Promise<void> {
   await db.goal.create({
     data: { userId, name: "Wakacje", targetAmount: 500_000, targetDate: new Date("2027-06-01") },
   });
+  // Klucz idempotencji zapisanego wydatku — też dane użytkownika.
+  await db.idempotencyKey.create({
+    data: {
+      userId,
+      scope: "POST /transactions",
+      key: "0199a1b2-0000-7000-8000-000000000001",
+      requestHash: "0".repeat(64),
+      responseStatus: 201,
+      responseBody: {},
+      expiresAt: new Date("2026-09-29T12:00:00Z"),
+    },
+  });
 }
 
 async function countUserRows(db: PrismaClient, userId: string): Promise<Record<string, number>> {
@@ -53,6 +65,7 @@ async function countUserRows(db: PrismaClient, userId: string): Promise<Record<s
     incomeEntries: await db.incomeEntry.count({ where }),
     transactions: await db.transaction.count({ where }),
     goals: await db.goal.count({ where }),
+    idempotencyKeys: await db.idempotencyKey.count({ where }),
   };
 }
 
@@ -118,6 +131,7 @@ describe("Users (e2e)", () => {
         incomeEntries: 0,
         transactions: 0,
         goals: 0,
+        idempotencyKeys: 0,
       });
     });
 

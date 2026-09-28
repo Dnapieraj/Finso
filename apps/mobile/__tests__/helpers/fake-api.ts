@@ -2,6 +2,7 @@ import type {
   BudgetSummary,
   Category,
   CreateTransactionRequest,
+  TransactionDraft,
   DeleteAccountInput,
   Goal,
   ListTransactionsQuery,
@@ -86,10 +87,12 @@ export function transactionPage(items: Transaction[]): TransactionPage {
  * test by jest.after-env.js.
  */
 const saved: Transaction[] = [];
+let drafts = 0;
 
-/** Forgets expenses saved by the previous test. */
+/** Forgets expenses saved and keys handed out in the previous test. */
 export function resetFakeServer(): void {
   saved.length = 0;
+  drafts = 0;
 }
 
 /**
@@ -127,7 +130,11 @@ export const fakeApi = {
     list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
       Promise.resolve(transactionPage([...saved].reverse().concat(testTransaction()).slice(0, 5))),
     ),
-    create: jest.fn((input: CreateTransactionRequest) => {
+    draft: jest.fn((input: CreateTransactionRequest): TransactionDraft => {
+      drafts += 1;
+      return { input, idempotencyKey: `idempotency-key-${String(drafts)}` };
+    }),
+    create: jest.fn(({ input }: TransactionDraft) => {
       const expense = testTransaction({
         id: "01923b6e-0000-7000-8000-000000000099",
         amount: input.amount,
