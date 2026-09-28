@@ -2,6 +2,7 @@
 module.exports = {
   preset: "jest-expo",
   setupFiles: ["./jest.setup.js"],
+  setupFilesAfterEnv: ["./jest.after-env.js"],
   // Call history resets between tests; default implementations (fake API) stay.
   clearMocks: true,
   // The first screen test in each file renders the whole app/ tree, and

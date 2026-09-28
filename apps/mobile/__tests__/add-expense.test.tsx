@@ -97,9 +97,10 @@ describe("quick add", () => {
   });
 
   it("offers a retry when categories cannot be loaded", async () => {
-    fakeApi.categories.list.mockRejectedValueOnce(
-      new ApiError("invalid-response", 200, "Response does not match the schema"),
-    );
+    const error = new ApiError("invalid-response", 200, "Response does not match the schema");
+    // The dashboard loads categories first, and the modal refetches a
+    // failed query when it opens: both attempts have to fail.
+    fakeApi.categories.list.mockRejectedValueOnce(error).mockRejectedValueOnce(error);
     await openAddExpense();
 
     expect(await screen.findByText("Nie udało się wczytać kategorii.")).toBeOnTheScreen();
@@ -135,10 +136,14 @@ describe("optimistic update", () => {
   });
 
   it("refreshes the budget and expenses from the server once saved", async () => {
-    await openAddExpense();
+    // Counted before the modal opens: the dashboard under it is hidden
+    // from queries (aria-hidden), as it is from screen readers.
+    await renderApp("/", { signedIn: true });
     await screen.findByText(zl("1234 zł"));
     const budgetCalls = fakeApi.budget.current.mock.calls.length;
     const listCalls = fakeApi.transactions.list.mock.calls.length;
+    await fireEvent.press(screen.getByRole("button", { name: "Dodaj wydatek" }));
+    await screen.findByRole("header", { name: "Nowy wydatek" });
 
     await addExpense("45,90");
 
@@ -157,9 +162,12 @@ describe("optimistic update", () => {
     await addExpense("45,90");
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(`Nie udało się zapisać wydatku ${zl("45,90 zł")}.`);
+    // The alert also contains its retry button, hence exact: false.
+    expect(alert).toHaveTextContent(`Nie udało się zapisać wydatku ${zl("45,90 zł")}.`, {
+      exact: false,
+    });
     // The optimistic numbers are gone: back to what the server said.
-    expect(screen.getByText(zl("1234 zł"))).toBeOnTheScreen();
+    expect(await screen.findByText(zl("1234 zł"))).toBeOnTheScreen();
     expect(
       screen.queryByLabelText(`Jedzenie, 28 września, ${zl("45,90 zł")}`),
     ).not.toBeOnTheScreen();
@@ -251,7 +259,9 @@ describe("Cofnij", () => {
     await fireEvent.press(await screen.findByRole("button", { name: "Cofnij" }));
 
     const alert = await screen.findByRole("alert");
-    expect(alert).toHaveTextContent(`Nie udało się cofnąć wydatku ${zl("45,90 zł")}.`);
+    expect(alert).toHaveTextContent(`Nie udało się cofnąć wydatku ${zl("45,90 zł")}.`, {
+      exact: false,
+    });
     await waitFor(() => {
       expect(fakeApi.budget.current.mock.calls.length).toBeGreaterThan(budgetCalls);
     });

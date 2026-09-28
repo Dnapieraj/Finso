@@ -11,6 +11,7 @@ import type {
   Transaction,
   TransactionPage,
 } from "@vireo/shared";
+import { addExpenseToSummary, grosze } from "@vireo/shared";
 import type { ApiClient } from "@vireo/shared/api";
 
 export const testUser: PublicUser = {
@@ -79,6 +80,19 @@ export function transactionPage(items: Transaction[]): TransactionPage {
 }
 
 /**
+ * A tiny in-memory server: expenses saved through `create` lower the
+ * budget and top the expense list until `remove` takes them out, so a
+ * refetch after a save shows what a real API would. Reset before each
+ * test by jest.after-env.js.
+ */
+const saved: Transaction[] = [];
+
+/** Forgets expenses saved by the previous test. */
+export function resetFakeServer(): void {
+  saved.length = 0;
+}
+
+/**
  * Stand-in for `src/api`, mocked in screen tests. The real client
  * (refresh, token storage, schema validation) is covered by the
  * @vireo/shared tests; here only the screens' reactions matter.
@@ -94,7 +108,14 @@ export const fakeApi = {
     deleteMe: jest.fn((_input: DeleteAccountInput) => Promise.resolve()),
   },
   budget: {
-    current: jest.fn(() => Promise.resolve(testBudget)),
+    current: jest.fn(() =>
+      Promise.resolve(
+        saved.reduce(
+          (summary, expense) => addExpenseToSummary(summary, grosze(expense.amount)),
+          testBudget,
+        ),
+      ),
+    ),
   },
   goals: {
     list: jest.fn(() => Promise.resolve([testGoal()])),
@@ -104,19 +125,23 @@ export const fakeApi = {
   },
   transactions: {
     list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
-      Promise.resolve(transactionPage([testTransaction()])),
+      Promise.resolve(transactionPage([...saved].reverse().concat(testTransaction()).slice(0, 5))),
     ),
-    create: jest.fn((input: CreateTransactionRequest) =>
-      Promise.resolve(
-        testTransaction({
-          id: "01923b6e-0000-7000-8000-000000000099",
-          amount: input.amount,
-          date: input.date,
-          categoryId: input.categoryId ?? null,
-        }),
-      ),
-    ),
-    remove: jest.fn((_id: string) => Promise.resolve()),
+    create: jest.fn((input: CreateTransactionRequest) => {
+      const expense = testTransaction({
+        id: "01923b6e-0000-7000-8000-000000000099",
+        amount: input.amount,
+        date: input.date,
+        categoryId: input.categoryId ?? null,
+      });
+      saved.push(expense);
+      return Promise.resolve(expense);
+    }),
+    remove: jest.fn((id: string) => {
+      const index = saved.findIndex((expense) => expense.id === id);
+      if (index !== -1) saved.splice(index, 1);
+      return Promise.resolve();
+    }),
   },
 } satisfies ApiClient;
 
