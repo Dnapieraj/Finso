@@ -45,6 +45,11 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-
 
+      # One Prettier config for the whole repo (@vireo/config/prettier);
+      # without the check the API drifted back to single quotes.
+      - name: Format check
+        run: pnpm format:check
+
       - name: Lint, typecheck, test
         run: pnpm turbo run lint typecheck test
 

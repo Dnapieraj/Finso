@@ -1,0 +1,6 @@
+# Prettier already skips what .gitignore lists at the repo root; these are
+# ignored by nested .gitignore files, which Prettier does not read.
+apps/web/test-results/
+apps/web/playwright-report/
+apps/mobile/.expo/
+apps/api/src/generated/
