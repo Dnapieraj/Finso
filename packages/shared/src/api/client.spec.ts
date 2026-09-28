@@ -392,6 +392,43 @@ describe("createApiClient", () => {
       },
     );
 
+    it("budget.simulate posts the planned purchase and validates the result", async () => {
+      const result = {
+        canAfford: true,
+        riskLevel: "tight",
+        before: { availableBalance: 123_456, dailyAllowance: 10_288 },
+        remainingAfter: 3_456,
+        dailyAllowanceAfter: 288,
+        goalImpacts: [{ goalId: goal.id, delayDays: 12 }],
+      };
+      const { api, fetch } = setup({ "POST /budget/simulate": [jsonResponse(200, result)] });
+
+      await expect(
+        api.budget.simulate({ amount: 120_000, categoryId: category.id }),
+      ).resolves.toEqual(result);
+
+      expect(sentRequest(fetch, 0).body).toEqual({ amount: 120_000, categoryId: category.id });
+    });
+
+    it("budget.simulate rejects a result with an unknown risk level", async () => {
+      const { api } = setup({
+        "POST /budget/simulate": [
+          jsonResponse(200, {
+            canAfford: true,
+            riskLevel: "risky",
+            before: { availableBalance: 1, dailyAllowance: 1 },
+            remainingAfter: 1,
+            dailyAllowanceAfter: 1,
+            goalImpacts: [],
+          }),
+        ],
+      });
+
+      await expect(
+        api.budget.simulate({ amount: 100, categoryId: category.id }),
+      ).rejects.toMatchObject({ kind: "invalid-response" });
+    });
+
     it("budget.current rejects a summary that breaks the schema", async () => {
       const { api } = setup({
         "GET /budget/current": [jsonResponse(200, { ...budget, availableBalance: 12.5 })],

@@ -9,6 +9,8 @@ import type {
   LoginInput,
   PublicUser,
   RegisterInput,
+  SimulatePurchaseRequest,
+  SimulationResult,
   Transaction,
   TransactionPage,
 } from "@vireo/shared";
@@ -40,6 +42,19 @@ export const testBudget: BudgetSummary = {
   fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
   goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
 };
+
+/** A 120 zł purchase that is easily affordable and touches no goal. */
+export function testSimulation(overrides: Partial<SimulationResult> = {}): SimulationResult {
+  return {
+    canAfford: true,
+    riskLevel: "safe",
+    before: { availableBalance: 123_456, dailyAllowance: 10_288 },
+    remainingAfter: 111_456,
+    dailyAllowanceAfter: 9_288,
+    goalImpacts: [{ goalId: "01923b6e-0000-7000-8000-000000000010", delayDays: 0 }],
+    ...overrides,
+  };
+}
 
 /** 1000 zł saved of 4000 zł (25%), due next June. */
 export function testGoal(overrides: Partial<Goal> = {}): Goal {
@@ -111,6 +126,7 @@ export const fakeApi = {
     deleteMe: jest.fn((_input: DeleteAccountInput) => Promise.resolve()),
   },
   budget: {
+    simulate: jest.fn((_input: SimulatePurchaseRequest) => Promise.resolve(testSimulation())),
     current: jest.fn(() =>
       Promise.resolve(
         saved.reduce(
