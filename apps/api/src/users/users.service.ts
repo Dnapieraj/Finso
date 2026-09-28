@@ -1,4 +1,4 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import type { PublicUser, UpdateMeInput } from '@vireo/shared';
 
 import { PasswordService } from '../auth/password.service.js';
@@ -53,8 +53,14 @@ export class UsersService {
       select: { passwordHash: true },
     });
     const valid = await this.passwords.verify(user?.passwordHash ?? null, password);
-    if (!user || !valid) {
-      throw new UnauthorizedException('Invalid password');
+    // Konto usunięte przy ważnym tokenie: 401, jak w getMe — klient kończy sesję.
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    // Złe hasło to odmowa, nie nieważny token: 401 kazałby klientowi odświeżyć
+    // sesję i ponowić żądanie z tym samym hasłem.
+    if (!valid) {
+      throw new ForbiddenException('Invalid password');
     }
     await this.db.user.delete({ where: { id: userId } });
   }
