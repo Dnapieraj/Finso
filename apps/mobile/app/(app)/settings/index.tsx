@@ -25,7 +25,7 @@ function AccountEmail() {
       <View className="gap-3">
         <Text className="font-sans text-base text-destructive">{t.accountError}</Text>
         <Button variant="outline" onPress={() => void me.refetch()}>
-          {t.retry}
+          {pl.common.retry}
         </Button>
       </View>
     );

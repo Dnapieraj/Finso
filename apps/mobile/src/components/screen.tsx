@@ -1,9 +1,23 @@
 import type { ReactNode } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text } from "react-native";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  type ScrollViewProps,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 /** Scrollable screen with a heading, safe-area insets and room for the keyboard. */
-export function Screen({ title, children }: { title: string; children: ReactNode }) {
+export function Screen({
+  title,
+  children,
+  refreshControl,
+  testID,
+}: {
+  title: string;
+  children: ReactNode;
+} & Pick<ScrollViewProps, "refreshControl" | "testID">) {
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -11,6 +25,8 @@ export function Screen({ title, children }: { title: string; children: ReactNode
         className="flex-1"
       >
         <ScrollView
+          testID={testID}
+          refreshControl={refreshControl}
           keyboardShouldPersistTaps="handled"
           contentContainerClassName="flex-grow gap-5 px-6 py-8"
         >
