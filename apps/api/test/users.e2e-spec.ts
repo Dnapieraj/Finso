@@ -151,9 +151,20 @@ describe('Users (e2e)', () => {
       const session = await registerUser(app);
       await seedUserData(db, session.user.id);
 
-      await http().delete('/users/me').set(auth(session)).send({ password: 'wrong password' }).expect(401);
+      await http().delete('/users/me').set(auth(session)).send({ password: 'wrong password' }).expect(403);
 
       expect((await countUserRows(db, session.user.id)).transactions).toBe(2);
+    });
+
+    // 403, nie 401: 401 znaczy „twój token jest nieważny” — klient odświeżyłby
+    // sesję i ponowił żądanie z tym samym złym hasłem. Złe hasło to odmowa,
+    // a sesja zostaje ważna.
+    it('złe hasło nie kończy sesji — token dalej działa', async () => {
+      const session = await registerUser(app);
+
+      await http().delete('/users/me').set(auth(session)).send({ password: 'wrong password' }).expect(403);
+
+      await http().get('/users/me').set(auth(session)).expect(200);
     });
 
     it('odrzuca żądanie bez hasła (400) i bez tokena (401)', async () => {

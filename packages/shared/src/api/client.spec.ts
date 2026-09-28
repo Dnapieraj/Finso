@@ -225,6 +225,20 @@ describe("createApiClient", () => {
     expect(onSessionExpired).not.toHaveBeenCalled();
   });
 
+  it("treats 403 as a final answer: no refresh, no retry", async () => {
+    const { api, fetch, tokens } = setup({
+      "DELETE /users/me": [jsonResponse(403, { statusCode: 403, message: "Invalid password" })],
+    });
+
+    await expect(api.users.deleteMe({ password: "zle-haslo" })).rejects.toMatchObject({
+      kind: "http",
+      status: 403,
+    });
+
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(tokens.saved).toEqual(oldTokens);
+  });
+
   it("never tries to refresh after a failed login", async () => {
     const { api, fetch, onSessionExpired } = setup({
       "POST /auth/login": [
