@@ -1,6 +1,7 @@
 import type {
   BudgetSummary,
   Category,
+  CreateTransactionRequest,
   DeleteAccountInput,
   Goal,
   ListTransactionsQuery,
@@ -105,8 +106,28 @@ export const fakeApi = {
     list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
       Promise.resolve(transactionPage([testTransaction()])),
     ),
+    create: jest.fn((input: CreateTransactionRequest) =>
+      Promise.resolve(
+        testTransaction({
+          id: "01923b6e-0000-7000-8000-000000000099",
+          amount: input.amount,
+          date: input.date,
+          categoryId: input.categoryId ?? null,
+        }),
+      ),
+    ),
+    remove: jest.fn((_id: string) => Promise.resolve()),
   },
 } satisfies ApiClient;
+
+/** A promise the test settles itself — for "before the server answers" cases. */
+export function deferred<T>() {
+  let resolve: (value: T) => void = () => undefined;
+  const promise = new Promise<T>((settle) => {
+    resolve = settle;
+  });
+  return { promise, resolve };
+}
 
 /** A promise that never settles — for asserting what a screen shows while waiting. */
 export function pending<T>(): Promise<T> {

@@ -395,6 +395,30 @@ describe("createApiClient", () => {
       expect(Object.fromEntries(url.searchParams)).toEqual({ status: "CONFIRMED", limit: "5" });
     });
 
+    it("transactions.create posts the expense and validates the created transaction", async () => {
+      const { api, fetch } = setup({ "POST /transactions": [jsonResponse(201, transaction)] });
+
+      await expect(
+        api.transactions.create({ amount: 4_590, date: "2026-09-27", categoryId: category.id }),
+      ).resolves.toEqual(transaction);
+
+      expect(sentRequest(fetch, 0).body).toEqual({
+        amount: 4_590,
+        date: "2026-09-27",
+        categoryId: category.id,
+      });
+    });
+
+    it("transactions.remove deletes the expense and resolves the 204 without a body", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /transactions/${transaction.id}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.transactions.remove(transaction.id)).resolves.toBeUndefined();
+
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+
     it("transactions.list leaves out filters passed as undefined", async () => {
       const { api, fetch } = setup({
         "GET /transactions": [jsonResponse(200, { items: [], nextCursor: null })],
