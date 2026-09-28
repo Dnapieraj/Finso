@@ -1,5 +1,7 @@
 import { Tabs } from "expo-router";
-import { House, Settings } from "lucide-react-native";
+// Per-icon imports: the package entry pulls in all ~1500 icons.
+import House from "lucide-react-native/icons/house";
+import Settings from "lucide-react-native/icons/settings";
 
 import { theme } from "@vireo/tokens";
 import { useColorScheme } from "react-native";
