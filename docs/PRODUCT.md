@@ -282,7 +282,7 @@ Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez Revenue
 | 4 | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione** | 1–2 tyg. |
 | 5 | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione** | — |
 | 6 | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**) | kilka dni |
-| 7 | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**); dalej: komponenty RN, auth, dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
+| 7 | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**), logowanie, rejestracja, wylogowanie i usuwanie konta (7.1, **zrobione**); dalej: dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
 | 8 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
 
 _Numeracja etapów 0–6 odpowiada historii commitów (np. „etap 3” = silnik budżetu, „etap 5a” = tokeny).
@@ -297,6 +297,9 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - Założenia do potwierdzenia przy wyborze hostingu: serwery w UE, kopie zapasowe nadpisywane w ciągu 30 dni
 - Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
 - **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
+
+**Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
+- Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 

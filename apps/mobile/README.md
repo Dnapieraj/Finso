@@ -2,7 +2,7 @@
 
 Aplikacja Finso na iOS i Androida: **Expo SDK 57 + Expo Router + NativeWind 4**.
 To tutaj powstaje cała funkcjonalność: logowanie, budżet, symulator, cele, ustawienia.
-Na razie jest tylko ekran startowy z logo.
+Na razie: logowanie, rejestracja i zakładki Start (logo) oraz Ustawienia (wylogowanie, usuwanie konta).
 
 ## Uruchomienie na telefonie
 
@@ -34,6 +34,13 @@ Bez poprawnego `EXPO_PUBLIC_API_URL` aplikacja zatrzyma się od razu z komunikat
 ## Jak to jest zbudowane
 
 - `app/` — ekrany (Expo Router: plik = ekran). `_layout.tsx` ładuje fonty, motyw i TanStack Query
+  i pilnuje dostępu: `Stack.Protected` wpuszcza do `(app)/` tylko zalogowanych, do `(auth)/` tylko
+  niezalogowanych. Zmiana stanu sesji sama przenosi na właściwy ekran i czyści historię „Wstecz”
+- `src/session.ts` — stan sesji poza Reactem (`restoring` / `signed-in` / `signed-out` + powód
+  wylogowania), bo wygasłą sesję zauważa klient API, nie komponent
+- `src/auth/` — hooki logowania/rejestracji/usuwania konta (TanStack Query) i komunikaty błędów API
+- `src/forms/error-map.ts` — polskie komunikaty walidacji dla wspólnych schematów Zod z `@vireo/shared`
+- `src/components/` — przyciski, pola formularza, alerty
 - `src/api.ts` — klient API z `@vireo/shared/api` (typy i walidacja wspólne z backendem)
 - `src/secure-token-store.ts` — tokeny sesji w Keychain (iOS) / Keystore (Android) przez `expo-secure-store`
 - `src/theme.ts` + `tailwind.config.ts` — kolory z `@vireo/tokens` jako zmienne CSS;
@@ -42,6 +49,12 @@ Bez poprawnego `EXPO_PUBLIC_API_URL` aplikacja zatrzyma się od razu z komunikat
 
 Style piszesz klasami Tailwinda (`className="bg-card text-foreground"`). NativeWind 4 działa
 na **Tailwind 3.4** (web używa Tailwind 4) — nazwy klas są prawie takie same.
+
+## Usuwanie konta — musi zgadzać się ze stroną WWW
+
+Ścieżka Ustawienia → „Usuń konto” → hasło → natychmiastowe usunięcie jest opisana na stronie
+`/usuwanie-konta` (wymóg Google Play). Test `__tests__/delete-account.test.tsx` czyta plik strony
+i przechodzi ekrany tymi samymi etykietami — zmiana po jednej stronie bez drugiej go wywali.
 
 ## Testy
 
@@ -52,6 +65,9 @@ pnpm --filter mobile lint
 ```
 
 W RNTL 14 `render` jest asynchroniczne: `await render(<Ekran />)`.
+Testy ekranów renderują prawdziwe drzewo `app/` przez `renderApp` (`__tests__/helpers/`), z udawanym
+klientem API i secure-store w pamięci. Ścieżkę sprawdzasz przez `expect(app).toHavePathname(...)`,
+a zakładki przez `getTab("Ustawienia")`.
 CI dodatkowo buduje bundle Androida (`expo export`), żeby wyłapać błędy Metro, których testy nie widzą.
 
 ## Uwagi
