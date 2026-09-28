@@ -8,6 +8,14 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "../auth/schemas.js";
+import { budgetSummarySchema, type BudgetSummary } from "../budget/schemas.js";
+import { categorySchema, type Category } from "../categories/schemas.js";
+import { goalSchema, type Goal } from "../goals/schemas.js";
+import {
+  transactionPageSchema,
+  type ListTransactionsQuery,
+  type TransactionPage,
+} from "../transactions/schemas.js";
 import { publicUserSchema, type PublicUser } from "../users/schemas.js";
 
 /**
@@ -75,6 +83,22 @@ export interface ApiClient {
     me(): Promise<PublicUser>;
     /** Usuwa konto (kaskadowo, wymaga hasła) i czyści tokeny. */
     deleteMe(input: DeleteAccountInput): Promise<void>;
+  };
+  readonly budget: {
+    /** Ile zostało do końca bieżącego okresu i ile dziennie. */
+    current(): Promise<BudgetSummary>;
+  };
+  readonly goals: {
+    /** Cele posortowane po terminie, najbliższy pierwszy. */
+    list(): Promise<Goal[]>;
+  };
+  readonly categories: {
+    /** Kategorie systemowe i własne użytkownika. */
+    list(): Promise<Category[]>;
+  };
+  readonly transactions: {
+    /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
+    list(query?: Partial<ListTransactionsQuery>): Promise<TransactionPage>;
   };
 }
 
@@ -181,6 +205,11 @@ export function createApiClient({
     return user;
   }
 
+  /** GET z walidacją odpowiedzi wspólnym schematem. */
+  async function read<T>(path: string, schema: z.ZodType<T>): Promise<T> {
+    return parse(await execute({ method: "GET", path }), schema);
+  }
+
   return {
     auth: {
       register: (input) => startSession("/auth/register", input),
@@ -207,7 +236,29 @@ export function createApiClient({
         await tokens.clear();
       },
     },
+    budget: {
+      current: () => read("/budget/current", budgetSummarySchema),
+    },
+    goals: {
+      list: () => read("/goals", z.array(goalSchema)),
+    },
+    categories: {
+      list: () => read("/categories", z.array(categorySchema)),
+    },
+    transactions: {
+      list: (query = {}) => read(`/transactions${queryString(query)}`, transactionPageSchema),
+    },
   };
+}
+
+/** `?a=1&b=2` z pól, które mają wartość; pusty tekst, gdy nie ma żadnego. */
+function queryString(query: Record<string, string | number | undefined>): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined) params.set(key, String(value));
+  }
+  const text = params.toString();
+  return text ? `?${text}` : "";
 }
 
 /** Parsuje JSON odpowiedzi 2xx i sprawdza go wspólnym schematem. */

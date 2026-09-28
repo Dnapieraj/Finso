@@ -395,6 +395,16 @@ describe("createApiClient", () => {
       expect(Object.fromEntries(url.searchParams)).toEqual({ status: "CONFIRMED", limit: "5" });
     });
 
+    it("transactions.list leaves out filters passed as undefined", async () => {
+      const { api, fetch } = setup({
+        "GET /transactions": [jsonResponse(200, { items: [], nextCursor: null })],
+      });
+
+      await api.transactions.list({ status: undefined, limit: 5 });
+
+      expect(sentRequest(fetch, 0).url).toBe(`${BASE_URL}/transactions?limit=5`);
+    });
+
     it("transactions.list without filters sends no query string", async () => {
       const { api, fetch } = setup({
         "GET /transactions": [jsonResponse(200, { items: [], nextCursor: null })],
