@@ -14,6 +14,7 @@
   "dependencies": {
     "@expo-google-fonts/bricolage-grotesque": "^0.4.1",
     "@expo-google-fonts/hanken-grotesk": "^0.4.3",
+    "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "5.103.2",
     "@vireo/shared": "workspace:*",
     "@vireo/tokens": "workspace:*",
@@ -27,12 +28,14 @@
     "expo-status-bar": "~57.0.1",
     "nativewind": "4.2.7",
     "react": "19.2.3",
+    "react-hook-form": "^7.89.0",
     "react-native": "0.86.3",
     "react-native-css-interop": "0.2.7",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.2",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@testing-library/react-native": "14.0.1",
