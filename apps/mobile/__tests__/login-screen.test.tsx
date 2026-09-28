@@ -15,17 +15,18 @@ async function fillIn(email: string, password: string) {
 }
 
 async function openLogin() {
-  await renderApp("/login", { signedIn: false });
+  const app = await renderApp("/login", { signedIn: false });
   await screen.findByRole("header", { name: "Zaloguj się" });
+  return app;
 }
 
 it("logs in with the normalised email and opens the app", async () => {
-  await openLogin();
+  const app = await openLogin();
 
   await fillIn("  Ola@Example.com ", "tajne-haslo-123");
   await fireEvent.press(screen.getByRole("button", { name: "Zaloguj się" }));
 
-  await waitFor(() => expect(screen).toHavePathname("/"));
+  await waitFor(() => expect(app).toHavePathname("/"));
   expect(fakeApi.auth.login).toHaveBeenCalledWith({
     email: "ola@example.com",
     password: "tajne-haslo-123",
@@ -44,16 +45,14 @@ it("shows Polish field errors and does not call the API for invalid input", asyn
 });
 
 it("announces wrong credentials and stays on the login screen", async () => {
-  fakeApi.auth.login.mockRejectedValueOnce(
-    new ApiError("http", 401, "Invalid email or password"),
-  );
-  await openLogin();
+  fakeApi.auth.login.mockRejectedValueOnce(new ApiError("http", 401, "Invalid email or password"));
+  const app = await openLogin();
 
   await fillIn("ola@example.com", "zle-haslo");
   await fireEvent.press(screen.getByRole("button", { name: "Zaloguj się" }));
 
   expect(await screen.findByRole("alert")).toHaveTextContent("Nieprawidłowy e-mail lub hasło.");
-  expect(screen).toHavePathname("/login");
+  expect(app).toHavePathname("/login");
 });
 
 it("blocks a second tap while the login request is in flight", async () => {
@@ -79,9 +78,9 @@ it("hides the password by default and reveals it on demand", async () => {
 });
 
 it("links to the register screen", async () => {
-  await openLogin();
+  const app = await openLogin();
 
   await fireEvent.press(screen.getByRole("link", { name: "Nie masz konta? Załóż je" }));
 
-  await waitFor(() => expect(screen).toHavePathname("/register"));
+  await waitFor(() => expect(app).toHavePathname("/register"));
 });

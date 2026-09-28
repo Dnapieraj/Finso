@@ -10,8 +10,9 @@ jest.mock("../src/api", () => ({ api: jest.requireActual("./helpers/fake-api").f
 beforeEach(resetSecureStore);
 
 async function openRegister() {
-  await renderApp("/register", { signedIn: false });
+  const app = await renderApp("/register", { signedIn: false });
   await screen.findByRole("header", { name: "Załóż konto" });
+  return app;
 }
 
 async function submit(email: string, password: string) {
@@ -21,11 +22,11 @@ async function submit(email: string, password: string) {
 }
 
 it("creates the account and opens the app", async () => {
-  await openRegister();
+  const app = await openRegister();
 
   await submit("ola@example.com", "tajne-haslo-123");
 
-  await waitFor(() => expect(screen).toHavePathname("/"));
+  await waitFor(() => expect(app).toHavePathname("/"));
   expect(fakeApi.auth.register).toHaveBeenCalledWith({
     email: "ola@example.com",
     password: "tajne-haslo-123",
@@ -46,18 +47,20 @@ it("explains that the email is taken and stays on the screen", async () => {
   fakeApi.auth.register.mockRejectedValueOnce(
     new ApiError("http", 409, "Email already registered"),
   );
-  await openRegister();
+  const app = await openRegister();
 
   await submit("ola@example.com", "tajne-haslo-123");
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Konto z tym adresem e-mail już istnieje.",
   );
-  expect(screen).toHavePathname("/register");
+  expect(app).toHavePathname("/register");
 });
 
 it("announces a network failure", async () => {
-  fakeApi.auth.register.mockRejectedValueOnce(new ApiError("network", null, "Network request failed"));
+  fakeApi.auth.register.mockRejectedValueOnce(
+    new ApiError("network", null, "Network request failed"),
+  );
   await openRegister();
 
   await submit("ola@example.com", "tajne-haslo-123");
@@ -68,9 +71,9 @@ it("announces a network failure", async () => {
 });
 
 it("links back to the login screen", async () => {
-  await openRegister();
+  const app = await openRegister();
 
   await fireEvent.press(screen.getByRole("link", { name: "Masz już konto? Zaloguj się" }));
 
-  await waitFor(() => expect(screen).toHavePathname("/login"));
+  await waitFor(() => expect(app).toHavePathname("/login"));
 });

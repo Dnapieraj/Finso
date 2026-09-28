@@ -24,7 +24,12 @@ it.each([
     { email: "ola@", password: "x" },
     { email: "Podaj poprawny adres e-mail." },
   ],
-  ["empty password on login", loginSchema, { email: "ola@example.com", password: "" }, { password: "Podaj hasło." }],
+  [
+    "empty password on login",
+    loginSchema,
+    { email: "ola@example.com", password: "" },
+    { password: "Podaj hasło." },
+  ],
   [
     "short password on register",
     registerSchema,
@@ -37,7 +42,12 @@ it.each([
     { email: "ola@example.com", password: "x".repeat(129) },
     { password: "Hasło może mieć najwyżej 128 znaków." },
   ],
-  ["empty password on account deletion", deleteAccountSchema, { password: "" }, { password: "Podaj hasło." }],
+  [
+    "empty password on account deletion",
+    deleteAccountSchema,
+    { password: "" },
+    { password: "Podaj hasło." },
+  ],
 ])("%s", (_case, schema, input, expected) => {
   expect(messages(schema, input)).toEqual(expected);
 });

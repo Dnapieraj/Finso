@@ -3,7 +3,11 @@ import type { TokenStore } from "@vireo/shared/api";
 
 import { createSessionStore } from "../src/session";
 
-const tokens: AuthTokens = { accessToken: "access", refreshToken: "refresh", accessTokenExpiresIn: 900 };
+const tokens: AuthTokens = {
+  accessToken: "access",
+  refreshToken: "refresh",
+  accessTokenExpiresIn: 900,
+};
 
 function memoryTokens(saved: AuthTokens | null = null) {
   const store: TokenStore & { saved: AuthTokens | null } = {
@@ -64,6 +68,16 @@ it("treats an unreadable secure store as signed-out and wipes it", async () => {
   expect(store.saved).toBeNull();
 });
 
+it("shares one secure-store read between overlapping restore() calls", async () => {
+  const { session, store } = setup(tokens);
+  const read = jest.spyOn(store, "getRefreshToken");
+
+  await Promise.all([session.restore(), session.restore()]);
+
+  expect(read).toHaveBeenCalledTimes(1);
+  expect(session.getState().status).toBe("signed-in");
+});
+
 it("signedIn() switches to signed-in and forgets the last sign-out reason", async () => {
   const { session } = setup();
   await session.signedOut("expired");
@@ -82,7 +96,7 @@ it.each(["logout", "expired", "deleted"] as const)(
     await session.signedOut(reason);
 
     expect(session.getState()).toEqual({ status: "signed-out", signOutReason: reason });
-    expect(onSignedOut).toHaveBeenCalledOnce();
+    expect(onSignedOut).toHaveBeenCalledTimes(1);
     // Defence in depth: the API client clears them too, but a restart must
     // never bring back a session the user has left.
     expect(store.saved).toBeNull();
