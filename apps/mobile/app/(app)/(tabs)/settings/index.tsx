@@ -1,10 +1,10 @@
 import { router } from "expo-router";
 import { Text, View } from "react-native";
 
-import { useLogout, useMe } from "../../../src/auth/hooks";
-import { Button } from "../../../src/components/button";
-import { Screen } from "../../../src/components/screen";
-import { pl } from "../../../src/messages/pl";
+import { useLogout, useMe } from "../../../../src/auth/hooks";
+import { Button } from "../../../../src/components/button";
+import { Screen } from "../../../../src/components/screen";
+import { pl } from "../../../../src/messages/pl";
 
 const t = pl.settings;
 

@@ -5,14 +5,14 @@ import { Text } from "react-native";
 
 import { deleteAccountSchema, type DeleteAccountInput } from "@vireo/shared";
 
-import { apiErrorMessage } from "../../../src/auth/api-error-message";
-import { useDeleteAccount } from "../../../src/auth/hooks";
-import { Button } from "../../../src/components/button";
-import { FormAlert } from "../../../src/components/form-alert";
-import { Screen } from "../../../src/components/screen";
-import { TextField } from "../../../src/components/text-field";
-import { plErrorMap } from "../../../src/forms/error-map";
-import { pl } from "../../../src/messages/pl";
+import { apiErrorMessage } from "../../../../src/auth/api-error-message";
+import { useDeleteAccount } from "../../../../src/auth/hooks";
+import { Button } from "../../../../src/components/button";
+import { FormAlert } from "../../../../src/components/form-alert";
+import { Screen } from "../../../../src/components/screen";
+import { TextField } from "../../../../src/components/text-field";
+import { plErrorMap } from "../../../../src/forms/error-map";
+import { pl } from "../../../../src/messages/pl";
 
 const t = pl.deleteAccount;
 

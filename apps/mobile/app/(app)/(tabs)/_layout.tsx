@@ -6,14 +6,14 @@ import Settings from "lucide-react-native/icons/settings";
 import { theme } from "@vireo/tokens";
 import { useColorScheme } from "react-native";
 
-import { pl } from "../../src/messages/pl";
+import { pl } from "../../../src/messages/pl";
 
 /**
  * The signed-in app. „Ustawienia” must stay a tab: the web page
  * /usuwanie-konta tells users to find account deletion there.
  * Icons come from lucide, the same set the web uses.
  */
-export default function AppLayout() {
+export default function TabsLayout() {
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
 
   return (

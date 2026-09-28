@@ -1,17 +1,26 @@
 import { formatMoney, grosze, type BudgetSummary, type Category, type Goal } from "@vireo/shared";
 import { theme } from "@vireo/tokens";
 import { useState, type ReactNode } from "react";
-import { RefreshControl, Text, useColorScheme, View } from "react-native";
+import { router } from "expo-router";
+// Per-icon import: the package entry pulls in all ~1500 icons.
+import Plus from "lucide-react-native/icons/plus";
+import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
-import { ProgressBar } from "../../src/components/progress-bar";
-import { LoadError, Skeleton } from "../../src/components/query-states";
-import { Screen } from "../../src/components/screen";
-import { goalProgress } from "../../src/dashboard/goal-progress";
-import { periodProgress } from "../../src/dashboard/period-progress";
-import { useBudget, useCategories, useGoals, useRecentExpenses } from "../../src/dashboard/queries";
-import { formatDayMonth } from "../../src/format/date";
-import { plural } from "../../src/format/plural";
-import { pl } from "../../src/messages/pl";
+import { ProgressBar } from "../../../src/components/progress-bar";
+import { LoadError, Skeleton } from "../../../src/components/query-states";
+import { Screen } from "../../../src/components/screen";
+import { goalProgress } from "../../../src/dashboard/goal-progress";
+import { periodProgress } from "../../../src/dashboard/period-progress";
+import {
+  useBudget,
+  useCategories,
+  useGoals,
+  useRecentExpenses,
+} from "../../../src/dashboard/queries";
+import { ExpenseNoticeBar } from "../../../src/expenses/expense-notice";
+import { formatDayMonth } from "../../../src/format/date";
+import { plural } from "../../../src/format/plural";
+import { pl } from "../../../src/messages/pl";
 
 const t = pl.dashboard;
 const GOALS_SHOWN = 3;
@@ -206,31 +215,46 @@ export default function DashboardScreen() {
   }
 
   return (
-    <Screen
-      title={t.title}
-      testID="dashboard-scroll"
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={() => void refresh()}
-          tintColor={colors.primary}
-          colors={[colors.primary]}
-        />
-      }
-    >
-      {budget.isPending ? (
-        <Card>
-          <Skeleton label={t.loadingBudget} lines={3} />
-        </Card>
-      ) : budget.isError ? (
-        <Card>
-          <LoadError message={t.budgetError} onRetry={() => void budget.refetch()} />
-        </Card>
-      ) : (
-        <BudgetOverview budget={budget.data} />
-      )}
-      <Goals asOf={budget.data?.asOf ?? null} />
-      <RecentExpenses />
-    </Screen>
+    <View className="flex-1">
+      <Screen
+        title={t.title}
+        testID="dashboard-scroll"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void refresh()}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      >
+        {budget.isPending ? (
+          <Card>
+            <Skeleton label={t.loadingBudget} lines={3} />
+          </Card>
+        ) : budget.isError ? (
+          <Card>
+            <LoadError message={t.budgetError} onRetry={() => void budget.refetch()} />
+          </Card>
+        ) : (
+          <BudgetOverview budget={budget.data} />
+        )}
+        <Goals asOf={budget.data?.asOf ?? null} />
+        <RecentExpenses />
+      </Screen>
+      <View pointerEvents="box-none" className="absolute bottom-4 left-4 right-4 gap-3">
+        <ExpenseNoticeBar />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={pl.addExpense.open}
+          onPress={() => {
+            router.push("/add-expense");
+          }}
+          className="h-14 w-14 items-center justify-center self-end rounded-full bg-primary active:opacity-80"
+        >
+          <Plus color={colors.primaryForeground} size={28} />
+        </Pressable>
+      </View>
+    </View>
   );
 }

@@ -25,6 +25,7 @@ export function TextField({
   | "textContentType"
   | "onSubmitEditing"
   | "returnKeyType"
+  | "autoFocus"
 >) {
   const [revealed, setRevealed] = useState(false);
   const [focused, setFocused] = useState(false);

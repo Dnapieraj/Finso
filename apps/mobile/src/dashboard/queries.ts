@@ -5,9 +5,13 @@ import { api } from "../api";
 /** Only confirmed expenses: the ones the budget engine counts. */
 const RECENT_EXPENSES = { status: "CONFIRMED", limit: 5 } as const;
 
+/** Cache keys the quick add updates optimistically. */
+export const BUDGET_KEY = ["budget", "current"] as const;
+export const RECENT_EXPENSES_KEY = ["transactions", RECENT_EXPENSES] as const;
+
 /** The current budget period: what is left and per day. */
 export function useBudget() {
-  return useQuery({ queryKey: ["budget", "current"], queryFn: () => api.budget.current() });
+  return useQuery({ queryKey: BUDGET_KEY, queryFn: () => api.budget.current() });
 }
 
 /** Goals, nearest target date first. */
@@ -27,7 +31,7 @@ export function useCategories() {
 /** The latest confirmed expenses. */
 export function useRecentExpenses() {
   return useQuery({
-    queryKey: ["transactions", RECENT_EXPENSES],
+    queryKey: RECENT_EXPENSES_KEY,
     queryFn: () => api.transactions.list(RECENT_EXPENSES),
   });
 }
