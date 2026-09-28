@@ -11,7 +11,7 @@ import { fromIsoDate, toIsoDate } from "../common/dates.js";
 import { OwnedReferencesService } from "../common/owned-references.service.js";
 import { dateRange, toPage } from "../common/pagination.js";
 import type { Transaction as TransactionRow } from "../generated/prisma/client.js";
-import type { Db } from "../prisma/prisma.module.js";
+import type { Db, DbTransaction } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
@@ -51,10 +51,15 @@ export class TransactionsService {
     return toTransaction(row);
   }
 
-  async create(userId: string, input: CreateTransactionInput): Promise<Transaction> {
+  /** `db` pozwala zapisać wydatek w jednej transakcji z kluczem idempotencji. */
+  async create(
+    userId: string,
+    input: CreateTransactionInput,
+    db: Db | DbTransaction = this.db,
+  ): Promise<Transaction> {
     await this.refs.assertCategory(userId, input.categoryId);
     await this.refs.assertRecurringRule(userId, input.recurringRuleId, "EXPENSE");
-    const row = await this.db.transaction.create({
+    const row = await db.transaction.create({
       data: {
         userId,
         amount: input.amount,

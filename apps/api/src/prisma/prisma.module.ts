@@ -9,6 +9,9 @@ export const PRISMA = Symbol("PRISMA");
 /** Typ klienta z aktywnym rozszerzeniem soft-delete. */
 export type Db = ReturnType<typeof withSoftDelete>;
 
+/** Klient wewnątrz `db.$transaction(async (tx) => …)`. */
+export type DbTransaction = Parameters<Parameters<Db["$transaction"]>[0]>[0];
+
 /**
  * PRISMA_TOKEN_RATIONALE: PrismaService (surowy PrismaClient, patrzy na
  * WSZYSTKIE wiersze łącznie z miękko usuniętymi) jest providerem, ale

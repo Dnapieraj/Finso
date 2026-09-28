@@ -66,13 +66,14 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens  RefreshToken[]
-  categories     Category[]
-  recurringRules RecurringRule[]
-  incomeSources  IncomeSource[]
-  incomeEntries  IncomeEntry[]
-  transactions   Transaction[]
-  goals          Goal[]
+  refreshTokens   RefreshToken[]
+  categories      Category[]
+  recurringRules  RecurringRule[]
+  incomeSources   IncomeSource[]
+  incomeEntries   IncomeEntry[]
+  transactions    Transaction[]
+  goals           Goal[]
+  idempotencyKeys IdempotencyKey[]
 }
 
 model RefreshToken {
@@ -281,4 +282,33 @@ model Goal {
   updatedAt DateTime @updatedAt
 
   @@index([userId, deletedAt])
+}
+
+// --- Idempotencja -------------------------------------------------------------
+
+/// Ponowione żądanie z tym samym nagłówkiem Idempotency-Key zwraca zapisaną
+/// odpowiedź zamiast tworzyć drugi wydatek (np. „Spróbuj ponownie” po
+/// zerwanym połączeniu, gdy pierwszy zapis jednak doszedł).
+model IdempotencyKey {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Endpoint, którego dotyczy klucz, np. "POST /transactions".
+  scope String
+  key   String
+
+  /// SHA-256 zwalidowanego body — ten sam klucz z inną treścią to 422.
+  requestHash    String
+  responseStatus Int
+  /// Zapisana odpowiedź, a nie tylko id: powtórka ma dać identyczny wynik,
+  /// także gdy wydatek zmieniono lub usunięto w międzyczasie.
+  responseBody   Json
+
+  createdAt DateTime @default(now())
+  /// Po terminie klucz nie działa, a sprzątanie usuwa wiersz (to dane finansowe).
+  expiresAt DateTime
+
+  @@unique([userId, scope, key])
+  @@index([expiresAt])
 }

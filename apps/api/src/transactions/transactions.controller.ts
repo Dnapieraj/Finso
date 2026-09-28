@@ -1,17 +1,21 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  Res,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import type { Transaction, TransactionPage } from "@vireo/shared";
+import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
+import { idSchema, type Transaction, type TransactionPage } from "@vireo/shared";
+import type { Response } from "express";
 import { ZodResponse } from "nestjs-zod";
 
 import type { AuthUser } from "../auth/decorators.js";
@@ -23,13 +27,17 @@ import {
   TransactionPageDto,
   UpdateTransactionDto,
 } from "./transactions.dto.js";
+import { IdempotencyService } from "../idempotency/idempotency.service.js";
 import { TransactionsService } from "./transactions.service.js";
 
 @ApiTags("transactions")
 @ApiBearerAuth()
 @Controller("transactions")
 export class TransactionsController {
-  constructor(private readonly transactions: TransactionsService) {}
+  constructor(
+    private readonly transactions: TransactionsService,
+    private readonly idempotency: IdempotencyService,
+  ) {}
 
   @Get()
   @ZodResponse({ type: TransactionPageDto })
@@ -46,10 +54,39 @@ export class TransactionsController {
     return this.transactions.get(user.id, id);
   }
 
+  /**
+   * Z nagłówkiem `Idempotency-Key` (UUID) ponowione żądanie zwraca zapisaną
+   * odpowiedź zamiast drugiego wydatku, np. po zerwanym połączeniu.
+   * Bez nagłówka — jak dotąd, każde żądanie to nowy wydatek.
+   */
   @Post()
   @ZodResponse({ status: HttpStatus.CREATED, type: TransactionDto })
-  create(@CurrentUser() user: AuthUser, @Body() body: CreateTransactionDto): Promise<Transaction> {
-    return this.transactions.create(user.id, body);
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "UUID wydatku; ten sam klucz przez 24 h zwraca ten sam wynik",
+  })
+  async create(
+    @CurrentUser() user: AuthUser,
+    @Body() body: CreateTransactionDto,
+    @Headers("idempotency-key") rawKey: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Transaction> {
+    if (rawKey === undefined) return this.transactions.create(user.id, body);
+
+    const key = idSchema.safeParse(rawKey);
+    if (!key.success) throw new BadRequestException("Idempotency-Key must be a UUID");
+
+    const result = await this.idempotency.run({
+      userId: user.id,
+      scope: "POST /transactions",
+      key: key.data,
+      request: body,
+      status: HttpStatus.CREATED,
+      perform: (db) => this.transactions.create(user.id, body, db),
+    });
+    if (result.replayed) res.setHeader("Idempotent-Replayed", "true");
+    return result.body;
   }
 
   @Patch(":id")
