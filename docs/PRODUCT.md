@@ -301,6 +301,14 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 - Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
+**Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
+Na ekranach logowania i rejestracji są już przyciski „Kontynuuj z Apple / Google”, ale tylko wizualnie (tapnięcie pokazuje „wkrótce dostępne”). Martwy przycisk nie przejdzie review w sklepie (App Store 2.1), więc przed publikacją muszą działać albo zniknąć. Do zrobienia:
+- **API:** weryfikacja tokenów tożsamości od Apple i Google po stronie serwera, powiązanie z kontem (e-mail / identyfikator dostawcy), konta bez hasła (`passwordHash` opcjonalny)
+- **Usuwanie konta:** konto bez hasła nie potwierdzi usunięcia hasłem — inne potwierdzenie (np. ponowne logowanie u dostawcy) w appce i ta sama zmiana na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`), w jednym etapie; test `apps/mobile/__tests__/delete-account.test.tsx` pilnuje zgodności
+- **Polityka prywatności:** Apple i Google jako nowi odbiorcy danych logowania (TODO w `apps/web/src/messages/legal/privacy.ts`)
+- **Development build zamiast Expo Go:** natywne logowanie (`expo-apple-authentication`, Google Sign-In) wymaga własnego buildu przez EAS — Expo Go go nie obsługuje
+- Apple na iOS jest obowiązkowe, jeśli jest Google (App Store 4.8); na Androidzie Apple działa przez przeglądarkę
+
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._
 
 **Kluczowa rada:** silnik liczenia budżetu (etap 3) napisz jako **czystą funkcję w `packages/shared`, bez zależności od frameworka, pokrytą testami**. Web i mobile tylko ją wywołują. To jest sedno appki i to najlepiej wygląda w portfolio.
