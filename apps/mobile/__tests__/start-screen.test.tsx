@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react-native";
 
-import StartScreen from "../app/index";
+import StartScreen from "../app/(app)/index";
 
 // RNTL 14 renders asynchronously: `render` returns a promise.
 it("start screen shows the Finso wordmark as a header", async () => {
