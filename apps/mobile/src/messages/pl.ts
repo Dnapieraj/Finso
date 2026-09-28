@@ -12,7 +12,34 @@ export const pl = {
   },
   tabs: {
     start: "Start",
+    simulator: "Symulator",
     settings: "Ustawienia",
+  },
+  simulator: {
+    title: "Czy mnie stać?",
+    amount: "Kwota",
+    category: "Kategoria",
+    loadingCategories: "Wczytywanie kategorii",
+    categoriesError: "Nie udało się wczytać kategorii.",
+    hint: "Wpisz kwotę i wybierz kategorię, żeby sprawdzić.",
+    calculating: "Liczę…",
+    error: "Nie udało się policzyć.",
+    verdict: {
+      safe: "Stać cię",
+      tight: "Stać cię, ale będzie ciasno",
+      over: "Nie stać cię teraz",
+    },
+    remaining: (amount: string) => `Zostanie ${amount}`,
+    perDay: (after: string, before: string) => `${after} dziennie zamiast ${before}`,
+    shortfall: (amount: string) => `Zabraknie ${amount}`,
+    goals: "Cele",
+    goalDelay: (goal: string, days: string) => `${goal}: później o ${days}`,
+    days: { one: "dzień", few: "dni", many: "dni" },
+    noGoalImpact: "Nie wpływa na Twoje cele.",
+    // The engine computes each delay as if that goal alone took the whole
+    // shortfall (docs/PRODUCT.md, "Znane uproszczenia").
+    independentGoals: "Każdy cel liczony osobno — opóźnienia się nie sumują.",
+    save: "Zapisz jako wydatek",
   },
   fields: {
     email: "E-mail",

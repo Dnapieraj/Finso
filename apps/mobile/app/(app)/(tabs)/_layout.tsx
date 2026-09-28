@@ -1,5 +1,6 @@
 import { Tabs } from "expo-router";
 // Per-icon imports: the package entry pulls in all ~1500 icons.
+import Calculator from "lucide-react-native/icons/calculator";
 import House from "lucide-react-native/icons/house";
 import Settings from "lucide-react-native/icons/settings";
 
@@ -31,6 +32,13 @@ export default function TabsLayout() {
         options={{
           title: pl.tabs.start,
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="simulator"
+        options={{
+          title: pl.tabs.simulator,
+          tabBarIcon: ({ color, size }) => <Calculator color={color} size={size} />,
         }}
       />
       <Tabs.Screen

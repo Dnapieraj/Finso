@@ -8,7 +8,13 @@ import {
   type LoginInput,
   type RegisterInput,
 } from "../auth/schemas.js";
-import { budgetSummarySchema, type BudgetSummary } from "../budget/schemas.js";
+import {
+  budgetSummarySchema,
+  simulationResultSchema,
+  type BudgetSummary,
+  type SimulatePurchaseRequest,
+  type SimulationResult,
+} from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
 import { goalSchema, type Goal } from "../goals/schemas.js";
 import {
@@ -96,6 +102,8 @@ export interface ApiClient {
   readonly budget: {
     /** Ile zostało do końca bieżącego okresu i ile dziennie. */
     current(): Promise<BudgetSummary>;
+    /** „Czy stać mnie na to teraz” — nic nie zapisuje. */
+    simulate(input: SimulatePurchaseRequest): Promise<SimulationResult>;
   };
   readonly goals: {
     /** Cele posortowane po terminie, najbliższy pierwszy. */
@@ -259,6 +267,11 @@ export function createApiClient({
     },
     budget: {
       current: () => read("/budget/current", budgetSummarySchema),
+      simulate: async (input) =>
+        parse(
+          await execute({ method: "POST", path: "/budget/simulate", body: input }),
+          simulationResultSchema,
+        ),
     },
     goals: {
       list: () => read("/goals", z.array(goalSchema)),
