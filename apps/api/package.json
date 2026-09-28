@@ -21,7 +21,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "lint": "eslint \"src/**/*.ts\"",
+    "lint": "eslint \"{src,test,prisma}/**/*.ts\" \"*.config.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
