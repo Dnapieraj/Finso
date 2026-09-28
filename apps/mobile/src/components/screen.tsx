@@ -14,9 +14,12 @@ export function Screen({
   children,
   refreshControl,
   testID,
+  floatingFooter = false,
 }: {
   title: string;
   children: ReactNode;
+  /** Leaves room at the bottom for buttons floating over the content. */
+  floatingFooter?: boolean;
 } & Pick<ScrollViewProps, "refreshControl" | "testID">) {
   return (
     <SafeAreaView edges={["top", "left", "right"]} className="flex-1 bg-background">
@@ -28,7 +31,7 @@ export function Screen({
           testID={testID}
           refreshControl={refreshControl}
           keyboardShouldPersistTaps="handled"
-          contentContainerClassName="flex-grow gap-5 px-6 py-8"
+          contentContainerClassName={`flex-grow gap-5 px-6 pt-8 ${floatingFooter ? "pb-44" : "pb-8"}`}
         >
           <Text accessibilityRole="header" className="font-heading text-3xl text-foreground">
             {title}

@@ -219,6 +219,7 @@ export default function DashboardScreen() {
       <Screen
         title={t.title}
         testID="dashboard-scroll"
+        floatingFooter
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
