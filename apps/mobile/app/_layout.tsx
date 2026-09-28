@@ -18,6 +18,7 @@ import { theme } from "@vireo/tokens";
 // Imported for its side effect: it validates EXPO_PUBLIC_API_URL at startup.
 import "../src/api";
 import { queryClient } from "../src/query-client";
+import { session, useSession } from "../src/session";
 import { themeVars } from "../src/theme";
 
 // Keep the splash screen until the fonts load, so text never flashes in a fallback font.
@@ -30,8 +31,16 @@ export default function RootLayout() {
     HankenGrotesk_400Regular,
     HankenGrotesk_600SemiBold,
   });
+  const { status } = useSession();
   // A font that fails to load must not block the app; system fonts take over.
-  const ready = fontsLoaded || fontError !== null;
+  // Waiting for the session keeps login from flashing before the app opens.
+  const ready = (fontsLoaded || fontError !== null) && status !== "restoring";
+
+  useEffect(() => {
+    // Only at app start: restoring again would blank the whole tree and
+    // remount the navigator, losing where the user was.
+    if (session.getState().status === "restoring") void session.restore();
+  }, []);
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
@@ -49,7 +58,17 @@ export default function RootLayout() {
             // this they paint white behind a dark screen during transitions.
             contentStyle: { backgroundColor: theme.colors[scheme].background },
           }}
-        />
+        >
+          {/* A guard turning false removes its screens from history and
+              redirects to the first allowed one: logout lands on login,
+              and Back cannot return to the app. */}
+          <Stack.Protected guard={status === "signed-in"}>
+            <Stack.Screen name="(app)" />
+          </Stack.Protected>
+          <Stack.Protected guard={status !== "signed-in"}>
+            <Stack.Screen name="(auth)" />
+          </Stack.Protected>
+        </Stack>
         <StatusBar style="auto" />
       </View>
     </QueryClientProvider>

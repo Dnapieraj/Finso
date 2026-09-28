@@ -1,6 +1,6 @@
 import { Text, View } from "react-native";
 
-import { pl } from "../src/messages/pl";
+import { pl } from "../../src/messages/pl";
 
 const t = pl.start;
 
