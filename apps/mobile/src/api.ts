@@ -1,4 +1,5 @@
 import { createApiClient } from "@vireo/shared/api";
+import { randomUUID } from "expo-crypto";
 
 import { readApiUrl } from "./config";
 import { session } from "./session";
@@ -11,4 +12,6 @@ export const api = createApiClient({
   // The refresh token was rejected: the guards send the user to login,
   // and the cached data of the expired session is dropped.
   onSessionExpired: () => void session.signedOut("expired"),
+  // Hermes has no crypto.randomUUID; expo-crypto uses the platform's CSPRNG.
+  randomUUID,
 });

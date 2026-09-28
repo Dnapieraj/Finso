@@ -4,6 +4,7 @@ import {
   type BudgetSummary,
   type Category,
   type Grosze,
+  type TransactionDraft,
   type TransactionPage,
 } from "@vireo/shared";
 
@@ -43,7 +44,15 @@ function refreshFromServer() {
  * a failure puts the numbers back and offers a retry. A "saved" notice
  * with Cofnij guards against tapping the wrong category.
  */
-export async function saveExpense(expense: QuickExpense): Promise<void> {
+export function saveExpense(expense: QuickExpense): Promise<void> {
+  const { amount, date, category } = expense;
+  // One draft — one Idempotency-Key — per expense: "Spróbuj ponownie"
+  // resends it, so a save that did reach the server is not stored twice.
+  const draft = api.transactions.draft({ amount, date, categoryId: category.id });
+  return submit(expense, draft);
+}
+
+async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<void> {
   optimisticIds += 1;
   const localId = `optimistic-${String(optimisticIds)}`;
   const { amount, date, category } = expense;
@@ -86,7 +95,7 @@ export async function saveExpense(expense: QuickExpense): Promise<void> {
   showNotice(notice);
 
   try {
-    const saved = await api.transactions.create({ amount, date, categoryId: category.id });
+    const saved = await api.transactions.create(draft);
     state.serverId = saved.id;
     if (state.undone) {
       await deleteExpense(saved.id, amount);
@@ -99,7 +108,7 @@ export async function saveExpense(expense: QuickExpense): Promise<void> {
       updateBudget((summary) => removeExpenseFromSummary(summary, amount));
       updateRecent((page) => removeExpense(page, localId));
     }
-    showNotice({ kind: "save-failed", amount, retry: () => void saveExpense(expense) });
+    showNotice({ kind: "save-failed", amount, retry: () => void submit(expense, draft) });
     refreshFromServer();
   }
 }

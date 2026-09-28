@@ -15,6 +15,7 @@ import {
   transactionPageSchema,
   transactionSchema,
   type CreateTransactionRequest,
+  type TransactionDraft,
   type ListTransactionsQuery,
   type Transaction,
   type TransactionPage,
@@ -45,6 +46,11 @@ export interface ApiClientOptions {
   readonly fetch?: FetchLike;
   /** Wywoływane raz, gdy odświeżenie sesji zostało odrzucone i tokeny wyczyszczone. */
   readonly onSessionExpired?: () => void;
+  /**
+   * Generator UUID dla kluczy idempotencji. Domyślnie `crypto.randomUUID`;
+   * Hermes (React Native) go nie ma, więc mobile podaje `expo-crypto`.
+   */
+  readonly randomUUID?: () => string;
 }
 
 /**
@@ -102,8 +108,13 @@ export interface ApiClient {
   readonly transactions: {
     /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
     list(query?: Partial<ListTransactionsQuery>): Promise<TransactionPage>;
-    /** Zapisuje wydatek i zwraca go z id nadanym przez API. */
-    create(input: CreateTransactionRequest): Promise<Transaction>;
+    /** Wydatek z własnym kluczem idempotencji — jeden draft na jeden wydatek. */
+    draft(input: CreateTransactionRequest): TransactionDraft;
+    /**
+     * Zapisuje wydatek z nagłówkiem `Idempotency-Key`; ponowne wysłanie tego
+     * samego draftu zwraca zapisany wcześniej wydatek zamiast drugiego.
+     */
+    create(draft: TransactionDraft): Promise<Transaction>;
     /** Przenosi wydatek do kosza (miękkie usunięcie, da się przywrócić). */
     remove(id: string): Promise<void>;
   };
@@ -113,6 +124,8 @@ interface Request {
   readonly method: "GET" | "POST" | "PATCH" | "DELETE";
   readonly path: string;
   readonly body?: unknown;
+  /** Dodatkowe nagłówki, np. `Idempotency-Key` — te same przy ponowieniu po 401. */
+  readonly headers?: Readonly<Record<string, string>>;
   /** Endpointy `/auth/*`: bez tokena i bez odświeżania sesji przy 401. */
   readonly isPublic?: boolean;
 }
@@ -133,12 +146,13 @@ export function createApiClient({
   tokens,
   fetch = (url, init) => globalThis.fetch(url, init),
   onSessionExpired,
+  randomUUID = () => globalThis.crypto.randomUUID(),
 }: ApiClientOptions): ApiClient {
   const root = baseUrl.replace(/\/+$/, "");
   let refreshing: Promise<boolean> | null = null;
 
   async function send(request: Request, accessToken: string | null): Promise<Response> {
-    const headers: Record<string, string> = { Accept: "application/json" };
+    const headers: Record<string, string> = { ...request.headers, Accept: "application/json" };
     if (request.body !== undefined) headers["Content-Type"] = "application/json";
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
     try {
@@ -254,9 +268,15 @@ export function createApiClient({
     },
     transactions: {
       list: (query = {}) => read(`/transactions${queryString(query)}`, transactionPageSchema),
-      create: async (input) =>
+      draft: (input) => ({ input, idempotencyKey: randomUUID() }),
+      create: async ({ input, idempotencyKey }) =>
         parse(
-          await execute({ method: "POST", path: "/transactions", body: input }),
+          await execute({
+            method: "POST",
+            path: "/transactions",
+            body: input,
+            headers: { "Idempotency-Key": idempotencyKey },
+          }),
           transactionSchema,
         ),
       async remove(id) {

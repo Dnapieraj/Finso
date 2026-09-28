@@ -59,6 +59,15 @@ export const transactionPageSchema = pageSchema(transactionSchema);
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 /** Body `POST /transactions` przed walidacją — to, co wysyła klient (data jako tekst). */
 export type CreateTransactionRequest = z.input<typeof createTransactionSchema>;
+/**
+ * Wydatek gotowy do wysłania z kluczem idempotencji nadanym raz — ponowne
+ * wysłanie tego samego draftu (np. „Spróbuj ponownie”) niesie ten sam klucz,
+ * więc API nie zapisze wydatku drugi raz.
+ */
+export interface TransactionDraft {
+  readonly input: CreateTransactionRequest;
+  readonly idempotencyKey: string;
+}
 /** Zmiany transakcji. */
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 /** Filtry listy transakcji. */
