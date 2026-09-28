@@ -1,11 +1,11 @@
-import type { ArgumentsHost } from '@nestjs/common';
-import { Catch, NotFoundException } from '@nestjs/common';
-import { BaseExceptionFilter } from '@nestjs/core';
+import type { ArgumentsHost } from "@nestjs/common";
+import { Catch, NotFoundException } from "@nestjs/common";
+import { BaseExceptionFilter } from "@nestjs/core";
 
-import { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from "../generated/prisma/client.js";
 
 /** Prisma: "operacja wymagała rekordu, którego nie znaleziono". */
-const RECORD_NOT_FOUND = 'P2025';
+const RECORD_NOT_FOUND = "P2025";
 
 /**
  * `update`/`delete` z `where: { id, userId }` rzuca P2025, gdy wiersza

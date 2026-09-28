@@ -1,6 +1,6 @@
-import type { OnModuleInit } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
-import * as argon2 from 'argon2';
+import type { OnModuleInit } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import * as argon2 from "argon2";
 
 /**
  * Hashowanie haseł argon2id z domyślnymi parametrami biblioteki
@@ -15,10 +15,10 @@ export class PasswordService implements OnModuleInit {
    * Bez niej "zły e-mail" odpowiada w ~1 ms, a "złe hasło" w ~50 ms
    * (argon2) — mierząc czas, da się sprawdzić, kto ma konto.
    */
-  private dummyHash = '';
+  private dummyHash = "";
 
   async onModuleInit(): Promise<void> {
-    this.dummyHash = await argon2.hash('timing-equalization-placeholder');
+    this.dummyHash = await argon2.hash("timing-equalization-placeholder");
   }
 
   /** Hashuje nowe hasło (rejestracja). */

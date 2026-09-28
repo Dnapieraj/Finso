@@ -1,8 +1,8 @@
-import type { ExecutionContext } from '@nestjs/common';
-import { createParamDecorator, SetMetadata } from '@nestjs/common';
-import type { Request } from 'express';
+import type { ExecutionContext } from "@nestjs/common";
+import { createParamDecorator, SetMetadata } from "@nestjs/common";
+import type { Request } from "express";
 
-export const IS_PUBLIC_KEY = 'isPublic';
+export const IS_PUBLIC_KEY = "isPublic";
 
 /**
  * Wyłącza globalny JwtAuthGuard dla endpointu lub kontrolera.
@@ -30,7 +30,7 @@ export const CurrentUser = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): AuthUser => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
     if (!request.user) {
-      throw new Error('@CurrentUser() used on a route without JwtAuthGuard');
+      throw new Error("@CurrentUser() used on a route without JwtAuthGuard");
     }
     return request.user;
   },

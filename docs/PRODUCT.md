@@ -1,4 +1,5 @@
 # Finso — brief produktowy i techniczny
+
 **Marka parasolowa: Vireo** · Pierwszy produkt: **Finso**
 
 > **Podział ról (wrzesień 2026):** Finso to **aplikacja mobilna** (iOS + Android, `apps/mobile`) —
@@ -14,6 +15,7 @@
 **Vireo** — firma parasolowa. Pod nią w przyszłości: Finso (finanse), potem todo, potem cokolwiek dalej.
 
 Co to znaczy praktycznie od początku:
+
 - Jedno konto użytkownika działa we wszystkich produktach Vireo (SSO) — zaprojektuj auth jako osobny serwis od razu, nie wbudowany w Finso
 - Wspólny design system (paleta, typografia, komponenty) w `packages/ui` — kolejny produkt startuje szybciej
 - Domeny: `vireo.app` (marka), `finso.app` lub `getfinso.com` (produkt)
@@ -25,15 +27,19 @@ Co to znaczy praktycznie od początku:
 ## 2. Pozycjonowanie Finso — czego nie ma na rynku
 
 ### Problem z istniejącymi appkami
+
 Kontomierz, Spendee, Wallet, YNAB, Revolut Analytics — prawie wszystkie **raportują przeszłość**. Pokazują ładne wykresy tego, co już wydałeś. To za późno. Decyzja finansowa zapada **w momencie zakupu**, nie miesiąc później przy przeglądaniu wykresu.
 
 ### Pozycjonowanie Finso (jedno zdanie)
+
 > Finso odpowiada na pytanie „czy stać mnie na to teraz" — zanim wydasz pieniądze, nie po fakcie.
 
 ### Cztery realne luki, które Finso wypełnia
 
 #### A. Symulator decyzji — „Czy mnie na to stać?"
-Wpisujesz kwotę i kategorię *przed* zakupem. Finso odpowiada w sekundę:
+
+Wpisujesz kwotę i kategorię _przed_ zakupem. Finso odpowiada w sekundę:
+
 - „Tak — zostanie Ci 340 zł na 12 dni (28 zł/dzień)"
 - „Tak, ale cel »Wakacje« przesunie się o 3 tygodnie"
 - „Nie — zabraknie Ci 180 zł przed wypłatą"
@@ -41,9 +47,11 @@ Wpisujesz kwotę i kategorię *przed* zakupem. Finso odpowiada w sekundę:
 To jest **rdzeń produktu**. Widżet na ekranie głównym telefonu, żeby sprawdzić w sklepie w 3 sekundy. Tego nikt porządnie nie zrobił.
 
 #### B. Nieregularne dochody
+
 Prawie każda appka zakłada „pensja 1. dnia miesiąca". A realnie: studenci dorabiający na zleceniach, freelancerzy, kelnerzy z napiwkami, kierowcy, korepetytorzy.
 
 Finso obsługuje to inaczej:
+
 - Uczy się Twojego **średniego dochodu z ostatnich 3–6 miesięcy** i jego zmienności
 - Liczy budżet nie od „następnej wypłaty", tylko od **realistycznej prognozy z buforem bezpieczeństwa**
 - Tryb „chudy miesiąc": jeśli wpływy są niższe niż zwykle, automatycznie proponuje, co przyciąć
@@ -51,16 +59,20 @@ Finso obsługuje to inaczej:
 To jest duża, niezagospodarowana grupa i mocny wyróżnik w opisie w App Store.
 
 #### C. Detektor wycieków — subskrypcje i podwyżki
+
 Ludzie tracą realne pieniądze na rzeczach, o których zapomnieli.
+
 - Finso wykrywa powtarzające się kwoty i oznacza je jako prawdopodobne subskrypcje
 - Wykrywa **podwyżkę ceny**: „Spotify wzrósł z 23 zł na 27 zł w marcu — +48 zł rocznie"
 - Wykrywa **martwe subskrypcje**: „Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś tego jako używane — anulować?"
 - Podsumowanie: „Twoje subskrypcje to 217 zł/mies. = 2604 zł/rok"
 
 #### D. Wspólne wydatki wliczone do budżetu
+
 Splitwise rozlicza długi, ale nie wie nic o Twoim budżecie. Twoja appka budżetowa nie wie nic o tym, że kolega odda Ci 200 zł w piątek.
 
 Finso łączy jedno z drugim:
+
 - Dzielisz rachunek ze współlokatorami / ze znajomymi
 - Kwota „do odzyskania" jest widoczna w budżecie jako **należność w drodze**, a nie zniknięte pieniądze
 - Przypomnienia o rozliczeniu
@@ -72,6 +84,7 @@ Finso łączy jedno z drugim:
 Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 
 ### MVP (Faza 1) — to wypuszczasz
+
 1. Rejestracja/logowanie (e-mail + Google/Apple)
 2. Onboarding: źródła dochodu (regularne lub nieregularne), stałe zobowiązania
 3. Dodawanie wydatków (ręcznie, szybko — max 3 tapnięcia)
@@ -82,6 +95,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 8. Historia + wykres wg kategorii
 
 ### Faza 2
+
 9. Detektor subskrypcji i podwyżek cen
 10. Nieregularne dochody — uczenie się wzorca
 11. Wspólne wydatki / rozliczenia
@@ -89,6 +103,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 13. Tryb offline z synchronizacją
 
 ### Faza 3
+
 14. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
 15. Wielowalutowość
 16. Eksport PDF/CSV, raporty roczne
@@ -117,6 +132,7 @@ Do rewizji w Fazie 2, jeśli feedback użytkowników pokaże, że to myli.
 ## 4. Stack — pełna specyfikacja
 
 ### Monorepo
+
 ```
 finso/
 ├── apps/
@@ -133,17 +149,18 @@ finso/
 Narzędzie: **Turborepo** + **pnpm workspaces**
 
 ### Backend — `apps/api`
-| Element | Wybór | Dlaczego |
-|---|---|---|
-| Framework | **NestJS** | struktura modułowa, DI, świetnie wygląda w portfolio, standard w ogłoszeniach |
-| Język | **TypeScript** (strict) | |
-| ORM | **Prisma** | typy generowane z schemy, migracje, świetny DX |
-| Baza | **PostgreSQL** | |
-| Walidacja | **Zod** | te same schematy współdzielone z frontendem |
-| Auth | **Auth.js** lub **Lucia** + JWT | |
-| Testy | **Vitest** + **Supertest** | |
-| Dokumentacja API | **Swagger** (wbudowany w NestJS) | |
-| Kolejki/cron | **BullMQ** + Redis | powiadomienia, wykrywanie subskrypcji |
+
+| Element          | Wybór                            | Dlaczego                                                                      |
+| ---------------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| Framework        | **NestJS**                       | struktura modułowa, DI, świetnie wygląda w portfolio, standard w ogłoszeniach |
+| Język            | **TypeScript** (strict)          |                                                                               |
+| ORM              | **Prisma**                       | typy generowane z schemy, migracje, świetny DX                                |
+| Baza             | **PostgreSQL**                   |                                                                               |
+| Walidacja        | **Zod**                          | te same schematy współdzielone z frontendem                                   |
+| Auth             | **Auth.js** lub **Lucia** + JWT  |                                                                               |
+| Testy            | **Vitest** + **Supertest**       |                                                                               |
+| Dokumentacja API | **Swagger** (wbudowany w NestJS) |                                                                               |
+| Kolejki/cron     | **BullMQ** + Redis               | powiadomienia, wykrywanie subskrypcji                                         |
 
 #### Usuwanie danych — który mechanizm
 
@@ -158,10 +175,10 @@ raportach. To zwykła edycja (`PATCH`), a nie usuwanie.
 **2. „To ma zniknąć”** (pomyłka, duplikat) → `DELETE`. Sposób zależy od
 tego, czym jest rekord:
 
-| Rodzaj rekordu | `DELETE` robi | Dlaczego |
-|---|---|---|
+| Rodzaj rekordu                                                    | `DELETE` robi                                        | Dlaczego                                                                    |
+| ----------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- |
 | **Fakt finansowy** (pieniądze, które się ruszyły) albo **postęp** | miękkie usunięcie: `deletedAt` + `POST /:id/restore` | utrata jest kosztowna i zwykle przypadkowa, więc użytkownik musi móc cofnąć |
-| **Konfiguracja** (kategoria, reguła, źródło) | twarde usunięcie | nie ma czego przywracać, bo to ustawienie, nie historia |
+| **Konfiguracja** (kategoria, reguła, źródło)                      | twarde usunięcie                                     | nie ma czego przywracać, bo to ustawienie, nie historia                     |
 
 Zasada nadrzędna: **usunięcie konfiguracji nigdy nie kasuje faktów.**
 Klucze obce od faktów do konfiguracji mają `onDelete: SetNull` (fakt
@@ -171,17 +188,18 @@ a konfigurację trzeba zarchiwizować). `Cascade` jest dozwolone tylko od
 
 Obecne encje:
 
-| Encja | Rodzaj | Archiwizacja | `DELETE` |
-|---|---|---|---|
-| Transaction | fakt | — | miękkie |
-| IncomeEntry | fakt | — | miękkie |
-| Goal | postęp | — | miękkie |
-| RecurringRule | konfiguracja | `isActive` | twarde; transakcje → `SetNull` |
-| IncomeSource | konfiguracja | `isActive` | twarde tylko bez wpływów (także tych w koszu); inaczej 409 (`NoAction`) |
-| Category | konfiguracja | — | twarde; transakcje i reguły → `SetNull` |
-| User | — | — | twarde, kaskadowo wszystko, wymaga hasła |
+| Encja         | Rodzaj       | Archiwizacja | `DELETE`                                                                |
+| ------------- | ------------ | ------------ | ----------------------------------------------------------------------- |
+| Transaction   | fakt         | —            | miękkie                                                                 |
+| IncomeEntry   | fakt         | —            | miękkie                                                                 |
+| Goal          | postęp       | —            | miękkie                                                                 |
+| RecurringRule | konfiguracja | `isActive`   | twarde; transakcje → `SetNull`                                          |
+| IncomeSource  | konfiguracja | `isActive`   | twarde tylko bez wpływów (także tych w koszu); inaczej 409 (`NoAction`) |
+| Category      | konfiguracja | —            | twarde; transakcje i reguły → `SetNull`                                 |
+| User          | —            | —            | twarde, kaskadowo wszystko, wymaga hasła                                |
 
 **Nowa encja? Zadaj oba pytania:**
+
 1. Czy może „przestać obowiązywać”, a jej historia ma zostać? → dodaj `isActive`.
 2. Czy jest faktem finansowym lub postępem użytkownika? → `deletedAt`,
    dopisz model do soft-delete extension (`apps/api/src/prisma/soft-delete.extension.ts`),
@@ -194,50 +212,55 @@ zarchiwizować. Rozwiąże to przyszłe „opróżnij kosz”, czyli twarde
 usunięcie rekordów z `deletedAt`.
 
 ### Web — `apps/web` (strona wizytówkowa)
-| Element | Wybór |
-|---|---|
-| Framework | **Next.js 16** (App Router), generowanie statyczne (SSG) |
-| Style | **Tailwind CSS v4** + tokeny `@vireo/ui` |
-| Komponenty | **shadcn/ui** (Base UI) w stylu Vireo |
-| SEO | metadane, obrazy OG, sitemap, robots |
-| Podstrony | `/`, `/polityka-prywatnosci`, `/regulamin`, `/usuwanie-konta` |
-| Później | `apple-app-site-association` i `assetlinks.json` (linki z e-maili otwierają aplikację) |
+
+| Element    | Wybór                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------- |
+| Framework  | **Next.js 16** (App Router), generowanie statyczne (SSG)                               |
+| Style      | **Tailwind CSS v4** + tokeny `@vireo/ui`                                               |
+| Komponenty | **shadcn/ui** (Base UI) w stylu Vireo                                                  |
+| SEO        | metadane, obrazy OG, sitemap, robots                                                   |
+| Podstrony  | `/`, `/polityka-prywatnosci`, `/regulamin`, `/usuwanie-konta`                          |
+| Później    | `apple-app-site-association` i `assetlinks.json` (linki z e-maili otwierają aplikację) |
 
 Bez logowania, bez TanStack Query, bez formularzy i bez wywołań API.
 
 ### Mobile — `apps/mobile`
-| Element | Wybór |
-|---|---|
-| Framework | **React Native + Expo (SDK 57)** |
-| Nawigacja | **Expo Router** (file-based, jak Next.js) |
-| Style | **NativeWind** (Tailwind w RN — te same tokeny co strona) |
-| Stan serwera | **TanStack Query** |
-| Wykresy | **Victory Native XL** |
-| Push | **Expo Notifications** |
-| Bezpieczne przechowywanie | **expo-secure-store** |
-| Build/deploy | **EAS Build** + **EAS Submit** |
+
+| Element                   | Wybór                                                     |
+| ------------------------- | --------------------------------------------------------- |
+| Framework                 | **React Native + Expo (SDK 57)**                          |
+| Nawigacja                 | **Expo Router** (file-based, jak Next.js)                 |
+| Style                     | **NativeWind** (Tailwind w RN — te same tokeny co strona) |
+| Stan serwera              | **TanStack Query**                                        |
+| Wykresy                   | **Victory Native XL**                                     |
+| Push                      | **Expo Notifications**                                    |
+| Bezpieczne przechowywanie | **expo-secure-store**                                     |
+| Build/deploy              | **EAS Build** + **EAS Submit**                            |
 
 ### Płatności
+
 - **RevenueCat** — warstwa nad Apple IAP + Google Play Billing
 - **Krytyczne:** subskrypcja sprzedawana w appce mobilnej **musi** iść przez Apple IAP / Google Billing (prowizja 15–30%). Nie da się tego obejść Stripe'em wewnątrz appki. RevenueCat to ujednolica i daje jedno źródło prawdy o statusie subskrypcji w backendzie (webhooki).
 - ~~Web: Stripe Checkout~~ — **porzucone**: web nie ma logowania, więc nie ma do czego przypisać zakupu. Subskrypcje sprzedajemy wyłącznie w aplikacji (RevenueCat). Web pokazuje cennik i kieruje do sklepów.
 
 ### Infrastruktura
-| Co | Gdzie |
-|---|---|
-| Web | **Vercel** |
-| API | **Railway** lub **Fly.io** |
-| Baza | **Neon** (serverless Postgres) lub **Supabase** |
-| Pliki (paragony) | **Cloudflare R2** lub Supabase Storage |
-| Monitoring błędów | **Sentry** (web + mobile + API) |
-| Analityka produktowa | **PostHog** |
-| CI/CD | **GitHub Actions** |
+
+| Co                   | Gdzie                                           |
+| -------------------- | ----------------------------------------------- |
+| Web                  | **Vercel**                                      |
+| API                  | **Railway** lub **Fly.io**                      |
+| Baza                 | **Neon** (serverless Postgres) lub **Supabase** |
+| Pliki (paragony)     | **Cloudflare R2** lub Supabase Storage          |
+| Monitoring błędów    | **Sentry** (web + mobile + API)                 |
+| Analityka produktowa | **PostHog**                                     |
+| CI/CD                | **GitHub Actions**                              |
 
 ---
 
 ## 5. Bezpieczeństwo i prawo — nie pomijaj
 
 Appka finansowa to dane wrażliwe. Do portfolio i do realnego wypuszczenia potrzebujesz:
+
 - **Hashowanie haseł:** argon2 (nie bcrypt, nie SHA)
 - **Szyfrowanie wrażliwych pól** w bazie (at-rest)
 - **Rate limiting** na endpointach auth
@@ -253,12 +276,14 @@ Nie jestem prawnikiem — przy sprzedaży subskrypcji w Polsce skonsultuj kwesti
 ## 6. Monetyzacja
 
 **Finso Free**
+
 - Ręczne wydatki bez limitu
 - 1 cel oszczędnościowy
 - Historia 60 dni
 - Symulator „czy mnie stać" — 5 użyć dziennie
 
 **Finso Plus — 12,99 zł/mies. lub 99 zł/rok**
+
 - Nielimitowane cele i symulacje
 - Detektor subskrypcji i podwyżek
 - Nieregularne dochody / prognozy
@@ -274,21 +299,22 @@ Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez Revenue
 
 ## 7. Kolejność budowania
 
-| Etap | Co | Przybliżony czas |
-|---|---|---|
-| 0 | Setup monorepo, wspólny config, CI — **zrobione** | 2–3 dni |
-| 1–2 | Model danych: schema Prisma, soft delete, docker-compose, migracje, seed kategorii — **zrobione** | — |
-| 3 | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione** | 1 tydz. |
-| 4 | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione** | 1–2 tyg. |
-| 5 | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione** | — |
-| 6 | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**) | kilka dni |
-| 7 | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**), logowanie, rejestracja, wylogowanie i usuwanie konta (7.1, **zrobione**); dalej: dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg. |
-| 8 | Publikacja: App Store + Google Play + Vercel | 1–2 tyg. (review trwa) |
+| Etap | Co                                                                                                                                                                                                                                                                                                                                                | Przybliżony czas       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 0    | Setup monorepo, wspólny config, CI — **zrobione**                                                                                                                                                                                                                                                                                                 | 2–3 dni                |
+| 1–2  | Model danych: schema Prisma, soft delete, docker-compose, migracje, seed kategorii — **zrobione**                                                                                                                                                                                                                                                 | —                      |
+| 3    | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione**                                                                                                                                                                                                                                                                         | 1 tydz.                |
+| 4    | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione**                                                                                                                                                                                                                             | 1–2 tyg.               |
+| 5    | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione**                                                                                                                                                                                                                                    | —                      |
+| 6    | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**)                                                                                                                                                                                    | kilka dni              |
+| 7    | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**), logowanie, rejestracja, wylogowanie i usuwanie konta (7.1, **zrobione**); dalej: dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg.               |
+| 8    | Publikacja: App Store + Google Play + Vercel                                                                                                                                                                                                                                                                                                      | 1–2 tyg. (review trwa) |
 
 _Numeracja etapów 0–6 odpowiada historii commitów (np. „etap 3” = silnik budżetu, „etap 5a” = tokeny).
 Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 
 **Do zrobienia przed publikacją (etap 8) — placeholdery w `apps/web`:**
+
 - Przyciski „Pobierz z App Store / Google Play” zamienić na **oficjalne grafiki sklepów** (wymagają ich wytyczne marketingowe Apple i Google) — `apps/web/src/components/landing/store-buttons.tsx`
 - Linki do sklepów zamiast `#` — `apps/web/src/content/links.ts`
 - Identyfikatory aplikacji w sklepach (`ios.bundleIdentifier`, `android.package` w `apps/mobile/app.json`) — **nie da się ich zmienić po publikacji**; ustalić przed pierwszym buildem EAS (np. odwrócona domena, gdy będzie prawdziwa)
@@ -299,10 +325,12 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
 
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
+
 - Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
 Na ekranach logowania i rejestracji są już przyciski „Kontynuuj z Apple / Google”, ale tylko wizualnie (tapnięcie pokazuje „wkrótce dostępne”). Martwy przycisk nie przejdzie review w sklepie (App Store 2.1), więc przed publikacją muszą działać albo zniknąć. Do zrobienia:
+
 - **API:** weryfikacja tokenów tożsamości od Apple i Google po stronie serwera, powiązanie z kontem (e-mail / identyfikator dostawcy), konta bez hasła (`passwordHash` opcjonalny)
 - **Usuwanie konta:** konto bez hasła nie potwierdzi usunięcia hasłem — inne potwierdzenie (np. ponowne logowanie u dostawcy) w appce i ta sama zmiana na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`), w jednym etapie; test `apps/mobile/__tests__/delete-account.test.tsx` pilnuje zgodności
 - **Polityka prywatności:** Apple i Google jako nowi odbiorcy danych logowania (TODO w `apps/web/src/messages/legal/privacy.ts`)

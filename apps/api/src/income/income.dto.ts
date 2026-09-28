@@ -7,8 +7,8 @@ import {
   listIncomeEntriesQuerySchema,
   updateIncomeEntrySchema,
   updateIncomeSourceSchema,
-} from '@vireo/shared';
-import { createZodDto } from 'nestjs-zod';
+} from "@vireo/shared";
+import { createZodDto } from "nestjs-zod";
 
 export class CreateIncomeSourceDto extends createZodDto(createIncomeSourceSchema) {}
 export class UpdateIncomeSourceDto extends createZodDto(updateIncomeSourceSchema) {}

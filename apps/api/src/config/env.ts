@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Schemat zmiennych środowiskowych API. Walidowany raz, przy starcie —
@@ -6,7 +6,7 @@ import { z } from 'zod';
  * podpisywać tokeny kluczem `undefined`.
  */
 export const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.url(),
 
@@ -16,7 +16,11 @@ export const envSchema = z.object({
    */
   JWT_ACCESS_SECRET: z.string().min(32),
   /** Krótki czas życia: skradziony access token jest ważny tylko chwilę. */
-  JWT_ACCESS_TTL_SECONDS: z.coerce.number().int().positive().default(15 * 60),
+  JWT_ACCESS_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(15 * 60),
   /** Okno bezczynności — po tylu dniach bez odświeżenia trzeba się zalogować. */
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
@@ -36,8 +40,8 @@ export function validateEnv(raw: Record<string, unknown>): Env {
   const result = envSchema.safeParse(raw);
   if (!result.success) {
     const problems = result.error.issues
-      .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
-      .join('\n');
+      .map((issue) => `  - ${issue.path.join(".")}: ${issue.message}`)
+      .join("\n");
     throw new Error(`Invalid environment configuration:\n${problems}`);
   }
   return result.data;

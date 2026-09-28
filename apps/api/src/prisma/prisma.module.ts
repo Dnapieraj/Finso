@@ -1,10 +1,10 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module } from "@nestjs/common";
 
-import { PrismaService } from './prisma.service.js';
-import { withSoftDelete } from './soft-delete.extension.js';
+import { PrismaService } from "./prisma.service.js";
+import { withSoftDelete } from "./soft-delete.extension.js";
 
 /** Token wstrzykiwania klienta bazy — patrz PRISMA_TOKEN_RATIONALE poniżej. */
-export const PRISMA = Symbol('PRISMA');
+export const PRISMA = Symbol("PRISMA");
 
 /** Typ klienta z aktywnym rozszerzeniem soft-delete. */
 export type Db = ReturnType<typeof withSoftDelete<PrismaService>>;

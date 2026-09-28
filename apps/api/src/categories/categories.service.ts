@@ -1,9 +1,9 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { Category, CreateCategoryInput, UpdateCategoryInput } from '@vireo/shared';
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { Category, CreateCategoryInput, UpdateCategoryInput } from "@vireo/shared";
 
-import type { Category as CategoryRow } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import type { Category as CategoryRow } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 /** Kategorie widoczne dla użytkownika: systemowe (userId = null) + własne. */
 const visibleTo = (userId: string) => ({ OR: [{ userId }, { userId: null }] });
@@ -15,7 +15,7 @@ export class CategoriesService {
   async list(userId: string): Promise<Category[]> {
     const rows = await this.db.category.findMany({
       where: visibleTo(userId),
-      orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      orderBy: [{ name: "asc" }, { id: "asc" }],
     });
     return rows.map(toCategory);
   }

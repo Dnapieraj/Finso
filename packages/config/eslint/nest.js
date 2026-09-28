@@ -27,17 +27,11 @@ export const nestConfig = tseslint.config(...baseConfig, {
     },
   },
   rules: {
-    "@typescript-eslint/no-empty-function": [
-      "error",
-      { allow: ["constructors"] },
-    ],
+    "@typescript-eslint/no-empty-function": ["error", { allow: ["constructors"] }],
     // Puste klasy z dekoratorem (@Module, @Injectable, @Controller...) to
     // normalny wzorzec Nesta — DI działa przez metadane dekoratora, nie
     // przez zawartość klasy.
-    "@typescript-eslint/no-extraneous-class": [
-      "error",
-      { allowWithDecorator: true },
-    ],
+    "@typescript-eslint/no-extraneous-class": ["error", { allowWithDecorator: true }],
   },
 });
 

@@ -1,18 +1,18 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateTransactionInput,
   ListTransactionsQuery,
   Transaction,
   TransactionPage,
   UpdateTransactionInput,
-} from '@vireo/shared';
+} from "@vireo/shared";
 
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
-import { OwnedReferencesService } from '../common/owned-references.service.js';
-import { dateRange, toPage } from '../common/pagination.js';
-import type { Transaction as TransactionRow } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import { OwnedReferencesService } from "../common/owned-references.service.js";
+import { dateRange, toPage } from "../common/pagination.js";
+import type { Transaction as TransactionRow } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
 export class TransactionsService {
@@ -27,21 +27,18 @@ export class TransactionsService {
       // Kursor z cudzej transakcji "działałby" (Prisma porównuje po jego
       // dacie) i zdradzałby, kiedy ktoś inny coś kupił. Tylko własne.
       const owned = await this.db.transaction.count({ where: { id: query.cursor, userId } });
-      if (owned === 0) throw new BadRequestException('Invalid cursor');
+      if (owned === 0) throw new BadRequestException("Invalid cursor");
     }
     const rows = await this.db.transaction.findMany({
       where: {
         userId,
         categoryId: query.categoryId,
         status: query.status,
-        date: dateRange(
-          query.from && fromIsoDate(query.from),
-          query.to && fromIsoDate(query.to),
-        ),
+        date: dateRange(query.from && fromIsoDate(query.from), query.to && fromIsoDate(query.to)),
       },
       // `id` jako drugi klucz: kilka wydatków z tego samego dnia musi mieć
       // stałą kolejność, inaczej kursor mógłby pominąć lub powtórzyć wiersz.
-      orderBy: [{ date: 'desc' }, { id: 'desc' }],
+      orderBy: [{ date: "desc" }, { id: "desc" }],
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });
@@ -56,7 +53,7 @@ export class TransactionsService {
 
   async create(userId: string, input: CreateTransactionInput): Promise<Transaction> {
     await this.refs.assertCategory(userId, input.categoryId);
-    await this.refs.assertRecurringRule(userId, input.recurringRuleId, 'EXPENSE');
+    await this.refs.assertRecurringRule(userId, input.recurringRuleId, "EXPENSE");
     const row = await this.db.transaction.create({
       data: {
         userId,
@@ -78,7 +75,7 @@ export class TransactionsService {
    */
   async update(userId: string, id: string, input: UpdateTransactionInput): Promise<Transaction> {
     await this.refs.assertCategory(userId, input.categoryId);
-    await this.refs.assertRecurringRule(userId, input.recurringRuleId, 'EXPENSE');
+    await this.refs.assertRecurringRule(userId, input.recurringRuleId, "EXPENSE");
     const row = await this.db.transaction.update({
       where: { id, userId, deletedAt: null },
       data: { ...input, date: input.date && fromIsoDate(input.date) },

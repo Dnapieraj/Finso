@@ -1,19 +1,19 @@
-import { ConflictException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
-import type { AuthSession, AuthTokens, LoginInput, RegisterInput } from '@vireo/shared';
+import { ConflictException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
+import type { AuthSession, AuthTokens, LoginInput, RegisterInput } from "@vireo/shared";
 
-import type { Env } from '../config/env.js';
-import type { User } from '../generated/prisma/client.js';
-import { Prisma } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
-import { toPublicUser } from '../users/public-user.js';
-import { PasswordService } from './password.service.js';
-import { RefreshTokenService } from './refresh-token.service.js';
+import type { Env } from "../config/env.js";
+import type { User } from "../generated/prisma/client.js";
+import { Prisma } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
+import { toPublicUser } from "../users/public-user.js";
+import { PasswordService } from "./password.service.js";
+import { RefreshTokenService } from "./refresh-token.service.js";
 
 /** Kod błędu Prismy dla naruszenia ograniczenia unikalności. */
-const UNIQUE_VIOLATION = 'P2002';
+const UNIQUE_VIOLATION = "P2002";
 
 @Injectable()
 export class AuthService {
@@ -41,7 +41,7 @@ export class AuthService {
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === UNIQUE_VIOLATION
       ) {
-        throw new ConflictException('Email already registered');
+        throw new ConflictException("Email already registered");
       }
       throw error;
     }
@@ -56,7 +56,7 @@ export class AuthService {
     const user = await this.db.user.findUnique({ where: { email: input.email } });
     const valid = await this.passwords.verify(user?.passwordHash ?? null, input.password);
     if (!user || !valid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException("Invalid email or password");
     }
 
     if (this.passwords.needsRehash(user.passwordHash)) {
@@ -99,6 +99,6 @@ export class AuthService {
   }
 
   private accessTtl(): number {
-    return this.config.get('JWT_ACCESS_TTL_SECONDS', { infer: true });
+    return this.config.get("JWT_ACCESS_TTL_SECONDS", { infer: true });
   }
 }

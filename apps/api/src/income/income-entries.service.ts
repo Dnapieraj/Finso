@@ -1,18 +1,18 @@
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateIncomeEntryInput,
   IncomeEntry,
   IncomeEntryPage,
   ListIncomeEntriesQuery,
   UpdateIncomeEntryInput,
-} from '@vireo/shared';
+} from "@vireo/shared";
 
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
-import { OwnedReferencesService } from '../common/owned-references.service.js';
-import { dateRange, toPage } from '../common/pagination.js';
-import type { IncomeEntry as IncomeEntryRow } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import { OwnedReferencesService } from "../common/owned-references.service.js";
+import { dateRange, toPage } from "../common/pagination.js";
+import type { IncomeEntry as IncomeEntryRow } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
 export class IncomeEntriesService {
@@ -25,18 +25,15 @@ export class IncomeEntriesService {
   async list(userId: string, query: ListIncomeEntriesQuery): Promise<IncomeEntryPage> {
     if (query.cursor) {
       const owned = await this.db.incomeEntry.count({ where: { id: query.cursor, userId } });
-      if (owned === 0) throw new BadRequestException('Invalid cursor');
+      if (owned === 0) throw new BadRequestException("Invalid cursor");
     }
     const rows = await this.db.incomeEntry.findMany({
       where: {
         userId,
         incomeSourceId: query.incomeSourceId,
-        date: dateRange(
-          query.from && fromIsoDate(query.from),
-          query.to && fromIsoDate(query.to),
-        ),
+        date: dateRange(query.from && fromIsoDate(query.from), query.to && fromIsoDate(query.to)),
       },
-      orderBy: [{ date: 'desc' }, { id: 'desc' }],
+      orderBy: [{ date: "desc" }, { id: "desc" }],
       take: query.limit + 1,
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });

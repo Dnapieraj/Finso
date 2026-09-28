@@ -1,17 +1,17 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateRecurringRuleInput,
   RecurringRule,
   UpdateRecurringRuleInput,
-} from '@vireo/shared';
-import { recurringRuleShapeSchema } from '@vireo/shared';
-import { ZodValidationException } from 'nestjs-zod';
+} from "@vireo/shared";
+import { recurringRuleShapeSchema } from "@vireo/shared";
+import { ZodValidationException } from "nestjs-zod";
 
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
-import { OwnedReferencesService } from '../common/owned-references.service.js';
-import type { RecurringRule as RecurringRuleRow } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import { OwnedReferencesService } from "../common/owned-references.service.js";
+import type { RecurringRule as RecurringRuleRow } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
 export class RecurringRulesService {
@@ -23,7 +23,7 @@ export class RecurringRulesService {
   async list(userId: string): Promise<RecurringRule[]> {
     const rows = await this.db.recurringRule.findMany({
       where: { userId },
-      orderBy: [{ kind: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ kind: "asc" }, { createdAt: "asc" }],
     });
     return rows.map(toRecurringRule);
   }
@@ -48,7 +48,11 @@ export class RecurringRulesService {
    * z bazy i walidujemy wynik — `frequency: 'WEEKLY'` bez `dayOfWeek`
    * przy regule, która go nie miała, to 400, a nie zepsuta reguła.
    */
-  async update(userId: string, id: string, input: UpdateRecurringRuleInput): Promise<RecurringRule> {
+  async update(
+    userId: string,
+    id: string,
+    input: UpdateRecurringRuleInput,
+  ): Promise<RecurringRule> {
     const existing = await this.db.recurringRule.findFirst({ where: { id, userId } });
     if (!existing) throw new NotFoundException();
 

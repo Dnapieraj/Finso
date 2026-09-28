@@ -1,7 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module } from "@nestjs/common";
 
-import { RecurringRulesController } from './recurring-rules.controller.js';
-import { RecurringRulesService } from './recurring-rules.service.js';
+import { RecurringRulesController } from "./recurring-rules.controller.js";
+import { RecurringRulesService } from "./recurring-rules.service.js";
 
 @Module({
   controllers: [RecurringRulesController],

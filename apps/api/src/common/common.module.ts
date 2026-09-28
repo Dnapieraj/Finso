@@ -1,7 +1,7 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module } from "@nestjs/common";
 
-import { CLOCK, systemClock } from './clock.js';
-import { OwnedReferencesService } from './owned-references.service.js';
+import { CLOCK, systemClock } from "./clock.js";
+import { OwnedReferencesService } from "./owned-references.service.js";
 
 @Global()
 @Module({

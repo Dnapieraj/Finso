@@ -1,11 +1,11 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import type {
   BudgetSnapshot,
   BudgetSummary,
   RecurrenceSchedule,
   SimulatePurchaseRequest,
   SimulationResult,
-} from '@vireo/shared';
+} from "@vireo/shared";
 import {
   assembleBudgetInput,
   calculateAvailableBalance,
@@ -13,15 +13,15 @@ import {
   grosze,
   simulatePurchase,
   todayInTimeZone,
-} from '@vireo/shared';
+} from "@vireo/shared";
 
-import type { Clock } from '../common/clock.js';
-import { CLOCK } from '../common/clock.js';
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
-import { OwnedReferencesService } from '../common/owned-references.service.js';
-import type { RecurringRule } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import type { Clock } from "../common/clock.js";
+import { CLOCK } from "../common/clock.js";
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import { OwnedReferencesService } from "../common/owned-references.service.js";
+import type { RecurringRule } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 /**
  * Warstwa między bazą a silnikiem budżetu. Nie liczy niczego sama —
@@ -86,9 +86,9 @@ export class BudgetService {
     // Soft-delete extension pomija usunięte transakcje, wpływy i cele.
     const [sources, entries, expenseRules, transactions, goals] = await Promise.all([
       this.db.incomeSource.findMany({ where: { userId }, include: { recurringRule: true } }),
-      this.db.incomeEntry.findMany({ where: { userId, status: 'CONFIRMED', date: inPeriod } }),
-      this.db.recurringRule.findMany({ where: { userId, kind: 'EXPENSE', isActive: true } }),
-      this.db.transaction.findMany({ where: { userId, status: 'CONFIRMED', date: inPeriod } }),
+      this.db.incomeEntry.findMany({ where: { userId, status: "CONFIRMED", date: inPeriod } }),
+      this.db.recurringRule.findMany({ where: { userId, kind: "EXPENSE", isActive: true } }),
+      this.db.transaction.findMany({ where: { userId, status: "CONFIRMED", date: inPeriod } }),
       this.db.goal.findMany({ where: { userId } }),
     ]);
 
@@ -119,7 +119,7 @@ export class BudgetService {
                 // Nazwa reguły wydatku jest wymagana od walidacji API
                 // (recurringRuleShapeSchema); kolumna jest nullable tylko
                 // dla reguł INCOME, więc `??` to wyłącznie obrona typów.
-                label: rule.name ?? '',
+                label: rule.name ?? "",
                 expectedAmount: grosze(rule.expectedAmount),
                 isActive: rule.isActive,
                 schedule: toSchedule(rule),

@@ -1,11 +1,11 @@
-import type { CanActivate, ExecutionContext } from '@nestjs/common';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
-import { z } from 'zod';
+import type { CanActivate, ExecutionContext } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { JwtService } from "@nestjs/jwt";
+import { z } from "zod";
 
-import type { AuthenticatedRequest } from './decorators.js';
-import { IS_PUBLIC_KEY } from './decorators.js';
+import type { AuthenticatedRequest } from "./decorators.js";
+import { IS_PUBLIC_KEY } from "./decorators.js";
 
 /**
  * Payload po weryfikacji podpisu też walidujemy: poprawny podpis mówi
@@ -66,6 +66,6 @@ function extractBearerToken(header: string | undefined): string | null {
   if (!header) {
     return null;
   }
-  const [scheme, token] = header.split(' ');
-  return scheme?.toLowerCase() === 'bearer' && token ? token : null;
+  const [scheme, token] = header.split(" ");
+  return scheme?.toLowerCase() === "bearer" && token ? token : null;
 }

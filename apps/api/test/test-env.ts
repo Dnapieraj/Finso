@@ -3,4 +3,4 @@
  * Można nadpisać zmienną TEST_DATABASE_URL (np. w CI).
  */
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://finso:finso@localhost:5432/finso_test';
+  process.env.TEST_DATABASE_URL ?? "postgresql://finso:finso@localhost:5432/finso_test";

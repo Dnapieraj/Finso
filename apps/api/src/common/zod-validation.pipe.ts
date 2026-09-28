@@ -1,7 +1,7 @@
-import type { ArgumentMetadata, PipeTransform } from '@nestjs/common';
-import { Injectable } from '@nestjs/common';
-import { createZodValidationPipe, ZodSchemaDeclarationException } from 'nestjs-zod';
-import { isZodDto } from 'nestjs-zod/dto';
+import type { ArgumentMetadata, PipeTransform } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
+import { createZodValidationPipe, ZodSchemaDeclarationException } from "nestjs-zod";
+import { isZodDto } from "nestjs-zod/dto";
 
 // Jawny typ: nestjs-zod nie eksportuje nazwy typu tej klasy, a przy
 // `declaration: true` tsc wymaga typu, który da się zapisać w .d.ts.
@@ -20,7 +20,7 @@ const BaseZodValidationPipe: new () => PipeTransform = createZodValidationPipe()
 @Injectable()
 export class ZodValidationPipe extends BaseZodValidationPipe {
   override transform(value: unknown, metadata: ArgumentMetadata): unknown {
-    if (metadata.type === 'body' && !isZodDto(metadata.metatype)) {
+    if (metadata.type === "body" && !isZodDto(metadata.metatype)) {
       throw new ZodSchemaDeclarationException();
     }
     return super.transform(value, metadata);

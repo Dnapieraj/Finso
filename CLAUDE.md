@@ -12,6 +12,7 @@ ani nie edytuj kopii poza repo — to już raz spowodowało rozjazd.
 zanim użytkownik wyda pieniądze. Nie raportuje przeszłości jak inne appki.
 
 **Wyróżniki:**
+
 1. Symulator decyzji — planowany wydatek → ile zostanie, wpływ na cele
 2. Nieregularne dochody — budżet z prognozy i zmienności
 3. Detektor subskrypcji — powtarzające się płatności, podwyżki, martwe subskrypcje
@@ -33,6 +34,7 @@ usuwanie konta, subskrypcje (RevenueCat) — wszystko tu.
 
 **`apps/web` to WYŁĄCZNIE strona marketingowa/wizytówkowa.** Statyczna,
 bez logowania, bez backendu logiki biznesowej. Zawiera:
+
 - Stronę główną: hero, wyróżniki produktu, jak appka działa
 - Cennik (Free / Plus) z przyciskiem do sklepów — **żadnych płatności na webie**
 - Przyciski „Pobierz z App Store" / „Pobierz z Google Play"
@@ -52,32 +54,32 @@ i **wyjaśniaj decyzje architektoniczne**.
 
 ## Podjęte decyzje
 
-| Decyzja | Wybór |
-|---|---|
-| Scope pakietów wewnętrznych | `@vireo/*` |
-| Commity | Osobny commit na każdy logiczny krok, Conventional Commits |
-| Next.js (web) | 16 |
-| Prymitywy shadcn/ui | Base UI |
-| Expo (mobile) | SDK 57 |
-| Prisma | 7, klient generowany do własnego katalogu, driver adapter Postgres |
-| NestJS | 11 |
-| Auth | Własna implementacja: argon2 + JWT (access + refresh z rotacją) |
-| Transport tokenów | JSON body; mobile: expo-secure-store. **Web nie obsługuje sesji użytkownika**, więc httpOnly cookie przez Next.js BFF jest NIEUŻYWANE po zmianie kierunku — usuń, jeśli zostało zaimplementowane |
-| Okres budżetowy | `User.periodStartDay` (dzień od wypłaty), nie kalendarzowy miesiąc |
-| Dochód/zobowiązania w budżecie | Liczone per wystąpienie (potwierdzone + oczekiwane × (wystąpienia − potwierdzone)) |
-| RecurringRule.label | Wymagane dla reguł wydatków, opcjonalne dla reguł dochodu |
-| Limity planu FREE | Zapisane, ale egzekwowane dopiero w etapie płatności |
-| Kierunek wizualny | **A · Oliwka** — zieleń mchu (od ptaka vireo) |
-| Fonty | **Bricolage Grotesque** (nagłówki, `--font-display`) + **Hanken Grotesk** (tekst i kwoty, `--font-body`), oba z `latin-ext` dla polskich znaków |
-| Kolory design systemu | Hex, nie oklch (kompatybilność z React Native) |
-| Tokeny designu | **Źródło prawdy: `@vireo/tokens`** — czysty TypeScript bez Reacta (paleta hex, kontrast, generator zmiennych CSS), używany przez web i mobile. `@vireo/ui` generuje z nich `theme.css` (`generate:theme`, nie edytowany ręcznie). Mobile NIE zależy od `@vireo/ui` (webowy React + react-dom = duplikat Reacta w aplikacji Expo) |
-| Dark mode | Systemowy domyślnie (`prefers-color-scheme`) + klasa `.dark`/`.light` pod przyszły przełącznik |
-| Formatowanie kwot | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import) |
-| Płatności | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu |
-| Kwoty | Int w groszach |
-| Style w mobile | **NativeWind 4 + Tailwind 3.4 tylko w `apps/mobile`** (NativeWind 4 nie działa z Tailwind v4; web zostaje na v4). Konfiguracja Tailwind czyta kolory z `@vireo/tokens`. Przejście na NativeWind 5, gdy wyjdzie stabilny |
-| Fonty w mobile | `@expo-google-fonts/bricolage-grotesque` + `@expo-google-fonts/hanken-grotesk` przez `expo-font` |
-| Klient API | W `@vireo/shared/api` (osobna ścieżka importu): czysty TS na `fetch`, odpowiedzi walidowane schematami Zod wspólnymi z API, tokeny przez wstrzykiwany `TokenStore` (mobile: `expo-secure-store`) |
+| Decyzja                        | Wybór                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scope pakietów wewnętrznych    | `@vireo/*`                                                                                                                                                                                                                                                                                                                       |
+| Commity                        | Osobny commit na każdy logiczny krok, Conventional Commits                                                                                                                                                                                                                                                                       |
+| Next.js (web)                  | 16                                                                                                                                                                                                                                                                                                                               |
+| Prymitywy shadcn/ui            | Base UI                                                                                                                                                                                                                                                                                                                          |
+| Expo (mobile)                  | SDK 57                                                                                                                                                                                                                                                                                                                           |
+| Prisma                         | 7, klient generowany do własnego katalogu, driver adapter Postgres                                                                                                                                                                                                                                                               |
+| NestJS                         | 11                                                                                                                                                                                                                                                                                                                               |
+| Auth                           | Własna implementacja: argon2 + JWT (access + refresh z rotacją)                                                                                                                                                                                                                                                                  |
+| Transport tokenów              | JSON body; mobile: expo-secure-store. **Web nie obsługuje sesji użytkownika**, więc httpOnly cookie przez Next.js BFF jest NIEUŻYWANE po zmianie kierunku — usuń, jeśli zostało zaimplementowane                                                                                                                                 |
+| Okres budżetowy                | `User.periodStartDay` (dzień od wypłaty), nie kalendarzowy miesiąc                                                                                                                                                                                                                                                               |
+| Dochód/zobowiązania w budżecie | Liczone per wystąpienie (potwierdzone + oczekiwane × (wystąpienia − potwierdzone))                                                                                                                                                                                                                                               |
+| RecurringRule.label            | Wymagane dla reguł wydatków, opcjonalne dla reguł dochodu                                                                                                                                                                                                                                                                        |
+| Limity planu FREE              | Zapisane, ale egzekwowane dopiero w etapie płatności                                                                                                                                                                                                                                                                             |
+| Kierunek wizualny              | **A · Oliwka** — zieleń mchu (od ptaka vireo)                                                                                                                                                                                                                                                                                    |
+| Fonty                          | **Bricolage Grotesque** (nagłówki, `--font-display`) + **Hanken Grotesk** (tekst i kwoty, `--font-body`), oba z `latin-ext` dla polskich znaków                                                                                                                                                                                  |
+| Kolory design systemu          | Hex, nie oklch (kompatybilność z React Native)                                                                                                                                                                                                                                                                                   |
+| Tokeny designu                 | **Źródło prawdy: `@vireo/tokens`** — czysty TypeScript bez Reacta (paleta hex, kontrast, generator zmiennych CSS), używany przez web i mobile. `@vireo/ui` generuje z nich `theme.css` (`generate:theme`, nie edytowany ręcznie). Mobile NIE zależy od `@vireo/ui` (webowy React + react-dom = duplikat Reacta w aplikacji Expo) |
+| Dark mode                      | Systemowy domyślnie (`prefers-color-scheme`) + klasa `.dark`/`.light` pod przyszły przełącznik                                                                                                                                                                                                                                   |
+| Formatowanie kwot              | `formatMoney` w `@vireo/shared/format/`, oddzielone od `budget/` (ESLint blokuje import)                                                                                                                                                                                                                                         |
+| Płatności                      | Wyłącznie RevenueCat w mobile (Apple IAP + Google Play Billing). Stripe/web USUNIĘTE z planu                                                                                                                                                                                                                                     |
+| Kwoty                          | Int w groszach                                                                                                                                                                                                                                                                                                                   |
+| Style w mobile                 | **NativeWind 4 + Tailwind 3.4 tylko w `apps/mobile`** (NativeWind 4 nie działa z Tailwind v4; web zostaje na v4). Konfiguracja Tailwind czyta kolory z `@vireo/tokens`. Przejście na NativeWind 5, gdy wyjdzie stabilny                                                                                                          |
+| Fonty w mobile                 | `@expo-google-fonts/bricolage-grotesque` + `@expo-google-fonts/hanken-grotesk` przez `expo-font`                                                                                                                                                                                                                                 |
+| Klient API                     | W `@vireo/shared/api` (osobna ścieżka importu): czysty TS na `fetch`, odpowiedzi walidowane schematami Zod wspólnymi z API, tokeny przez wstrzykiwany `TokenStore` (mobile: `expo-secure-store`)                                                                                                                                 |
 
 ## Stack
 
@@ -110,6 +112,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 ## Zasady kodu — nienegocjowalne
 
 ### Pieniądze
+
 - Int w groszach, nigdy Float
 - Formatowanie WYŁĄCZNIE przez `formatMoney` z `@vireo/shared/format/`
 - `budget/` nigdy nie importuje `format/` (wymuszone przez ESLint)
@@ -117,6 +120,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
   w wywołaniu (`whole: 'down' | 'up'`)
 
 ### Daty
+
 - `@db.Date` dla dat kalendarzowych (transakcje, wpływy, terminy celów) —
   nie `DateTime`, żeby uniknąć przesunięć o dzień przy zmianie stref
 - `createdAt`/`updatedAt` jako zwykłe `DateTime` (Postgres `timestamptz`, UTC)
@@ -124,10 +128,12 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
   użytkownika — testy na DST i lata przestępne obowiązkowe
 
 ### TypeScript
+
 - Tryb `strict`, zero `any`
 - Typy współdzielone w `@vireo/shared`, nie duplikuj
 
 ### Logika biznesowa
+
 - Silnik budżetu w `@vireo/shared/budget/` — czysty TypeScript, zero
   importów z NestJS, React, Prisma, `format/`
 - Każda funkcja eksportowana ma JSDoc
@@ -139,6 +145,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
   z dzielenia groszy
 
 ### Usuwanie danych — trzy różne mechanizmy, celowo
+
 - `Transaction`, `Goal`: soft delete (`deletedAt`) — dane finansowe nie znikają
 - `IncomeSource`: `isActive: false` (archiwizacja) — jeśli ma powiązane
   wpływy, nie da się usunąć, tylko zarchiwizować
@@ -146,6 +153,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - Wszystkie zapytania i wyliczenia budżetu MUSZĄ pomijać rekordy usunięte/nieaktywne
 
 ### UI (mobile jako główny cel)
+
 - Dark mode od początku
 - Mobile-first
 - Teksty UI w jednym miejscu (web: `src/messages/pl.ts`), żeby dało się
@@ -156,6 +164,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - Design system Vireo — nie domyślny wygląd shadcn
 
 ### Web (strona wizytówkowa) — SEO
+
 - Każda podstrona generowana statycznie (SSG), bez wywołań API w runtime
 - Metadane na każdej podstronie: `title`, `description`, Open Graph
   (`og:title`, `og:description`, `og:locale` = `pl_PL`), `lang="pl"`
@@ -165,6 +174,7 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
   `https://finso.app`, e-mail kontaktowy `kontakt@finso.app`
 
 ### Bezpieczeństwo
+
 - Hasła: argon2
 - Rate limiting na `/auth/*`
 - Walidacja Zod na granicy API zawsze
@@ -211,5 +221,5 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - Nie pisz integracji bankowej — Faza 3
 - Nie pomijaj testów
 - Nigdy nie oznaczaj zadania jako gotowe, jeśli testy nie przechodzą
-- Nie pisz komentarzy typu `// increment counter` — komentuj *dlaczego*, nie *co*
+- Nie pisz komentarzy typu `// increment counter` — komentuj _dlaczego_, nie _co_
 - Nie wyłączaj reguł lintera ani `@ts-ignore`, żeby coś przeszło

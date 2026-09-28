@@ -1,10 +1,10 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import type { CreateGoalInput, Goal, UpdateGoalInput } from '@vireo/shared';
+import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import type { CreateGoalInput, Goal, UpdateGoalInput } from "@vireo/shared";
 
-import { fromIsoDate, toIsoDate } from '../common/dates.js';
-import type { Goal as GoalRow } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import type { Goal as GoalRow } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
 export class GoalsService {
@@ -14,7 +14,7 @@ export class GoalsService {
   async list(userId: string): Promise<Goal[]> {
     const rows = await this.db.goal.findMany({
       where: { userId },
-      orderBy: [{ targetDate: 'asc' }, { id: 'asc' }],
+      orderBy: [{ targetDate: "asc" }, { id: "asc" }],
     });
     return rows.map(toGoal);
   }

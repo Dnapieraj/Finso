@@ -4,8 +4,8 @@ import {
   transactionPageSchema,
   transactionSchema,
   updateTransactionSchema,
-} from '@vireo/shared';
-import { createZodDto } from 'nestjs-zod';
+} from "@vireo/shared";
+import { createZodDto } from "nestjs-zod";
 
 export class CreateTransactionDto extends createZodDto(createTransactionSchema) {}
 export class UpdateTransactionDto extends createZodDto(updateTransactionSchema) {}

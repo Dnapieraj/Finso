@@ -1,10 +1,10 @@
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import type { PublicUser, UpdateMeInput } from '@vireo/shared';
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import type { PublicUser, UpdateMeInput } from "@vireo/shared";
 
-import { PasswordService } from '../auth/password.service.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
-import { publicUserSelect, toPublicUser } from './public-user.js';
+import { PasswordService } from "../auth/password.service.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
+import { publicUserSelect, toPublicUser } from "./public-user.js";
 
 @Injectable()
 export class UsersService {
@@ -60,7 +60,7 @@ export class UsersService {
     // Złe hasło to odmowa, nie nieważny token: 401 kazałby klientowi odświeżyć
     // sesję i ponowić żądanie z tym samym hasłem.
     if (!valid) {
-      throw new ForbiddenException('Invalid password');
+      throw new ForbiddenException("Invalid password");
     }
     await this.db.user.delete({ where: { id: userId } });
   }

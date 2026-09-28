@@ -1,13 +1,13 @@
-import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-import { PrismaClient } from '../src/generated/prisma/client.js';
-import { SYSTEM_CATEGORIES, seedSystemCategories } from './system-categories.js';
+import { PrismaClient } from "../src/generated/prisma/client.js";
+import { SYSTEM_CATEGORIES, seedSystemCategories } from "./system-categories.js";
 
 async function main(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL nie jest ustawione.');
+    throw new Error("DATABASE_URL nie jest ustawione.");
   }
 
   const adapter = new PrismaPg({ connectionString: databaseUrl });

@@ -1,7 +1,7 @@
-import type { INestApplication } from '@nestjs/common';
-import type { OpenAPIObject } from '@nestjs/swagger';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { cleanupOpenApiDoc } from 'nestjs-zod';
+import type { INestApplication } from "@nestjs/common";
+import type { OpenAPIObject } from "@nestjs/swagger";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { cleanupOpenApiDoc } from "nestjs-zod";
 
 /**
  * Dokument OpenAPI generowany z kontrolerów i DTO (createZodDto).
@@ -10,9 +10,9 @@ import { cleanupOpenApiDoc } from 'nestjs-zod';
  */
 export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const config = new DocumentBuilder()
-    .setTitle('Finso API')
-    .setDescription('Kwoty zawsze w groszach (int). Daty kalendarzowe jako YYYY-MM-DD.')
-    .setVersion('0.1.0')
+    .setTitle("Finso API")
+    .setDescription("Kwoty zawsze w groszach (int). Daty kalendarzowe jako YYYY-MM-DD.")
+    .setVersion("0.1.0")
     .addBearerAuth()
     .build();
   // cleanupOpenApiDoc porządkuje schematy wygenerowane z Zoda (nazwy,
@@ -22,5 +22,5 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
 
 /** Swagger UI pod /docs i JSON pod /docs-json. */
 export function setupSwagger(app: INestApplication): void {
-  SwaggerModule.setup('docs', app, () => buildOpenApiDocument(app));
+  SwaggerModule.setup("docs", app, () => buildOpenApiDocument(app));
 }

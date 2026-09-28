@@ -1,4 +1,4 @@
-import type { PrismaClient } from '../src/generated/prisma/client.js';
+import type { PrismaClient } from "../src/generated/prisma/client.js";
 
 /**
  * Kategorie systemowe: userId = null, więc widoczne dla każdego
@@ -20,47 +20,47 @@ import type { PrismaClient } from '../src/generated/prisma/client.js';
  */
 export const SYSTEM_CATEGORIES = [
   {
-    id: '00000000-0000-7000-8000-000000000001',
-    name: 'Jedzenie',
-    icon: 'utensils',
-    color: '#F59E0B',
+    id: "00000000-0000-7000-8000-000000000001",
+    name: "Jedzenie",
+    icon: "utensils",
+    color: "#F59E0B",
   },
-  { id: '00000000-0000-7000-8000-000000000002', name: 'Transport', icon: 'car', color: '#3B82F6' },
+  { id: "00000000-0000-7000-8000-000000000002", name: "Transport", icon: "car", color: "#3B82F6" },
   {
-    id: '00000000-0000-7000-8000-000000000003',
-    name: 'Mieszkanie',
-    icon: 'home',
-    color: '#8B5CF6',
-  },
-  {
-    id: '00000000-0000-7000-8000-000000000004',
-    name: 'Rozrywka',
-    icon: 'party-popper',
-    color: '#EC4899',
+    id: "00000000-0000-7000-8000-000000000003",
+    name: "Mieszkanie",
+    icon: "home",
+    color: "#8B5CF6",
   },
   {
-    id: '00000000-0000-7000-8000-000000000005',
-    name: 'Zdrowie',
-    icon: 'heart-pulse',
-    color: '#EF4444',
+    id: "00000000-0000-7000-8000-000000000004",
+    name: "Rozrywka",
+    icon: "party-popper",
+    color: "#EC4899",
   },
   {
-    id: '00000000-0000-7000-8000-000000000006',
-    name: 'Edukacja',
-    icon: 'graduation-cap',
-    color: '#10B981',
+    id: "00000000-0000-7000-8000-000000000005",
+    name: "Zdrowie",
+    icon: "heart-pulse",
+    color: "#EF4444",
   },
   {
-    id: '00000000-0000-7000-8000-000000000007',
-    name: 'Subskrypcje',
-    icon: 'repeat',
-    color: '#6366F1',
+    id: "00000000-0000-7000-8000-000000000006",
+    name: "Edukacja",
+    icon: "graduation-cap",
+    color: "#10B981",
   },
   {
-    id: '00000000-0000-7000-8000-000000000008',
-    name: 'Inne',
-    icon: 'more-horizontal',
-    color: '#6B7280',
+    id: "00000000-0000-7000-8000-000000000007",
+    name: "Subskrypcje",
+    icon: "repeat",
+    color: "#6366F1",
+  },
+  {
+    id: "00000000-0000-7000-8000-000000000008",
+    name: "Inne",
+    icon: "more-horizontal",
+    color: "#6B7280",
   },
 ] as const;
 

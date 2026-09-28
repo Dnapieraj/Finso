@@ -1,6 +1,6 @@
-import type { PublicUser } from '@vireo/shared';
+import type { PublicUser } from "@vireo/shared";
 
-import type { User } from '../generated/prisma/client.js';
+import type { User } from "../generated/prisma/client.js";
 
 /** Pola pobierane z bazy dla publicznego widoku — `select`, nie cały wiersz. */
 export const publicUserSelect = {

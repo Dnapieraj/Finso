@@ -1,8 +1,8 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 
-import type { RecurringRuleKind } from '../generated/prisma/client.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import type { RecurringRuleKind } from "../generated/prisma/client.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 /**
  * Sprawdza identyfikatory przysłane w BODY (categoryId, incomeSourceId...).
@@ -25,7 +25,7 @@ export class OwnedReferencesService {
     const found = await this.db.category.count({
       where: { id: categoryId, OR: [{ userId }, { userId: null }] },
     });
-    if (found === 0) throw unknownReference('categoryId');
+    if (found === 0) throw unknownReference("categoryId");
   }
 
   /** Własna reguła określonego rodzaju — wydatek nie podepnie się pod regułę dochodu. */
@@ -36,13 +36,13 @@ export class OwnedReferencesService {
   ): Promise<void> {
     if (!ruleId) return;
     const found = await this.db.recurringRule.count({ where: { id: ruleId, userId, kind } });
-    if (found === 0) throw unknownReference('recurringRuleId');
+    if (found === 0) throw unknownReference("recurringRuleId");
   }
 
   /** Własne źródło dochodu. */
   async assertIncomeSource(userId: string, sourceId: string): Promise<void> {
     const found = await this.db.incomeSource.count({ where: { id: sourceId, userId } });
-    if (found === 0) throw unknownReference('incomeSourceId');
+    if (found === 0) throw unknownReference("incomeSourceId");
   }
 }
 
@@ -51,7 +51,7 @@ function unknownReference(field: string): BadRequestException {
   // oba jednym kodem.
   return new BadRequestException({
     statusCode: 400,
-    message: 'Validation failed',
-    errors: [{ code: 'unknown_reference', path: [field], message: 'unknown_reference' }],
+    message: "Validation failed",
+    errors: [{ code: "unknown_reference", path: [field], message: "unknown_reference" }],
   });
 }

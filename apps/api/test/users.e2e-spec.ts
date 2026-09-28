@@ -1,39 +1,45 @@
-import type { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import type { INestApplication } from "@nestjs/common";
+import request from "supertest";
 
-import type { PrismaClient } from '../src/generated/prisma/client.js';
-import type { TestSession } from './helpers.js';
-import { createTestApp, createTestDb, registerUser, resetDb, TEST_PASSWORD } from './helpers.js';
+import type { PrismaClient } from "../src/generated/prisma/client.js";
+import type { TestSession } from "./helpers.js";
+import { createTestApp, createTestDb, registerUser, resetDb, TEST_PASSWORD } from "./helpers.js";
 
 /** Zakłada użytkownikowi po jednym wierszu w każdej tabeli z danymi. */
 async function seedUserData(db: PrismaClient, userId: string): Promise<void> {
   const category = await db.category.create({
-    data: { userId, name: 'Własna', icon: 'star', color: '#123456' },
+    data: { userId, name: "Własna", icon: "star", color: "#123456" },
   });
   const rule = await db.recurringRule.create({
     data: {
       userId,
-      kind: 'INCOME',
-      frequency: 'MONTHLY',
+      kind: "INCOME",
+      frequency: "MONTHLY",
       dayOfMonth: 10,
-      startDate: new Date('2026-01-10'),
+      startDate: new Date("2026-01-10"),
     },
   });
   const source = await db.incomeSource.create({
-    data: { userId, name: 'Pensja', kind: 'REGULAR', expectedAmount: 800_000, recurringRuleId: rule.id },
+    data: {
+      userId,
+      name: "Pensja",
+      kind: "REGULAR",
+      expectedAmount: 800_000,
+      recurringRuleId: rule.id,
+    },
   });
   await db.incomeEntry.create({
-    data: { userId, incomeSourceId: source.id, amount: 800_000, date: new Date('2026-09-10') },
+    data: { userId, incomeSourceId: source.id, amount: 800_000, date: new Date("2026-09-10") },
   });
   await db.transaction.createMany({
     data: [
-      { userId, categoryId: category.id, amount: 4_999, date: new Date('2026-09-12') },
+      { userId, categoryId: category.id, amount: 4_999, date: new Date("2026-09-12") },
       // Miękko usunięta — też musi zniknąć przy usunięciu konta.
-      { userId, amount: 1_500, date: new Date('2026-09-13'), deletedAt: new Date() },
+      { userId, amount: 1_500, date: new Date("2026-09-13"), deletedAt: new Date() },
     ],
   });
   await db.goal.create({
-    data: { userId, name: 'Wakacje', targetAmount: 500_000, targetDate: new Date('2027-06-01') },
+    data: { userId, name: "Wakacje", targetAmount: 500_000, targetDate: new Date("2027-06-01") },
   });
 }
 
@@ -51,7 +57,7 @@ async function countUserRows(db: PrismaClient, userId: string): Promise<Record<s
   };
 }
 
-describe('Users (e2e)', () => {
+describe("Users (e2e)", () => {
   let app: INestApplication;
   let db: PrismaClient;
 
@@ -72,33 +78,37 @@ describe('Users (e2e)', () => {
   const http = () => request(app.getHttpServer());
   const auth = (session: TestSession) => ({ Authorization: `Bearer ${session.accessToken}` });
 
-  describe('GET /users/me', () => {
-    it('zwraca tylko dane zalogowanego użytkownika', async () => {
-      const alice = await registerUser(app, 'alice@example.com');
-      await registerUser(app, 'bob@example.com');
+  describe("GET /users/me", () => {
+    it("zwraca tylko dane zalogowanego użytkownika", async () => {
+      const alice = await registerUser(app, "alice@example.com");
+      await registerUser(app, "bob@example.com");
 
-      const res = await http().get('/users/me').set(auth(alice)).expect(200);
+      const res = await http().get("/users/me").set(auth(alice)).expect(200);
 
       expect(res.body).toEqual({
         id: alice.user.id,
-        email: 'alice@example.com',
-        plan: 'FREE',
-        currency: 'PLN',
-        timezone: 'Europe/Warsaw',
+        email: "alice@example.com",
+        plan: "FREE",
+        currency: "PLN",
+        timezone: "Europe/Warsaw",
         periodStartDay: 1,
       });
     });
   });
 
-  describe('DELETE /users/me', () => {
-    it('usuwa konto i WSZYSTKIE dane użytkownika, także miękko usunięte', async () => {
+  describe("DELETE /users/me", () => {
+    it("usuwa konto i WSZYSTKIE dane użytkownika, także miękko usunięte", async () => {
       const session = await registerUser(app);
       await seedUserData(db, session.user.id);
 
       const before = await countUserRows(db, session.user.id);
       expect(Object.values(before).every((count) => count > 0)).toBe(true);
 
-      await http().delete('/users/me').set(auth(session)).send({ password: TEST_PASSWORD }).expect(204);
+      await http()
+        .delete("/users/me")
+        .set(auth(session))
+        .send({ password: TEST_PASSWORD })
+        .expect(204);
 
       expect(await countUserRows(db, session.user.id)).toEqual({
         user: 0,
@@ -112,46 +122,64 @@ describe('Users (e2e)', () => {
       });
     });
 
-    it('nie rusza danych innych użytkowników ani kategorii systemowych', async () => {
+    it("nie rusza danych innych użytkowników ani kategorii systemowych", async () => {
       const alice = await registerUser(app);
       const bob = await registerUser(app);
       await seedUserData(db, alice.user.id);
       await seedUserData(db, bob.user.id);
-      await db.category.create({ data: { userId: null, name: 'Jedzenie', icon: 'food', color: '#00aa00' } });
+      await db.category.create({
+        data: { userId: null, name: "Jedzenie", icon: "food", color: "#00aa00" },
+      });
       const bobBefore = await countUserRows(db, bob.user.id);
 
-      await http().delete('/users/me').set(auth(alice)).send({ password: TEST_PASSWORD }).expect(204);
+      await http()
+        .delete("/users/me")
+        .set(auth(alice))
+        .send({ password: TEST_PASSWORD })
+        .expect(204);
 
       expect(await countUserRows(db, bob.user.id)).toEqual(bobBefore);
       expect(await db.category.count({ where: { userId: null } })).toBe(1);
     });
 
-    it('po usunięciu konta stare tokeny i dane logowania przestają działać', async () => {
-      const session = await registerUser(app, 'deleted@example.com');
+    it("po usunięciu konta stare tokeny i dane logowania przestają działać", async () => {
+      const session = await registerUser(app, "deleted@example.com");
 
-      await http().delete('/users/me').set(auth(session)).send({ password: TEST_PASSWORD }).expect(204);
+      await http()
+        .delete("/users/me")
+        .set(auth(session))
+        .send({ password: TEST_PASSWORD })
+        .expect(204);
 
       // Access token ma jeszcze ważny podpis, ale konta już nie ma.
-      await http().get('/users/me').set(auth(session)).expect(401);
-      await http().post('/auth/refresh').send({ refreshToken: session.refreshToken }).expect(401);
+      await http().get("/users/me").set(auth(session)).expect(401);
+      await http().post("/auth/refresh").send({ refreshToken: session.refreshToken }).expect(401);
       await http()
-        .post('/auth/login')
-        .send({ email: 'deleted@example.com', password: TEST_PASSWORD })
+        .post("/auth/login")
+        .send({ email: "deleted@example.com", password: TEST_PASSWORD })
         .expect(401);
     });
 
-    it('można ponownie założyć konto na ten sam e-mail', async () => {
-      const session = await registerUser(app, 'again@example.com');
-      await http().delete('/users/me').set(auth(session)).send({ password: TEST_PASSWORD }).expect(204);
+    it("można ponownie założyć konto na ten sam e-mail", async () => {
+      const session = await registerUser(app, "again@example.com");
+      await http()
+        .delete("/users/me")
+        .set(auth(session))
+        .send({ password: TEST_PASSWORD })
+        .expect(204);
 
-      await registerUser(app, 'again@example.com');
+      await registerUser(app, "again@example.com");
     });
 
-    it('wymaga poprawnego hasła — skradziony access token nie wystarczy', async () => {
+    it("wymaga poprawnego hasła — skradziony access token nie wystarczy", async () => {
       const session = await registerUser(app);
       await seedUserData(db, session.user.id);
 
-      await http().delete('/users/me').set(auth(session)).send({ password: 'wrong password' }).expect(403);
+      await http()
+        .delete("/users/me")
+        .set(auth(session))
+        .send({ password: "wrong password" })
+        .expect(403);
 
       expect((await countUserRows(db, session.user.id)).transactions).toBe(2);
     });
@@ -159,19 +187,23 @@ describe('Users (e2e)', () => {
     // 403, nie 401: 401 znaczy „twój token jest nieważny” — klient odświeżyłby
     // sesję i ponowił żądanie z tym samym złym hasłem. Złe hasło to odmowa,
     // a sesja zostaje ważna.
-    it('złe hasło nie kończy sesji — token dalej działa', async () => {
+    it("złe hasło nie kończy sesji — token dalej działa", async () => {
       const session = await registerUser(app);
 
-      await http().delete('/users/me').set(auth(session)).send({ password: 'wrong password' }).expect(403);
+      await http()
+        .delete("/users/me")
+        .set(auth(session))
+        .send({ password: "wrong password" })
+        .expect(403);
 
-      await http().get('/users/me').set(auth(session)).expect(200);
+      await http().get("/users/me").set(auth(session)).expect(200);
     });
 
-    it('odrzuca żądanie bez hasła (400) i bez tokena (401)', async () => {
+    it("odrzuca żądanie bez hasła (400) i bez tokena (401)", async () => {
       const session = await registerUser(app);
 
-      await http().delete('/users/me').set(auth(session)).send({}).expect(400);
-      await http().delete('/users/me').send({ password: TEST_PASSWORD }).expect(401);
+      await http().delete("/users/me").set(auth(session)).send({}).expect(400);
+      await http().delete("/users/me").send({ password: TEST_PASSWORD }).expect(401);
       expect(await db.user.count({ where: { id: session.user.id } })).toBe(1);
     });
   });

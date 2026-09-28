@@ -1,12 +1,12 @@
-import type { INestApplication } from '@nestjs/common';
-import type { TestingModuleBuilder } from '@nestjs/testing';
-import { Test } from '@nestjs/testing';
-import { PrismaPg } from '@prisma/adapter-pg';
-import request from 'supertest';
+import type { INestApplication } from "@nestjs/common";
+import type { TestingModuleBuilder } from "@nestjs/testing";
+import { Test } from "@nestjs/testing";
+import { PrismaPg } from "@prisma/adapter-pg";
+import request from "supertest";
 
-import { AppModule } from '../src/app.module.js';
-import { PrismaClient } from '../src/generated/prisma/client.js';
-import { TEST_DATABASE_URL } from './test-env.js';
+import { AppModule } from "../src/app.module.js";
+import { PrismaClient } from "../src/generated/prisma/client.js";
+import { TEST_DATABASE_URL } from "./test-env.js";
 
 /**
  * Surowy klient do przygotowania danych i asercji "co faktycznie jest
@@ -50,7 +50,7 @@ export function uniqueEmail(): string {
   return `user${emailCounter}-${Date.now()}@example.com`;
 }
 
-export const TEST_PASSWORD = 'correct horse battery staple';
+export const TEST_PASSWORD = "correct horse battery staple";
 
 export interface TestSession {
   user: { id: string; email: string };
@@ -65,7 +65,7 @@ export async function registerUser(
   password = TEST_PASSWORD,
 ): Promise<TestSession> {
   const res = await request(app.getHttpServer())
-    .post('/auth/register')
+    .post("/auth/register")
     .send({ email, password })
     .expect(201);
   return res.body as TestSession;

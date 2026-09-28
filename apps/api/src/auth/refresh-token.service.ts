@@ -1,14 +1,14 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
-import type { Env } from '../config/env.js';
-import type { Db } from '../prisma/prisma.module.js';
-import { PRISMA } from '../prisma/prisma.module.js';
+import type { Env } from "../config/env.js";
+import type { Db } from "../prisma/prisma.module.js";
+import { PRISMA } from "../prisma/prisma.module.js";
 
 /** Klient Prismy wewnątrz `$transaction` — ten sam kształt co Db, bez metod transakcji. */
-type DbTx = Parameters<Parameters<Db['$transaction']>[0]>[0];
+type DbTx = Parameters<Parameters<Db["$transaction"]>[0]>[0];
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -47,14 +47,14 @@ export class RefreshTokenService {
       where: { tokenHash: hashToken(rawToken) },
     });
     if (!existing) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException("Invalid refresh token");
     }
     if (existing.revokedAt) {
       await this.revokeFamily(existing.familyId);
-      throw new UnauthorizedException('Refresh token reuse detected');
+      throw new UnauthorizedException("Refresh token reuse detected");
     }
     if (existing.expiresAt <= new Date()) {
-      throw new UnauthorizedException('Refresh token expired');
+      throw new UnauthorizedException("Refresh token expired");
     }
 
     const refreshToken = await this.db.$transaction(async (tx) => {
@@ -75,7 +75,7 @@ export class RefreshTokenService {
     if (refreshToken === null) {
       // Przegrany wyścig to też ponowne użycie tego samego tokena.
       await this.revokeFamily(existing.familyId);
-      throw new UnauthorizedException('Refresh token reuse detected');
+      throw new UnauthorizedException("Refresh token reuse detected");
     }
     return { userId: existing.userId, refreshToken };
   }
@@ -103,8 +103,8 @@ export class RefreshTokenService {
   }
 
   private async createToken(db: Db | DbTx, userId: string, familyId: string): Promise<string> {
-    const rawToken = randomBytes(32).toString('base64url');
-    const ttlDays = this.config.get('REFRESH_TOKEN_TTL_DAYS', { infer: true });
+    const rawToken = randomBytes(32).toString("base64url");
+    const ttlDays = this.config.get("REFRESH_TOKEN_TTL_DAYS", { infer: true });
     await db.refreshToken.create({
       data: {
         userId,
@@ -118,5 +118,5 @@ export class RefreshTokenService {
 }
 
 function hashToken(rawToken: string): string {
-  return createHash('sha256').update(rawToken).digest('hex');
+  return createHash("sha256").update(rawToken).digest("hex");
 }

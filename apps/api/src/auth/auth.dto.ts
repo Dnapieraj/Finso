@@ -4,8 +4,8 @@ import {
   loginSchema,
   refreshTokenSchema,
   registerSchema,
-} from '@vireo/shared';
-import { createZodDto } from 'nestjs-zod';
+} from "@vireo/shared";
+import { createZodDto } from "nestjs-zod";
 
 // Cienkie opakowania schematów z @vireo/shared. Klasa jest potrzebna, bo
 // Nest (pipe'y, a w etapie 4b Swagger) odczytuje typ parametru z metadanych

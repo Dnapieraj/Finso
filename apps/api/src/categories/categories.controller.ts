@@ -1,16 +1,26 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import type { Category } from '@vireo/shared';
-import { ZodResponse } from 'nestjs-zod';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+} from "@nestjs/common";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import type { Category } from "@vireo/shared";
+import { ZodResponse } from "nestjs-zod";
 
-import type { AuthUser } from '../auth/decorators.js';
-import { CurrentUser } from '../auth/decorators.js';
-import { CategoriesService } from './categories.service.js';
-import { CategoryDto, CreateCategoryDto, UpdateCategoryDto } from './categories.dto.js';
+import type { AuthUser } from "../auth/decorators.js";
+import { CurrentUser } from "../auth/decorators.js";
+import { CategoriesService } from "./categories.service.js";
+import { CategoryDto, CreateCategoryDto, UpdateCategoryDto } from "./categories.dto.js";
 
-@ApiTags('categories')
+@ApiTags("categories")
 @ApiBearerAuth()
-@Controller('categories')
+@Controller("categories")
 export class CategoriesController {
   constructor(private readonly categories: CategoriesService) {}
 
@@ -21,9 +31,9 @@ export class CategoriesController {
     return this.categories.list(user.id);
   }
 
-  @Get(':id')
+  @Get(":id")
   @ZodResponse({ type: CategoryDto })
-  get(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<Category> {
+  get(@CurrentUser() user: AuthUser, @Param("id") id: string): Promise<Category> {
     return this.categories.get(user.id, id);
   }
 
@@ -34,19 +44,19 @@ export class CategoriesController {
   }
 
   /** Tylko własne — kategorii systemowych nie da się edytować (404). */
-  @Patch(':id')
+  @Patch(":id")
   @ZodResponse({ type: CategoryDto })
   update(
     @CurrentUser() user: AuthUser,
-    @Param('id') id: string,
+    @Param("id") id: string,
     @Body() body: UpdateCategoryDto,
   ): Promise<Category> {
     return this.categories.update(user.id, id, body);
   }
 
-  @Delete(':id')
+  @Delete(":id")
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@CurrentUser() user: AuthUser, @Param('id') id: string): Promise<void> {
+  remove(@CurrentUser() user: AuthUser, @Param("id") id: string): Promise<void> {
     return this.categories.remove(user.id, id);
   }
 }
