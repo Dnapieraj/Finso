@@ -2,6 +2,7 @@ import type {
   BudgetSummary,
   Category,
   CompleteOnboardingInput,
+  CreateGoalRequest,
   CreateIncomeSourceRequest,
   CreateRecurringRuleRequest,
   IdempotentDraft,
@@ -19,6 +20,7 @@ import type {
   SimulationResult,
   Transaction,
   TransactionPage,
+  UpdateGoalInput,
   UpdateIncomeSourceInput,
   UpdateMeInput,
   UpdateRecurringRuleInput,
@@ -177,6 +179,9 @@ let drafts = 0;
 let account: PublicUser = testUser;
 let rules: RecurringRule[] = [];
 let sources: IncomeSource[] = [];
+let goals: Goal[] = [];
+/** Goals in the trash: soft-deleted, so they can come back. */
+let trashedGoals: Goal[] = [];
 let created = 0;
 
 /** A new id for something the fake server creates. */
@@ -193,6 +198,8 @@ export function resetFakeServer(): void {
   account = testUser;
   rules = [salaryRule, testRule()];
   sources = [testIncomeSource()];
+  goals = [testGoal()];
+  trashedGoals = [];
 }
 
 /** A draft with the next key: "idempotency-key-1", "-2"… */
@@ -202,9 +209,14 @@ function keyed<T>(input: T): IdempotentDraft<T> {
 }
 
 /** Replaces what the fake server holds, e.g. to start with no commitments. */
-export function seedFakeServer(data: { rules?: RecurringRule[]; sources?: IncomeSource[] }) {
+export function seedFakeServer(data: {
+  rules?: RecurringRule[];
+  sources?: IncomeSource[];
+  goals?: Goal[];
+}) {
   if (data.rules) rules = data.rules;
   if (data.sources) sources = data.sources;
+  if (data.goals) goals = data.goals;
 }
 
 /** The signed-in account has not finished onboarding (e.g. quit halfway last time). */
@@ -255,7 +267,41 @@ export const fakeApi = {
     ),
   },
   goals: {
-    list: jest.fn(() => Promise.resolve([testGoal()])),
+    // Nearest target date first, like the API.
+    list: jest.fn(() =>
+      Promise.resolve([...goals].sort((a, b) => a.targetDate.localeCompare(b.targetDate))),
+    ),
+    draft: jest.fn((input: CreateGoalRequest) => keyed(input)),
+    create: jest.fn(({ input }: IdempotentDraft<CreateGoalRequest>) => {
+      const goal: Goal = {
+        id: nextId(),
+        name: input.name,
+        targetAmount: input.targetAmount,
+        currentAmount: input.currentAmount ?? 0,
+        targetDate: input.targetDate,
+      };
+      goals = [...goals, goal];
+      return Promise.resolve(goal);
+    }),
+    update: jest.fn((id: string, input: UpdateGoalInput) => {
+      const current = goals.find((goal) => goal.id === id);
+      if (!current) return Promise.reject(new Error(`No goal ${id}`));
+      const goal = { ...current, ...input };
+      goals = goals.map((other) => (other.id === id ? goal : other));
+      return Promise.resolve(goal);
+    }),
+    remove: jest.fn((id: string) => {
+      trashedGoals = [...trashedGoals, ...goals.filter((goal) => goal.id === id)];
+      goals = goals.filter((goal) => goal.id !== id);
+      return Promise.resolve();
+    }),
+    restore: jest.fn((id: string) => {
+      const goal = trashedGoals.find((trashed) => trashed.id === id);
+      if (!goal) return Promise.reject(new Error(`No goal ${id} in the trash`));
+      trashedGoals = trashedGoals.filter((trashed) => trashed.id !== id);
+      goals = [...goals, goal];
+      return Promise.resolve(goal);
+    }),
   },
   recurringRules: {
     list: jest.fn(() => Promise.resolve(rules)),

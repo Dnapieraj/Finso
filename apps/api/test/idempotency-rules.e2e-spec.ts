@@ -7,7 +7,7 @@ import { createTestApp, createTestDb, registerUser, resetDb, TestClock } from ".
 
 /**
  * Ten sam mechanizm co przy POST /transactions (idempotency.e2e-spec.ts):
- * tu sprawdzamy, że działa też dla reguł cyklicznych i źródeł dochodu,
+ * tu sprawdzamy, że działa też dla reguł cyklicznych, źródeł dochodu i celów,
  * a klucz obowiązuje w obrębie jednego endpointu.
  */
 
@@ -29,9 +29,12 @@ const salary = {
   schedule: { frequency: "MONTHLY", startDate: "2026-09-01", dayOfMonth: 10 },
 };
 
+const trip = { name: "Wakacje", targetAmount: 500_000, targetDate: "2027-06-30" };
+
 describe.each([
   { path: "/recurring-rules", body: rent, changed: { ...rent, expectedAmount: 260_000 } },
   { path: "/income/sources", body: salary, changed: { ...salary, name: "Pensja" } },
+  { path: "/goals", body: trip, changed: { ...trip, targetAmount: 600_000 } },
 ])("Idempotency-Key dla POST $path (e2e)", ({ path, body, changed }) => {
   let app: TestApp;
   let db: PrismaClient;
@@ -46,8 +49,13 @@ describe.each([
   const counts = async () => ({
     rules: await db.recurringRule.count({ where: { userId: me.user.id } }),
     sources: await db.incomeSource.count({ where: { userId: me.user.id } }),
+    goals: await db.goal.count({ where: { userId: me.user.id } }),
   });
-  const once = path === "/income/sources" ? { rules: 1, sources: 1 } : { rules: 1, sources: 0 };
+  const once = {
+    "/recurring-rules": { rules: 1, sources: 0, goals: 0 },
+    "/income/sources": { rules: 1, sources: 1, goals: 0 },
+    "/goals": { rules: 0, sources: 0, goals: 1 },
+  }[path] ?? { rules: 0, sources: 0, goals: 0 };
 
   beforeAll(async () => {
     app = await createTestApp((builder) => builder.overrideProvider(CLOCK).useValue(clock));
@@ -69,7 +77,11 @@ describe.each([
     await create(body).expect(201);
     await create(body).expect(201);
 
-    expect(await counts()).toEqual({ rules: once.rules * 2, sources: once.sources * 2 });
+    expect(await counts()).toEqual({
+      rules: once.rules * 2,
+      sources: once.sources * 2,
+      goals: once.goals * 2,
+    });
   });
 
   it("ten sam klucz dwa razy: jeden zapis i ta sama odpowiedź", async () => {
@@ -100,7 +112,7 @@ describe.each([
   it("klucz, który nie jest UUID: 400", async () => {
     await create(body, "not-a-uuid").expect(400);
 
-    expect(await counts()).toEqual({ rules: 0, sources: 0 });
+    expect(await counts()).toEqual({ rules: 0, sources: 0, goals: 0 });
   });
 
   it("klucz dotyczy jednego endpointu: ten sam UUID przy wydatku to osobny zapis", async () => {

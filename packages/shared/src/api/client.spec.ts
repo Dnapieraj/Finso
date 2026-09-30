@@ -748,6 +748,58 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("goals: create with a key, edit, move to trash and back", () => {
+    const GOAL_ID = "01923b6e-0000-7000-8000-000000000060";
+    const goal = {
+      id: GOAL_ID,
+      name: "Rower",
+      targetAmount: 300_000,
+      currentAmount: 0,
+      targetDate: "2027-06-30",
+    };
+    const input = { name: "Rower", targetAmount: 300_000, targetDate: "2027-06-30" };
+
+    it("goals.create posts the draft with its Idempotency-Key", async () => {
+      const { api, fetch } = setup({ "POST /goals": [jsonResponse(201, goal)] });
+      const draft = api.goals.draft(input);
+
+      await expect(api.goals.create(draft)).resolves.toEqual(goal);
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual(input);
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+      expect(api.goals.draft(input).idempotencyKey).not.toBe(draft.idempotencyKey);
+    });
+
+    it("goals.update patches only the fields given", async () => {
+      const { api, fetch } = setup({
+        [`PATCH /goals/${GOAL_ID}`]: [jsonResponse(200, { ...goal, targetAmount: 350_000 })],
+      });
+
+      await expect(api.goals.update(GOAL_ID, { targetAmount: 350_000 })).resolves.toMatchObject({
+        targetAmount: 350_000,
+      });
+      expect(sentRequest(fetch, 0).body).toEqual({ targetAmount: 350_000 });
+    });
+
+    it("goals.remove moves the goal to the trash (204 without a body)", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /goals/${GOAL_ID}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.goals.remove(GOAL_ID)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+
+    it("goals.restore brings it back and validates the goal", async () => {
+      const { api, fetch } = setup({
+        [`POST /goals/${GOAL_ID}/restore`]: [jsonResponse(200, goal)],
+      });
+
+      await expect(api.goals.restore(GOAL_ID)).resolves.toEqual(goal);
+      expect(sentRequest(fetch, 0).method).toBe("POST");
+    });
+  });
+
   it("joins the base URL and path without a double slash", async () => {
     const fetch = fakeFetch({ "GET /users/me": [jsonResponse(200, me)] });
     const api = createApiClient({ baseUrl: `${BASE_URL}/`, tokens: memoryTokenStore(), fetch });
