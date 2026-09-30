@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import Plus from "lucide-react-native/icons/plus";
 import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
+import { Button } from "../../../src/components/button";
 import { ProgressBar } from "../../../src/components/progress-bar";
 import { LoadError, Skeleton } from "../../../src/components/query-states";
 import { Screen } from "../../../src/components/screen";
@@ -148,7 +149,19 @@ function Goals({ asOf }: { asOf: string | null }) {
       </>
     );
   }
-  return <Card title={t.goals}>{body}</Card>;
+  return (
+    <Card title={t.goals}>
+      {body}
+      <Button
+        variant="ghost"
+        onPress={() => {
+          router.push("/goals");
+        }}
+      >
+        {t.allGoals}
+      </Button>
+    </Card>
+  );
 }
 
 function RecentExpenses() {

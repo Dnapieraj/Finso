@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import Calculator from "lucide-react-native/icons/calculator";
 import House from "lucide-react-native/icons/house";
 import Settings from "lucide-react-native/icons/settings";
+import Target from "lucide-react-native/icons/target";
 
 import { theme } from "@vireo/tokens";
 import { useColorScheme } from "react-native";
@@ -32,6 +33,13 @@ export default function TabsLayout() {
         options={{
           title: pl.tabs.start,
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="goals"
+        options={{
+          title: pl.tabs.goals,
+          tabBarIcon: ({ color, size }) => <Target color={color} size={size} />,
         }}
       />
       <Tabs.Screen
