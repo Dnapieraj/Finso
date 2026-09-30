@@ -20,13 +20,16 @@ import type {
   SimulationResult,
   Transaction,
   TransactionPage,
+  TransactionSummary,
+  TransactionSummaryQuery,
   UpdateGoalInput,
   UpdateIncomeSourceInput,
   UpdateMeInput,
   UpdateRecurringRuleInput,
+  UpdateTransactionInput,
 } from "@vireo/shared";
 import { addExpenseToSummary, grosze } from "@vireo/shared";
-import type { ApiClient } from "@vireo/shared/api";
+import { ApiError, type ApiClient } from "@vireo/shared/api";
 
 export const testUser: PublicUser = {
   id: "01923b6e-0000-7000-8000-000000000001",
@@ -175,6 +178,24 @@ export function transactionPage(items: Transaction[]): TransactionPage {
  */
 const saved: Transaction[] = [];
 let drafts = 0;
+/** Expenses that were there before the test: by default the one testTransaction. */
+let earlier: Transaction[] = [];
+/** Expenses in the trash, with where they came from, so a restore puts them back. */
+let trashedExpenses: { expense: Transaction; wasSaved: boolean }[] = [];
+
+/** Every expense not in the trash: saved in this test first, newest first. */
+function allExpenses(): Transaction[] {
+  return [...saved].reverse().concat(earlier);
+}
+
+/** The newest first, like the API: by date, then as they were added. */
+function byDateDesc(expenses: Transaction[]): Transaction[] {
+  return [...expenses].sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function inRange(expense: Transaction, from?: string, to?: string): boolean {
+  return (from === undefined || expense.date >= from) && (to === undefined || expense.date <= to);
+}
 /** Settings of the account; a new account starts before onboarding. */
 let account: PublicUser = testUser;
 let rules: RecurringRule[] = [];
@@ -195,6 +216,8 @@ export function resetFakeServer(): void {
   saved.length = 0;
   drafts = 0;
   created = 0;
+  earlier = [testTransaction()];
+  trashedExpenses = [];
   account = testUser;
   rules = [salaryRule, testRule()];
   sources = [testIncomeSource()];
@@ -213,7 +236,9 @@ export function seedFakeServer(data: {
   rules?: RecurringRule[];
   sources?: IncomeSource[];
   goals?: Goal[];
+  transactions?: Transaction[];
 }) {
+  if (data.transactions) earlier = data.transactions;
   if (data.rules) rules = data.rules;
   if (data.sources) sources = data.sources;
   if (data.goals) goals = data.goals;
@@ -381,9 +406,73 @@ export const fakeApi = {
     list: jest.fn(() => Promise.resolve([testCategory])),
   },
   transactions: {
-    list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
-      Promise.resolve(transactionPage([...saved].reverse().concat(testTransaction()).slice(0, 5))),
-    ),
+    list: jest.fn((query: Partial<ListTransactionsQuery> = {}) => {
+      const matching = byDateDesc(allExpenses()).filter(
+        (expense) =>
+          (query.status === undefined || expense.status === query.status) &&
+          (query.categoryId === undefined || expense.categoryId === query.categoryId) &&
+          inRange(expense, query.from, query.to),
+      );
+      const start = query.cursor
+        ? matching.findIndex((expense) => expense.id === query.cursor) + 1
+        : 0;
+      const limit = query.limit ?? 50;
+      const items = matching.slice(start, start + limit);
+      const more = matching.length > start + limit;
+      return Promise.resolve({ items, nextCursor: more ? (items.at(-1)?.id ?? null) : null });
+    }),
+    summary: jest.fn((query: TransactionSummaryQuery): Promise<TransactionSummary> => {
+      const counted = allExpenses().filter(
+        (expense) => expense.status === "CONFIRMED" && inRange(expense, query.from, query.to),
+      );
+      const totals = new Map<string | null, { amount: number; count: number }>();
+      for (const expense of counted) {
+        const line = totals.get(expense.categoryId) ?? { amount: 0, count: 0 };
+        totals.set(expense.categoryId, {
+          amount: line.amount + expense.amount,
+          count: line.count + 1,
+        });
+      }
+      return Promise.resolve({
+        total: counted.reduce((sum, expense) => sum + expense.amount, 0),
+        count: counted.length,
+        byCategory: [...totals]
+          .map(([categoryId, line]) => ({ categoryId, ...line }))
+          .sort((a, b) => b.amount - a.amount),
+      });
+    }),
+    get: jest.fn((id: string) => {
+      const expense = allExpenses().find((item) => item.id === id);
+      return expense
+        ? Promise.resolve(expense)
+        : Promise.reject(new ApiError("http", 404, "Not Found"));
+    }),
+    update: jest.fn((id: string, input: UpdateTransactionInput) => {
+      const change = (list: Transaction[]) => {
+        const index = list.findIndex((item) => item.id === id);
+        const current = list[index];
+        if (!current) return null;
+        const expense: Transaction = {
+          ...current,
+          ...(input.amount === undefined ? {} : { amount: input.amount }),
+          ...(input.date === undefined ? {} : { date: input.date }),
+          ...(input.categoryId === undefined ? {} : { categoryId: input.categoryId }),
+          ...(input.note === undefined ? {} : { note: input.note }),
+        };
+        list.splice(index, 1, expense);
+        return expense;
+      };
+      const expense = change(saved) ?? change(earlier);
+      return expense ? Promise.resolve(expense) : Promise.reject(new Error(`No expense ${id}`));
+    }),
+    restore: jest.fn((id: string) => {
+      const trashed = trashedExpenses.find((item) => item.expense.id === id);
+      if (!trashed) return Promise.reject(new Error(`No expense ${id} in the trash`));
+      trashedExpenses = trashedExpenses.filter((item) => item !== trashed);
+      if (trashed.wasSaved) saved.push(trashed.expense);
+      else earlier = [...earlier, trashed.expense];
+      return Promise.resolve(trashed.expense);
+    }),
     draft: jest.fn((input: CreateTransactionRequest): TransactionDraft => keyed(input)),
     create: jest.fn(({ input }: TransactionDraft) => {
       const expense = testTransaction({
@@ -397,7 +486,16 @@ export const fakeApi = {
     }),
     remove: jest.fn((id: string) => {
       const index = saved.findIndex((expense) => expense.id === id);
-      if (index !== -1) saved.splice(index, 1);
+      const fromSaved = saved[index];
+      if (fromSaved) {
+        saved.splice(index, 1);
+        trashedExpenses.push({ expense: fromSaved, wasSaved: true });
+      }
+      const fromEarlier = earlier.find((expense) => expense.id === id);
+      if (fromEarlier) {
+        earlier = earlier.filter((expense) => expense !== fromEarlier);
+        trashedExpenses.push({ expense: fromEarlier, wasSaved: false });
+      }
       return Promise.resolve();
     }),
   },

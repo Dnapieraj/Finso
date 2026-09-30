@@ -28,6 +28,7 @@ describe("OpenAPI (e2e)", () => {
         "/categories",
         "/categories/{id}",
         "/transactions",
+        "/transactions/summary",
         "/transactions/{id}",
         "/transactions/{id}/restore",
         "/goals",

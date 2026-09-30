@@ -800,6 +800,68 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("history: summary, one expense, edit, restore", () => {
+    const TX_ID = "01923b6e-0000-7000-8000-000000000070";
+    const expense = {
+      id: TX_ID,
+      amount: 4_590,
+      date: "2026-09-27",
+      categoryId: null,
+      recurringRuleId: null,
+      note: null,
+      status: "CONFIRMED",
+    };
+    const summary = {
+      total: 4_590,
+      count: 1,
+      byCategory: [{ categoryId: null, amount: 4_590, count: 1 }],
+    };
+
+    it("transactions.summary asks for the period and validates the sums", async () => {
+      const { api, fetch } = setup({ "GET /transactions/summary": [jsonResponse(200, summary)] });
+
+      await expect(
+        api.transactions.summary({ from: "2026-09-10", to: "2026-10-09" }),
+      ).resolves.toEqual(summary);
+      expect(new URL(sentRequest(fetch, 0).url).search).toBe("?from=2026-09-10&to=2026-10-09");
+    });
+
+    it("transactions.summary rejects sums that break the schema", async () => {
+      const { api } = setup({
+        "GET /transactions/summary": [jsonResponse(200, { ...summary, total: "4590" })],
+      });
+
+      await expect(
+        api.transactions.summary({ from: "2026-09-10", to: "2026-10-09" }),
+      ).rejects.toMatchObject({ kind: "invalid-response" });
+    });
+
+    it("transactions.get reads one expense", async () => {
+      const { api } = setup({ [`GET /transactions/${TX_ID}`]: [jsonResponse(200, expense)] });
+
+      await expect(api.transactions.get(TX_ID)).resolves.toEqual(expense);
+    });
+
+    it("transactions.update patches only the fields given", async () => {
+      const { api, fetch } = setup({
+        [`PATCH /transactions/${TX_ID}`]: [jsonResponse(200, { ...expense, amount: 5_000 })],
+      });
+
+      await api.transactions.update(TX_ID, { amount: 5_000, note: null });
+
+      expect(sentRequest(fetch, 0).body).toEqual({ amount: 5_000, note: null });
+    });
+
+    it("transactions.restore takes the expense out of the trash", async () => {
+      const { api, fetch } = setup({
+        [`POST /transactions/${TX_ID}/restore`]: [jsonResponse(200, expense)],
+      });
+
+      await expect(api.transactions.restore(TX_ID)).resolves.toEqual(expense);
+      expect(sentRequest(fetch, 0).method).toBe("POST");
+    });
+  });
+
   it("joins the base URL and path without a double slash", async () => {
     const fetch = fakeFetch({ "GET /users/me": [jsonResponse(200, me)] });
     const api = createApiClient({ baseUrl: `${BASE_URL}/`, tokens: memoryTokenStore(), fetch });
