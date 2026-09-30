@@ -5,7 +5,7 @@ import { session } from "../src/session";
 // The same module instance jest.setup.js installs as expo-secure-store.
 import { getItemAsync, resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
-import { getTab, queryTab } from "./helpers/tabs";
+import { findTab, getTab, queryTab } from "./helpers/tabs";
 
 jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
@@ -28,7 +28,8 @@ it("opens the app for a user with a saved session, with Start and Ustawienia tab
   await waitFor(() => {
     expect(app).toHavePathname("/");
   });
-  expect(getTab("Start")).toBeOnTheScreen();
+  // The account loads first: it decides between onboarding and the tabs.
+  expect(await findTab("Start")).toBeOnTheScreen();
   expect(getTab("Ustawienia")).toBeOnTheScreen();
 });
 

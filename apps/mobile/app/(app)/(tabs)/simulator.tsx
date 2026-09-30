@@ -10,7 +10,7 @@ import {
 } from "@vireo/shared";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 
 import { api } from "../../../src/api";
 import { Button } from "../../../src/components/button";
@@ -18,6 +18,7 @@ import { LoadError, Skeleton } from "../../../src/components/query-states";
 import { Screen } from "../../../src/components/screen";
 import { TextField } from "../../../src/components/text-field";
 import { useBudget, useCategories, useGoals } from "../../../src/dashboard/queries";
+import { CategoryChip } from "../../../src/expenses/category-chip";
 import { saveExpense } from "../../../src/expenses/save-expense";
 import { plural } from "../../../src/format/plural";
 import { useDebouncedValue } from "../../../src/hooks/use-debounced-value";
@@ -33,37 +34,6 @@ const VERDICT_STYLE = {
   tight: { box: "border-caution bg-caution-subtle", text: "text-caution" },
   over: { box: "border-risk bg-risk-subtle", text: "text-risk" },
 } as const;
-
-function CategoryChip({
-  category,
-  selected,
-  onPress,
-}: {
-  category: Category;
-  selected: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="radio"
-      accessibilityLabel={category.name}
-      accessibilityState={{ selected }}
-      onPress={onPress}
-      className={`min-h-11 flex-row items-center gap-2 rounded-full border px-4 ${
-        selected ? "border-primary bg-primary" : "border-input bg-background"
-      }`}
-    >
-      <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-      <Text
-        className={`font-sans-semibold text-sm ${
-          selected ? "text-primary-foreground" : "text-foreground"
-        }`}
-      >
-        {category.name}
-      </Text>
-    </Pressable>
-  );
-}
 
 function Verdict({ result }: { result: SimulationResult }) {
   const style = VERDICT_STYLE[result.riskLevel];

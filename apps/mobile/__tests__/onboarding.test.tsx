@@ -157,7 +157,7 @@ describe("when it shows", () => {
   });
 
   it("an account onboarded before never sees it", async () => {
-    fakeApi.users.me.mockResolvedValue(testUser);
+    fakeApi.users.me.mockResolvedValueOnce(testUser);
 
     const app = await renderApp("/onboarding", { signedIn: true });
 
@@ -681,8 +681,9 @@ describe("finishing", () => {
 
     await skipToFinish();
 
-    expect(screen.getByRole("button", { name: "Zapisywanie…" })).toBeDisabled();
-    await press("Zapisywanie…");
+    const button = await screen.findByRole("button", { name: "Zapisywanie…" });
+    expect(button).toBeDisabled();
+    await fireEvent.press(button);
     expect(fakeApi.users.completeOnboarding).toHaveBeenCalledTimes(1);
   });
 
@@ -715,7 +716,7 @@ describe("finishing", () => {
   // earlier attempt whose response was lost. The account is set up.
   it("409 — already finished: goes on to the dashboard without an error", async () => {
     fakeApi.users.completeOnboarding.mockImplementationOnce(() => {
-      fakeApi.users.me.mockResolvedValue(testUser);
+      fakeApi.users.me.mockResolvedValueOnce(testUser);
       return Promise.reject(new ApiError("http", 409, "Onboarding already completed"));
     });
     const app = await reachCommitments();

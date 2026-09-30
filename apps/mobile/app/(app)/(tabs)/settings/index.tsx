@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { Text, View } from "react-native";
 
-import { useLogout, useMe } from "../../../../src/auth/hooks";
+import { useAccount } from "../../../../src/auth/account";
+import { useLogout } from "../../../../src/auth/hooks";
 import { Button } from "../../../../src/components/button";
 import { Screen } from "../../../../src/components/screen";
 import { pl } from "../../../../src/messages/pl";
@@ -9,28 +10,7 @@ import { pl } from "../../../../src/messages/pl";
 const t = pl.settings;
 
 function AccountEmail() {
-  const me = useMe();
-
-  if (me.isPending) {
-    return (
-      <View
-        accessible
-        accessibilityLabel={t.loadingAccount}
-        className="h-6 w-48 rounded-md bg-muted"
-      />
-    );
-  }
-  if (me.isError) {
-    return (
-      <View className="gap-3">
-        <Text className="font-sans text-base text-destructive">{t.accountError}</Text>
-        <Button variant="outline" onPress={() => void me.refetch()}>
-          {pl.common.retry}
-        </Button>
-      </View>
-    );
-  }
-  return <Text className="font-sans text-base text-foreground">{me.data.email}</Text>;
+  return <Text className="font-sans text-base text-foreground">{useAccount().email}</Text>;
 }
 
 export default function SettingsScreen() {
