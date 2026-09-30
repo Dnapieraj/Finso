@@ -104,12 +104,15 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 14. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
     i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
     przy zmianie w trakcie okresu
+15. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
+    kwoty. Wpłaty jako osobne zapisy (data, kwota, cofnięcie) dałyby
+    historię postępu i mogłyby zmniejszać dostępne środki w okresie wpłaty
 
 ### Faza 3
 
-15. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
-16. Wielowalutowość
-17. Eksport PDF/CSV, raporty roczne
+16. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
+17. Wielowalutowość
+18. Eksport PDF/CSV, raporty roczne
 
 ### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
 
