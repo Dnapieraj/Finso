@@ -396,6 +396,16 @@ describe("step 3: fixed commitments", () => {
     expect(screen.getByRole("button", { name: "Pomiń" })).toBeOnTheScreen();
   });
 
+  it("next to Pomiń, says the commitments can be added later in Settings", async () => {
+    await reachCommitments();
+
+    expect(screen.getByText("Dodasz je później w Ustawieniach.")).toBeOnTheScreen();
+
+    await addCommitment("Czynsz", "2500", "5", "Rachunki");
+
+    expect(screen.queryByText("Dodasz je później w Ustawieniach.")).not.toBeOnTheScreen();
+  });
+
   it("adds a commitment and lists it with its amount and day", async () => {
     await reachCommitments();
 

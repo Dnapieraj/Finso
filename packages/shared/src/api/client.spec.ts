@@ -581,6 +581,140 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("settings: payday, income sources, recurring rules", () => {
+    const RULE_ID = "01923b6e-0000-7000-8000-000000000040";
+    const SOURCE_ID = "01923b6e-0000-7000-8000-000000000050";
+    const rent = {
+      id: RULE_ID,
+      kind: "EXPENSE",
+      name: "Czynsz",
+      frequency: "MONTHLY",
+      interval: 1,
+      startDate: "2026-09-28",
+      dayOfMonth: 5,
+      dayOfWeek: null,
+      expectedAmount: 250_000,
+      categoryId: null,
+      isActive: true,
+    } as const;
+    const salary = {
+      id: SOURCE_ID,
+      name: "Wypłata",
+      kind: "REGULAR",
+      expectedAmount: 800_000,
+      recurringRuleId: RULE_ID,
+      isActive: true,
+      schedule: {
+        frequency: "MONTHLY",
+        interval: 1,
+        startDate: "2026-09-10",
+        dayOfMonth: 10,
+        dayOfWeek: null,
+      },
+    } as const;
+
+    it("users.updateMe patches the payday and returns the account", async () => {
+      const { api, fetch } = setup({
+        "PATCH /users/me": [jsonResponse(200, { ...me, periodStartDay: 25 })],
+      });
+
+      await expect(api.users.updateMe({ periodStartDay: 25 })).resolves.toMatchObject({
+        periodStartDay: 25,
+      });
+      expect(sentRequest(fetch, 0).body).toEqual({ periodStartDay: 25 });
+    });
+
+    it("recurringRules.list validates every rule", async () => {
+      const { api } = setup({ "GET /recurring-rules": [jsonResponse(200, [rent])] });
+
+      await expect(api.recurringRules.list()).resolves.toEqual([rent]);
+    });
+
+    it("recurringRules.list rejects a rule with an unknown frequency", async () => {
+      const { api } = setup({
+        "GET /recurring-rules": [jsonResponse(200, [{ ...rent, frequency: "DAILY" }])],
+      });
+
+      await expect(api.recurringRules.list()).rejects.toMatchObject({ kind: "invalid-response" });
+    });
+
+    it("recurringRules.create posts the rule", async () => {
+      const { api, fetch } = setup({ "POST /recurring-rules": [jsonResponse(201, rent)] });
+      const input = {
+        kind: "EXPENSE",
+        name: "Czynsz",
+        frequency: "MONTHLY",
+        startDate: "2026-09-28",
+        dayOfMonth: 5,
+        expectedAmount: 250_000,
+      } as const;
+
+      await expect(api.recurringRules.create(input)).resolves.toEqual(rent);
+      expect(sentRequest(fetch, 0).body).toEqual(input);
+    });
+
+    it("recurringRules.update patches only the fields given", async () => {
+      const { api, fetch } = setup({
+        [`PATCH /recurring-rules/${RULE_ID}`]: [jsonResponse(200, { ...rent, dayOfMonth: 7 })],
+      });
+
+      await api.recurringRules.update(RULE_ID, { dayOfMonth: 7 });
+
+      expect(sentRequest(fetch, 0).body).toEqual({ dayOfMonth: 7 });
+    });
+
+    it("recurringRules.remove resolves the 204 without a body", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /recurring-rules/${RULE_ID}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.recurringRules.remove(RULE_ID)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+
+    it("incomeSources.list validates every source with its schedule", async () => {
+      const { api } = setup({ "GET /income/sources": [jsonResponse(200, [salary])] });
+
+      await expect(api.incomeSources.list()).resolves.toEqual([salary]);
+    });
+
+    it("incomeSources.create posts the source with its schedule", async () => {
+      const { api, fetch } = setup({ "POST /income/sources": [jsonResponse(201, salary)] });
+      const input = {
+        name: "Wypłata",
+        kind: "REGULAR",
+        expectedAmount: 800_000,
+        schedule: { frequency: "MONTHLY", startDate: "2026-09-10", dayOfMonth: 10 },
+      } as const;
+
+      await expect(api.incomeSources.create(input)).resolves.toEqual(salary);
+      expect(sentRequest(fetch, 0).body).toEqual(input);
+    });
+
+    it("incomeSources.update patches the source", async () => {
+      const { api, fetch } = setup({
+        [`PATCH /income/sources/${SOURCE_ID}`]: [jsonResponse(200, { ...salary, name: "Pensja" })],
+      });
+
+      await api.incomeSources.update(SOURCE_ID, { name: "Pensja" });
+
+      expect(sentRequest(fetch, 0).body).toEqual({ name: "Pensja" });
+    });
+
+    it("incomeSources.remove reports 409 (source with entries) as an http ApiError", async () => {
+      const { api } = setup({
+        [`DELETE /income/sources/${SOURCE_ID}`]: [
+          jsonResponse(409, { message: "Income source has income entries" }),
+        ],
+      });
+
+      await expect(api.incomeSources.remove(SOURCE_ID)).rejects.toMatchObject({
+        kind: "http",
+        status: 409,
+      });
+    });
+  });
+
   it("joins the base URL and path without a double slash", async () => {
     const fetch = fakeFetch({ "GET /users/me": [jsonResponse(200, me)] });
     const api = createApiClient({ baseUrl: `${BASE_URL}/`, tokens: memoryTokenStore(), fetch });

@@ -2,7 +2,11 @@ import type {
   BudgetSummary,
   Category,
   CompleteOnboardingInput,
+  CreateIncomeSourceRequest,
+  CreateRecurringRuleRequest,
   CreateTransactionRequest,
+  IncomeSource,
+  RecurringRule,
   TransactionDraft,
   DeleteAccountInput,
   Goal,
@@ -14,6 +18,9 @@ import type {
   SimulationResult,
   Transaction,
   TransactionPage,
+  UpdateIncomeSourceInput,
+  UpdateMeInput,
+  UpdateRecurringRuleInput,
 } from "@vireo/shared";
 import { addExpenseToSummary, grosze } from "@vireo/shared";
 import type { ApiClient } from "@vireo/shared/api";
@@ -92,6 +99,66 @@ export function testTransaction(overrides: Partial<Transaction> = {}): Transacti
   };
 }
 
+/** Bills, for commitments; not in the default category list. */
+export const billsCategory: Category = {
+  id: "01923b6e-0000-7000-8000-000000000022",
+  name: "Rachunki",
+  icon: "bills",
+  color: "#b45309",
+  isSystem: true,
+};
+
+/** The schedule of the salary: the 10th of every month, from the period start. */
+const SALARY_RULE_ID = "01923b6e-0000-7000-8000-000000000041";
+
+/** 5000 zł on the 10th, as set up in onboarding. */
+export function testIncomeSource(overrides: Partial<IncomeSource> = {}): IncomeSource {
+  return {
+    id: "01923b6e-0000-7000-8000-000000000050",
+    name: "Wypłata",
+    kind: "REGULAR",
+    expectedAmount: 500_000,
+    recurringRuleId: SALARY_RULE_ID,
+    isActive: true,
+    schedule: {
+      frequency: "MONTHLY",
+      interval: 1,
+      startDate: "2026-09-10",
+      dayOfMonth: 10,
+      dayOfWeek: null,
+    },
+    ...overrides,
+  };
+}
+
+/** Rent, 1500 zł on the 5th — the commitment in testBudget. */
+export function testRule(overrides: Partial<RecurringRule> = {}): RecurringRule {
+  return {
+    id: "01923b6e-0000-7000-8000-000000000040",
+    kind: "EXPENSE",
+    name: "Czynsz",
+    frequency: "MONTHLY",
+    interval: 1,
+    startDate: "2026-09-10",
+    dayOfMonth: 5,
+    dayOfWeek: null,
+    expectedAmount: 150_000,
+    categoryId: billsCategory.id,
+    isActive: true,
+    ...overrides,
+  };
+}
+
+/** The INCOME rule behind testIncomeSource; the API lists it with the commitments. */
+const salaryRule: RecurringRule = testRule({
+  id: SALARY_RULE_ID,
+  kind: "INCOME",
+  name: null,
+  dayOfMonth: 10,
+  expectedAmount: null,
+  categoryId: null,
+});
+
 /** A one-page transaction list, for `mockResolvedValueOnce`. */
 export function transactionPage(items: Transaction[]): TransactionPage {
   return { items, nextCursor: null };
@@ -107,12 +174,30 @@ const saved: Transaction[] = [];
 let drafts = 0;
 /** Settings of the account; a new account starts before onboarding. */
 let account: PublicUser = testUser;
+let rules: RecurringRule[] = [];
+let sources: IncomeSource[] = [];
+let created = 0;
+
+/** A new id for something the fake server creates. */
+function nextId(): string {
+  created += 1;
+  return `01923b6e-0000-7000-8000-0000000001${String(created).padStart(2, "0")}`;
+}
 
 /** Forgets expenses saved, keys handed out and account changes from the previous test. */
 export function resetFakeServer(): void {
   saved.length = 0;
   drafts = 0;
+  created = 0;
   account = testUser;
+  rules = [salaryRule, testRule()];
+  sources = [testIncomeSource()];
+}
+
+/** Replaces what the fake server holds, e.g. to start with no commitments. */
+export function seedFakeServer(data: { rules?: RecurringRule[]; sources?: IncomeSource[] }) {
+  if (data.rules) rules = data.rules;
+  if (data.sources) sources = data.sources;
 }
 
 /** The signed-in account has not finished onboarding (e.g. quit halfway last time). */
@@ -136,6 +221,10 @@ export const fakeApi = {
   },
   users: {
     me: jest.fn(() => Promise.resolve(account)),
+    updateMe: jest.fn((input: UpdateMeInput) => {
+      account = { ...account, ...input };
+      return Promise.resolve(account);
+    }),
     deleteMe: jest.fn((_input: DeleteAccountInput) => Promise.resolve()),
     completeOnboarding: jest.fn((input: CompleteOnboardingInput) => {
       account = {
@@ -160,6 +249,87 @@ export const fakeApi = {
   },
   goals: {
     list: jest.fn(() => Promise.resolve([testGoal()])),
+  },
+  recurringRules: {
+    list: jest.fn(() => Promise.resolve(rules)),
+    create: jest.fn((input: CreateRecurringRuleRequest) => {
+      const rule: RecurringRule = {
+        id: nextId(),
+        kind: input.kind,
+        name: input.name ?? null,
+        frequency: input.frequency,
+        interval: input.interval ?? 1,
+        startDate: input.startDate,
+        dayOfMonth: input.dayOfMonth ?? null,
+        dayOfWeek: input.dayOfWeek ?? null,
+        expectedAmount: input.expectedAmount ?? null,
+        categoryId: input.categoryId ?? null,
+        isActive: true,
+      };
+      rules = [...rules, rule];
+      return Promise.resolve(rule);
+    }),
+    update: jest.fn((id: string, input: UpdateRecurringRuleInput) => {
+      const current = rules.find((rule) => rule.id === id);
+      if (!current) return Promise.reject(new Error(`No rule ${id}`));
+      const rule = { ...current, ...input };
+      rules = rules.map((other) => (other.id === id ? rule : other));
+      return Promise.resolve(rule);
+    }),
+    remove: jest.fn((id: string) => {
+      rules = rules.filter((rule) => rule.id !== id);
+      return Promise.resolve();
+    }),
+  },
+  incomeSources: {
+    list: jest.fn(() => Promise.resolve(sources)),
+    create: jest.fn((input: CreateIncomeSourceRequest) => {
+      const schedule = input.schedule
+        ? {
+            frequency: input.schedule.frequency,
+            interval: input.schedule.interval ?? 1,
+            startDate: input.schedule.startDate,
+            dayOfMonth: input.schedule.dayOfMonth ?? null,
+            dayOfWeek: input.schedule.dayOfWeek ?? null,
+          }
+        : null;
+      const source: IncomeSource = {
+        id: nextId(),
+        name: input.name,
+        kind: input.kind,
+        expectedAmount: input.expectedAmount ?? null,
+        recurringRuleId: schedule ? nextId() : null,
+        isActive: true,
+        schedule,
+      };
+      sources = [...sources, source];
+      return Promise.resolve(source);
+    }),
+    update: jest.fn((id: string, input: UpdateIncomeSourceInput) => {
+      const current = sources.find((source) => source.id === id);
+      if (!current) return Promise.reject(new Error(`No income source ${id}`));
+      const { schedule, ...fields } = input;
+      const source: IncomeSource = {
+        ...current,
+        ...fields,
+        schedule:
+          schedule === undefined
+            ? current.schedule
+            : schedule && {
+                frequency: schedule.frequency,
+                interval: schedule.interval ?? 1,
+                startDate: schedule.startDate,
+                dayOfMonth: schedule.dayOfMonth ?? null,
+                dayOfWeek: schedule.dayOfWeek ?? null,
+              },
+      };
+      sources = sources.map((other) => (other.id === id ? source : other));
+      return Promise.resolve(source);
+    }),
+    remove: jest.fn((id: string) => {
+      sources = sources.filter((source) => source.id !== id);
+      return Promise.resolve();
+    }),
   },
   categories: {
     list: jest.fn(() => Promise.resolve([testCategory])),

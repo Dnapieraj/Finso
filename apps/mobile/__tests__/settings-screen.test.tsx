@@ -35,3 +35,27 @@ it("logs out and returns to the login screen without a notice", async () => {
   expect(fakeApi.auth.logout).toHaveBeenCalledTimes(1);
   expect(screen.queryByRole("alert")).not.toBeOnTheScreen();
 });
+
+describe("budget settings", () => {
+  it("shows the payday and opens its screen", async () => {
+    const app = await openSettingsTab();
+
+    expect(screen.getByText("10. dnia miesiąca")).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole("button", { name: "Dzień wypłaty" }));
+
+    await screen.findByRole("header", { name: "Dzień wypłaty" });
+    expect(app).toHavePathname("/settings/payday");
+  });
+
+  it.each([
+    ["Dochody", "/settings/income"],
+    ["Stałe zobowiązania", "/settings/commitments"],
+  ])("opens %s", async (name, path) => {
+    const app = await openSettingsTab();
+
+    await fireEvent.press(screen.getByRole("button", { name }));
+
+    await screen.findByRole("header", { name });
+    expect(app).toHavePathname(path);
+  });
+});
