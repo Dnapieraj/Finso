@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   createIncomeSourceSchema,
   incomeSourceSchema,
+  incomeSourceShapeSchema,
   updateIncomeSourceSchema,
 } from "./schemas.js";
 
@@ -115,6 +116,15 @@ describe("harmonogram źródła dochodu (`schedule`)", () => {
         issues(updateIncomeSourceSchema.safeParse({ schedule: monthly, recurringRuleId: RULE_ID })),
       ).toEqual(["schedule:conflicts_with_recurring_rule_id"]);
     });
+  });
+
+  it("po scaleniu PATCH ze stanem z bazy: nieregularny z harmonogramem to błąd", () => {
+    const merged = { kind: "IRREGULAR", expectedAmount: null } as const;
+
+    expect(issues(incomeSourceShapeSchema.safeParse({ ...merged, hasSchedule: true }))).toEqual([
+      "schedule:not_allowed_for_irregular",
+    ]);
+    expect(incomeSourceShapeSchema.safeParse({ ...merged, hasSchedule: false }).success).toBe(true);
   });
 
   it("odpowiedź API niesie harmonogram, żeby appka nie musiała pobierać reguł", () => {

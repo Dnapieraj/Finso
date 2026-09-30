@@ -8,6 +8,7 @@ import {
   isoDateOutputSchema,
   pageSchema,
 } from "../common/schemas.js";
+import { scheduleOutputSchema, scheduleSchema } from "../recurring-rules/schemas.js";
 import { confirmationStatusSchema } from "../transactions/schemas.js";
 
 /** Rodzaj źródła dochodu — lustro enuma `IncomeSourceKind` z bazy. */
@@ -38,8 +39,37 @@ function checkSourceShape(source: SourceShapeFields, ctx: z.RefinementCtx): void
   }
 }
 
+/**
+ * `schedule` to harmonogram tworzony razem ze źródłem (w jednej transakcji)
+ * — alternatywa dla podpięcia istniejącej reguły przez `recurringRuleId`.
+ * Nieregularny dochód nie ma harmonogramu: silnik liczy go z wpływów.
+ */
+function checkSchedule(
+  source: { kind?: string; schedule?: unknown; recurringRuleId?: string | null },
+  ctx: z.RefinementCtx,
+): void {
+  if (source.schedule === undefined || source.schedule === null) return;
+  if (source.kind === "IRREGULAR") {
+    ctx.addIssue({ code: "custom", path: ["schedule"], message: "not_allowed_for_irregular" });
+  }
+  if (source.recurringRuleId !== undefined && source.recurringRuleId !== null) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["schedule"],
+      message: "conflicts_with_recurring_rule_id",
+    });
+  }
+}
+
 /** Kształt źródła po scaleniu zmian z PATCH ze stanem z bazy. */
-export const incomeSourceShapeSchema = sourceShapeFieldsSchema.superRefine(checkSourceShape);
+export const incomeSourceShapeSchema = sourceShapeFieldsSchema
+  .extend({ hasSchedule: z.boolean() })
+  .superRefine((source, ctx) => {
+    checkSourceShape(source, ctx);
+    if (source.kind === "IRREGULAR" && source.hasSchedule) {
+      ctx.addIssue({ code: "custom", path: ["schedule"], message: "not_allowed_for_irregular" });
+    }
+  });
 
 /** Body `POST /income/sources`. */
 export const createIncomeSourceSchema = z
@@ -49,8 +79,13 @@ export const createIncomeSourceSchema = z
     expectedAmount: amountSchema.nullable().default(null),
     /** Reguła typu INCOME opisująca, kiedy wpływa (np. 10. dnia miesiąca). */
     recurringRuleId: idSchema.nullable().default(null),
+    /** Albo harmonogram do utworzenia razem ze źródłem. */
+    schedule: scheduleSchema.nullable().default(null),
   })
-  .superRefine(checkSourceShape);
+  .superRefine((source, ctx) => {
+    checkSourceShape(source, ctx);
+    checkSchedule(source, ctx);
+  });
 
 /** Body `PATCH /income/sources/:id`. */
 export const updateIncomeSourceSchema = z
@@ -61,8 +96,11 @@ export const updateIncomeSourceSchema = z
     recurringRuleId: idSchema.nullable(),
     /** Archiwizacja (np. zmiana pracy) — historia wpływów zostaje. */
     isActive: z.boolean(),
+    /** Nowy harmonogram (zmienia podpiętą regułę albo tworzy ją); `null` odpina i usuwa regułę. */
+    schedule: scheduleSchema.nullable(),
   })
-  .partial();
+  .partial()
+  .superRefine(checkSchedule);
 
 /** Źródło dochodu w odpowiedzi API. */
 export const incomeSourceSchema = z.object({
@@ -72,6 +110,8 @@ export const incomeSourceSchema = z.object({
   expectedAmount: z.number().int().nullable(),
   recurringRuleId: idSchema.nullable(),
   isActive: z.boolean(),
+  /** Harmonogram podpiętej reguły — appka pokazuje go bez pobierania reguł. */
+  schedule: scheduleOutputSchema.nullable(),
 });
 
 const incomeEntryFieldsSchema = z.object({
@@ -116,6 +156,8 @@ export const incomeEntryPageSchema = pageSchema(incomeEntrySchema);
 
 /** Dane nowego źródła dochodu. */
 export type CreateIncomeSourceInput = z.infer<typeof createIncomeSourceSchema>;
+/** Nowe źródło, jak wysyła je klient (pola z domyślną wartością są opcjonalne). */
+export type CreateIncomeSourceRequest = z.input<typeof createIncomeSourceSchema>;
 /** Zmiany źródła dochodu. */
 export type UpdateIncomeSourceInput = z.infer<typeof updateIncomeSourceSchema>;
 /** Źródło dochodu w odpowiedzi API. */

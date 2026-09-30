@@ -1,16 +1,30 @@
 import { ConflictException, Inject, Injectable, NotFoundException } from "@nestjs/common";
-import type { CreateIncomeSourceInput, IncomeSource, UpdateIncomeSourceInput } from "@vireo/shared";
+import type {
+  CreateIncomeSourceInput,
+  IncomeSource,
+  Schedule,
+  UpdateIncomeSourceInput,
+} from "@vireo/shared";
 import { incomeSourceShapeSchema } from "@vireo/shared";
 import { ZodValidationException } from "nestjs-zod";
 
+import { fromIsoDate, toIsoDate } from "../common/dates.js";
 import { OwnedReferencesService } from "../common/owned-references.service.js";
-import type { IncomeSource as IncomeSourceRow } from "../generated/prisma/client.js";
+import type {
+  IncomeSource as IncomeSourceRow,
+  RecurringRule as RecurringRuleRow,
+} from "../generated/prisma/client.js";
 import { Prisma } from "../generated/prisma/client.js";
-import type { Db } from "../prisma/prisma.module.js";
+import type { Db, DbTransaction } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 const UNIQUE_VIOLATION = "P2002";
 const FOREIGN_KEY_VIOLATION = "P2003";
+
+/** Źródło z podpiętą regułą — z niej bierze się `schedule` w odpowiedzi. */
+type SourceWithRule = IncomeSourceRow & { recurringRule: RecurringRuleRow | null };
+
+const withRule = { recurringRule: true } as const;
 
 @Injectable()
 export class IncomeSourcesService {
@@ -22,41 +36,87 @@ export class IncomeSourcesService {
   async list(userId: string): Promise<IncomeSource[]> {
     const rows = await this.db.incomeSource.findMany({
       where: { userId },
+      include: withRule,
       orderBy: [{ isActive: "desc" }, { createdAt: "asc" }],
     });
     return rows.map(toIncomeSource);
   }
 
   async get(userId: string, id: string): Promise<IncomeSource> {
-    const row = await this.db.incomeSource.findFirst({ where: { id, userId } });
+    const row = await this.db.incomeSource.findFirst({ where: { id, userId }, include: withRule });
     if (!row) throw new NotFoundException();
     return toIncomeSource(row);
   }
 
+  /**
+   * Z `schedule` — źródło i reguła INCOME w jednej transakcji: zerwane
+   * połączenie nie zostawi samotnej reguły, której budżet i tak nie liczy.
+   */
   async create(userId: string, input: CreateIncomeSourceInput): Promise<IncomeSource> {
-    await this.refs.assertRecurringRule(userId, input.recurringRuleId, "INCOME");
-    return toIncomeSource(
-      await withRuleConflict(() => this.db.incomeSource.create({ data: { ...input, userId } })),
+    const { schedule, ...fields } = input;
+    await this.refs.assertRecurringRule(userId, fields.recurringRuleId, "INCOME");
+    return withRuleConflict(() =>
+      this.db.$transaction(async (tx) => {
+        const recurringRuleId = schedule
+          ? (await createIncomeRule(tx, userId, schedule)).id
+          : fields.recurringRuleId;
+        const row = await tx.incomeSource.create({
+          data: { ...fields, recurringRuleId, userId },
+          include: withRule,
+        });
+        return toIncomeSource(row);
+      }),
     );
   }
 
-  /** Jak przy regułach: spójność REGULAR/IRREGULAR sprawdzana po scaleniu ze stanem z bazy. */
+  /**
+   * Spójność REGULAR/IRREGULAR sprawdzana po scaleniu ze stanem z bazy, jak
+   * przy regułach. `schedule` zmienia podpiętą regułę (id zostaje), tworzy
+   * ją, gdy jej nie było, a `null` odpina i usuwa — reguła INCOME to tylko
+   * harmonogram tego źródła.
+   */
   async update(userId: string, id: string, input: UpdateIncomeSourceInput): Promise<IncomeSource> {
     const existing = await this.db.incomeSource.findFirst({ where: { id, userId } });
     if (!existing) throw new NotFoundException();
+    const { schedule, ...fields } = input;
 
+    const keepsRule =
+      fields.recurringRuleId !== undefined
+        ? fields.recurringRuleId !== null
+        : existing.recurringRuleId !== null;
     const shape = incomeSourceShapeSchema.safeParse({
-      kind: input.kind ?? existing.kind,
+      kind: fields.kind ?? existing.kind,
       expectedAmount:
-        input.expectedAmount !== undefined ? input.expectedAmount : existing.expectedAmount,
+        fields.expectedAmount !== undefined ? fields.expectedAmount : existing.expectedAmount,
+      hasSchedule: schedule !== undefined ? schedule !== null : keepsRule,
     });
     if (!shape.success) throw new ZodValidationException(shape.error);
-    await this.refs.assertRecurringRule(userId, input.recurringRuleId, "INCOME");
+    await this.refs.assertRecurringRule(userId, fields.recurringRuleId, "INCOME");
 
-    return toIncomeSource(
-      await withRuleConflict(() =>
-        this.db.incomeSource.update({ where: { id, userId }, data: input }),
-      ),
+    return withRuleConflict(() =>
+      this.db.$transaction(async (tx) => {
+        // undefined = bez zmiany powiązania.
+        let recurringRuleId = schedule === null ? null : fields.recurringRuleId;
+        if (schedule && existing.recurringRuleId) {
+          await tx.recurringRule.update({
+            where: { id: existing.recurringRuleId, userId },
+            data: scheduleData(schedule),
+          });
+        } else if (schedule) {
+          recurringRuleId = (await createIncomeRule(tx, userId, schedule)).id;
+        }
+
+        const row = await tx.incomeSource.update({
+          where: { id, userId },
+          data: { ...fields, recurringRuleId },
+          include: withRule,
+        });
+        // Odpięta reguła była tylko harmonogramem tego źródła — nie zostawiamy jej.
+        if (schedule === null && existing.recurringRuleId) {
+          await tx.recurringRule.delete({ where: { id: existing.recurringRuleId, userId } });
+        }
+        return toIncomeSource(row);
+      }),
     );
   }
 
@@ -83,6 +143,14 @@ export class IncomeSourcesService {
   }
 }
 
+function scheduleData(schedule: Schedule) {
+  return { ...schedule, startDate: fromIsoDate(schedule.startDate) };
+}
+
+function createIncomeRule(tx: DbTransaction, userId: string, schedule: Schedule) {
+  return tx.recurringRule.create({ data: { ...scheduleData(schedule), userId, kind: "INCOME" } });
+}
+
 /** Reguła może opisywać tylko jedno źródło (unikalny recurringRuleId). */
 async function withRuleConflict<T>(operation: () => Promise<T>): Promise<T> {
   try {
@@ -95,7 +163,8 @@ async function withRuleConflict<T>(operation: () => Promise<T>): Promise<T> {
   }
 }
 
-function toIncomeSource(row: IncomeSourceRow): IncomeSource {
+function toIncomeSource(row: SourceWithRule): IncomeSource {
+  const rule = row.recurringRule;
   return {
     id: row.id,
     name: row.name,
@@ -103,5 +172,12 @@ function toIncomeSource(row: IncomeSourceRow): IncomeSource {
     expectedAmount: row.expectedAmount,
     recurringRuleId: row.recurringRuleId,
     isActive: row.isActive,
+    schedule: rule && {
+      frequency: rule.frequency,
+      interval: rule.interval,
+      startDate: toIsoDate(rule.startDate),
+      dayOfMonth: rule.dayOfMonth,
+      dayOfWeek: rule.dayOfWeek,
+    },
   };
 }

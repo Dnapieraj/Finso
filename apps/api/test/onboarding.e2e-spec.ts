@@ -131,6 +131,13 @@ describe("Onboarding (e2e)", () => {
           expectedAmount: 800_000,
           recurringRuleId: rule?.id,
           isActive: true,
+          schedule: {
+            frequency: "MONTHLY",
+            interval: 1,
+            startDate: "2026-09-10",
+            dayOfMonth: 10,
+            dayOfWeek: null,
+          },
         },
       ]);
     });
@@ -215,6 +222,7 @@ describe("Onboarding (e2e)", () => {
             expectedAmount: null,
             recurringRuleId: null,
             isActive: true,
+            schedule: null,
           },
         ]);
         expect(await get<RecurringRule[]>("/recurring-rules")).toEqual([]);

@@ -17,6 +17,12 @@ import {
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
 import { goalSchema, type Goal } from "../goals/schemas.js";
+import {
+  incomeSourceSchema,
+  type CreateIncomeSourceRequest,
+  type IncomeSource,
+  type UpdateIncomeSourceInput,
+} from "../income/schemas.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   transactionPageSchema,
@@ -27,7 +33,13 @@ import {
   type Transaction,
   type TransactionPage,
 } from "../transactions/schemas.js";
-import { publicUserSchema, type PublicUser } from "../users/schemas.js";
+import {
+  recurringRuleSchema,
+  type CreateRecurringRuleRequest,
+  type RecurringRule,
+  type UpdateRecurringRuleInput,
+} from "../recurring-rules/schemas.js";
+import { publicUserSchema, type PublicUser, type UpdateMeInput } from "../users/schemas.js";
 
 /**
  * Miejsce przechowywania tokenów sesji. Klient nie wie, gdzie leżą —
@@ -97,6 +109,8 @@ export interface ApiClient {
   };
   readonly users: {
     me(): Promise<PublicUser>;
+    /** Ustawienia budżetu: dzień wypłaty, strefa czasowa. */
+    updateMe(input: UpdateMeInput): Promise<PublicUser>;
     /** Usuwa konto (kaskadowo, wymaga hasła) i czyści tokeny. */
     deleteMe(input: DeleteAccountInput): Promise<void>;
     /**
@@ -114,6 +128,24 @@ export interface ApiClient {
   readonly goals: {
     /** Cele posortowane po terminie, najbliższy pierwszy. */
     list(): Promise<Goal[]>;
+  };
+  readonly recurringRules: {
+    /** Reguły wydatków i dochodów, także wyłączone. */
+    list(): Promise<RecurringRule[]>;
+    create(input: CreateRecurringRuleRequest): Promise<RecurringRule>;
+    /** Zmienia tylko podane pola. */
+    update(id: string, input: UpdateRecurringRuleInput): Promise<RecurringRule>;
+    /** Usuwa regułę; wydatki, które z niej powstały, zostają. */
+    remove(id: string): Promise<void>;
+  };
+  readonly incomeSources: {
+    /** Źródła z harmonogramem, także zarchiwizowane. */
+    list(): Promise<IncomeSource[]>;
+    /** Tworzy źródło, z `schedule` — razem z regułą, w jednej transakcji. */
+    create(input: CreateIncomeSourceRequest): Promise<IncomeSource>;
+    update(id: string, input: UpdateIncomeSourceInput): Promise<IncomeSource>;
+    /** 409, gdy źródło ma wpływy — wtedy archiwizuje się je przez `isActive: false`. */
+    remove(id: string): Promise<void>;
   };
   readonly categories: {
     /** Kategorie systemowe i własne użytkownika. */
@@ -240,6 +272,16 @@ export function createApiClient({
     return user;
   }
 
+  /** POST/PATCH z body i walidacją odpowiedzi wspólnym schematem. */
+  async function write<T>(
+    method: "POST" | "PATCH",
+    path: string,
+    body: unknown,
+    schema: z.ZodType<T>,
+  ): Promise<T> {
+    return parse(await execute({ method, path, body }), schema);
+  }
+
   /** GET z walidacją odpowiedzi wspólnym schematem. */
   async function read<T>(path: string, schema: z.ZodType<T>): Promise<T> {
     return parse(await execute({ method: "GET", path }), schema);
@@ -266,6 +308,7 @@ export function createApiClient({
     },
     users: {
       me: async () => parse(await execute({ method: "GET", path: "/users/me" }), publicUserSchema),
+      updateMe: (input) => write("PATCH", "/users/me", input, publicUserSchema),
       async deleteMe(input) {
         await execute({ method: "DELETE", path: "/users/me", body: input });
         await tokens.clear();
@@ -289,6 +332,24 @@ export function createApiClient({
     },
     categories: {
       list: () => read("/categories", z.array(categorySchema)),
+    },
+    recurringRules: {
+      list: () => read("/recurring-rules", z.array(recurringRuleSchema)),
+      create: (input) => write("POST", "/recurring-rules", input, recurringRuleSchema),
+      update: (id, input) =>
+        write("PATCH", `/recurring-rules/${encodeURIComponent(id)}`, input, recurringRuleSchema),
+      async remove(id) {
+        await execute({ method: "DELETE", path: `/recurring-rules/${encodeURIComponent(id)}` });
+      },
+    },
+    incomeSources: {
+      list: () => read("/income/sources", z.array(incomeSourceSchema)),
+      create: (input) => write("POST", "/income/sources", input, incomeSourceSchema),
+      update: (id, input) =>
+        write("PATCH", `/income/sources/${encodeURIComponent(id)}`, input, incomeSourceSchema),
+      async remove(id) {
+        await execute({ method: "DELETE", path: `/income/sources/${encodeURIComponent(id)}` });
+      },
     },
     transactions: {
       list: (query = {}) => read(`/transactions${queryString(query)}`, transactionPageSchema),

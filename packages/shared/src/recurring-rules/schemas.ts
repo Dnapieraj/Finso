@@ -47,13 +47,7 @@ function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
     ctx.addIssue({ code: "custom", path: [path], message });
   };
 
-  if (rule.frequency === "WEEKLY") {
-    if (rule.dayOfWeek === null) issue("dayOfWeek", "required_for_weekly");
-    if (rule.dayOfMonth !== null) issue("dayOfMonth", "not_allowed_for_weekly");
-  } else {
-    if (rule.dayOfMonth === null) issue("dayOfMonth", "required_for_monthly_and_yearly");
-    if (rule.dayOfWeek !== null) issue("dayOfWeek", "not_allowed_for_monthly_and_yearly");
-  }
+  checkScheduleAnchors(rule, ctx);
   if (rule.kind === "EXPENSE" && rule.expectedAmount === null) {
     issue("expectedAmount", "required_for_expense");
   }
@@ -64,6 +58,54 @@ function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
     issue("categoryId", "not_allowed_for_income");
   }
 }
+
+/** Pola harmonogramu, od których zależy, który dzień jest kotwicą. */
+interface ScheduleAnchors {
+  frequency: z.infer<typeof recurrenceFrequencySchema>;
+  dayOfMonth: number | null;
+  dayOfWeek: number | null;
+}
+
+/**
+ * WEEKLY → `dayOfWeek` bez `dayOfMonth`; MONTHLY/YEARLY → odwrotnie.
+ * Wspólne dla reguły i harmonogramu źródła dochodu (`schedule`), żeby
+ * oba odrzucały te same kształty tymi samymi kluczami.
+ */
+export function checkScheduleAnchors(schedule: ScheduleAnchors, ctx: z.RefinementCtx): void {
+  const issue = (path: "dayOfMonth" | "dayOfWeek", message: string) => {
+    ctx.addIssue({ code: "custom", path: [path], message });
+  };
+  if (schedule.frequency === "WEEKLY") {
+    if (schedule.dayOfWeek === null) issue("dayOfWeek", "required_for_weekly");
+    if (schedule.dayOfMonth !== null) issue("dayOfMonth", "not_allowed_for_weekly");
+  } else {
+    if (schedule.dayOfMonth === null) issue("dayOfMonth", "required_for_monthly_and_yearly");
+    if (schedule.dayOfWeek !== null) issue("dayOfWeek", "not_allowed_for_monthly_and_yearly");
+  }
+}
+
+/**
+ * Harmonogram bez reszty reguły — np. „kiedy wpływa” przy źródle dochodu.
+ * Te same pola i domyślne wartości co w `POST /recurring-rules`.
+ */
+export const scheduleSchema = z
+  .object({
+    frequency: recurrenceFrequencySchema,
+    interval: z.number().int().min(1).max(52).default(1),
+    startDate: isoDateInputSchema,
+    dayOfMonth: z.number().int().min(1).max(31).nullable().default(null),
+    dayOfWeek: z.number().int().min(0).max(6).nullable().default(null),
+  })
+  .superRefine(checkScheduleAnchors);
+
+/** Harmonogram w odpowiedzi API. */
+export const scheduleOutputSchema = z.object({
+  frequency: recurrenceFrequencySchema,
+  interval: z.number().int(),
+  startDate: isoDateOutputSchema,
+  dayOfMonth: z.number().int().nullable(),
+  dayOfWeek: z.number().int().nullable(),
+});
 
 /** Kształt reguły po scaleniu zmian z PATCH ze stanem z bazy. */
 export const recurringRuleShapeSchema = shapeFieldsSchema.superRefine(checkShape);
@@ -121,6 +163,14 @@ export const recurringRuleSchema = z.object({
 
 /** Dane nowej reguły. */
 export type CreateRecurringRuleInput = z.infer<typeof createRecurringRuleSchema>;
+/** Nowa reguła, jak wysyła ją klient (pola z domyślną wartością są opcjonalne). */
+export type CreateRecurringRuleRequest = z.input<typeof createRecurringRuleSchema>;
+/** Harmonogram po walidacji. */
+export type Schedule = z.infer<typeof scheduleSchema>;
+/** Harmonogram, jak wysyła go klient. */
+export type ScheduleRequest = z.input<typeof scheduleSchema>;
+/** Harmonogram w odpowiedzi API. */
+export type ScheduleOutput = z.infer<typeof scheduleOutputSchema>;
 /** Zmiany reguły. */
 export type UpdateRecurringRuleInput = z.infer<typeof updateRecurringRuleSchema>;
 /** Reguła w odpowiedzi API. */
