@@ -3,19 +3,24 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Res,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 import type { Goal } from "@vireo/shared";
 import { createGoalSchema, goalSchema, updateGoalSchema } from "@vireo/shared";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
 import type { AuthUser } from "../auth/decorators.js";
 import { CurrentUser } from "../auth/decorators.js";
+import { idempotentPost } from "../idempotency/idempotent-post.js";
+import { IdempotencyService } from "../idempotency/idempotency.service.js";
 import { GoalsService } from "./goals.service.js";
 
 export class CreateGoalDto extends createZodDto(createGoalSchema) {}
@@ -26,7 +31,10 @@ export class GoalDto extends createZodDto(goalSchema) {}
 @ApiBearerAuth()
 @Controller("goals")
 export class GoalsController {
-  constructor(private readonly goals: GoalsService) {}
+  constructor(
+    private readonly goals: GoalsService,
+    private readonly idempotency: IdempotencyService,
+  ) {}
 
   @Get()
   @ZodResponse({ type: [GoalDto] })
@@ -40,10 +48,28 @@ export class GoalsController {
     return this.goals.get(user.id, id);
   }
 
+  /** Z `Idempotency-Key` ponowienie zwraca zapisany cel zamiast drugiego. */
   @Post()
   @ZodResponse({ status: HttpStatus.CREATED, type: GoalDto })
-  create(@CurrentUser() user: AuthUser, @Body() body: CreateGoalDto): Promise<Goal> {
-    return this.goals.create(user.id, body);
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "UUID celu; ten sam klucz przez 24 h zwraca ten sam wynik",
+  })
+  create(
+    @CurrentUser() user: AuthUser,
+    @Body() body: CreateGoalDto,
+    @Headers("idempotency-key") rawKey: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Goal> {
+    return idempotentPost(this.idempotency, {
+      userId: user.id,
+      scope: "POST /goals",
+      rawKey,
+      request: body,
+      res,
+      perform: (tx) => this.goals.create(user.id, body, tx),
+    });
   }
 
   @Patch(":id")

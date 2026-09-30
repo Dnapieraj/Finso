@@ -3,7 +3,7 @@ import type { CreateGoalInput, Goal, UpdateGoalInput } from "@vireo/shared";
 
 import { fromIsoDate, toIsoDate } from "../common/dates.js";
 import type { Goal as GoalRow } from "../generated/prisma/client.js";
-import type { Db } from "../prisma/prisma.module.js";
+import type { Db, DbTransaction } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
@@ -25,8 +25,13 @@ export class GoalsService {
     return toGoal(row);
   }
 
-  async create(userId: string, input: CreateGoalInput): Promise<Goal> {
-    const row = await this.db.goal.create({
+  /** `db` — transakcja, gdy zapis idzie razem z kluczem idempotencji. */
+  async create(
+    userId: string,
+    input: CreateGoalInput,
+    db: Db | DbTransaction = this.db,
+  ): Promise<Goal> {
+    const row = await db.goal.create({
       data: { ...input, userId, targetDate: fromIsoDate(input.targetDate) },
     });
     return toGoal(row);

@@ -17,7 +17,12 @@ import {
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
 import type { IdempotentDraft } from "../common/schemas.js";
-import { goalSchema, type Goal } from "../goals/schemas.js";
+import {
+  goalSchema,
+  type CreateGoalRequest,
+  type Goal,
+  type UpdateGoalInput,
+} from "../goals/schemas.js";
 import {
   incomeSourceSchema,
   type CreateIncomeSourceRequest,
@@ -127,8 +132,18 @@ export interface ApiClient {
     simulate(input: SimulatePurchaseRequest): Promise<SimulationResult>;
   };
   readonly goals: {
-    /** Cele posortowane po terminie, najbliższy pierwszy. */
+    /** Cele posortowane po terminie, najbliższy pierwszy (bez tych w koszu). */
     list(): Promise<Goal[]>;
+    /** Cel z własnym kluczem idempotencji — jeden draft na jeden cel. */
+    draft(input: CreateGoalRequest): IdempotentDraft<CreateGoalRequest>;
+    /** Ponowne wysłanie tego samego draftu zwraca zapisany wcześniej cel. */
+    create(draft: IdempotentDraft<CreateGoalRequest>): Promise<Goal>;
+    /** Zmienia tylko podane pola. */
+    update(id: string, input: UpdateGoalInput): Promise<Goal>;
+    /** Przenosi cel do kosza (miękkie usunięcie, da się przywrócić). */
+    remove(id: string): Promise<void>;
+    /** Wyjmuje cel z kosza. */
+    restore(id: string): Promise<Goal>;
   };
   readonly recurringRules: {
     /** Reguły wydatków i dochodów, także wyłączone. */
@@ -355,6 +370,14 @@ export function createApiClient({
     },
     goals: {
       list: () => read("/goals", z.array(goalSchema)),
+      draft: (input) => ({ input, idempotencyKey: randomUUID() }),
+      create: (draft) => createKeyed("/goals", draft, goalSchema),
+      update: (id, input) => write("PATCH", `/goals/${encodeURIComponent(id)}`, input, goalSchema),
+      async remove(id) {
+        await execute({ method: "DELETE", path: `/goals/${encodeURIComponent(id)}` });
+      },
+      restore: (id) =>
+        write("POST", `/goals/${encodeURIComponent(id)}/restore`, undefined, goalSchema),
     },
     categories: {
       list: () => read("/categories", z.array(categorySchema)),

@@ -37,6 +37,8 @@ export const goalSchema = z.object({
 
 /** Dane nowego celu. */
 export type CreateGoalInput = z.infer<typeof createGoalSchema>;
+/** Nowy cel, jak wysyła go klient (`currentAmount` opcjonalne). */
+export type CreateGoalRequest = z.input<typeof createGoalSchema>;
 /** Zmiany celu. */
 export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
 /** Cel w odpowiedzi API. */
