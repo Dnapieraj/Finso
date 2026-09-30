@@ -101,12 +101,15 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 11. Wspólne wydatki / rozliczenia
 12. Widżety iOS/Android
 13. Tryb offline z synchronizacją
+14. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
+    i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
+    przy zmianie w trakcie okresu
 
 ### Faza 3
 
-14. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
-15. Wielowalutowość
-16. Eksport PDF/CSV, raporty roczne
+15. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
+16. Wielowalutowość
+17. Eksport PDF/CSV, raporty roczne
 
 ### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
 
@@ -126,6 +129,20 @@ jednocześnie — te liczby się nie sumują do realnego stanu budżetu (brakuje
 proporcjonalna atrybucja deficytu między celami. Zaakceptowany na MVP.
 Do rewizji w Fazie 2, jeśli feedback użytkowników pokaże, że to myli.
 (Implementacja: `packages/shared/src/budget/types.ts`, JSDoc `GoalImpact`.)
+
+**Wcześniejszy dzień wypłaty nie odtwarza drobnych wydatków sprzed Finso.**
+Gdy użytkownik zmieni dzień wypłaty tak, że bieżący okres zaczyna się
+wcześniej (np. z 10. na 1.), dni między nowym a starym początkiem okresu
+wchodzą do budżetu. Stałe płatności z tych dni się liczą — `PATCH /users/me`
+przesuwa start reguł (`rebaseRuleStarts`). Ale zwykłe wydatki sprzed
+onboardingu z tych dni nie istnieją nigdzie: krok „Ile już wydałeś od
+ostatniej wypłaty?” pytał od STAREGO dnia wypłaty. Do końca tego jednego
+okresu budżet może więc pokazać za dużo o te wydatki.
+
+Nie da się tego naprawić bez pytania użytkownika. Kandydat na Fazę 2:
+po takiej zmianie zapytać „Ile wydałeś od DD.MM do DD.MM?” i zapisać to jak
+„Wydatki przed Finso”. (Implementacja:
+`packages/shared/src/budget/rebase-rule-starts.ts`.)
 
 ---
 
