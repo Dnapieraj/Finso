@@ -312,16 +312,7 @@ export const fakeApi = {
       const source: IncomeSource = {
         ...current,
         ...fields,
-        schedule:
-          schedule === undefined
-            ? current.schedule
-            : schedule && {
-                frequency: schedule.frequency,
-                interval: schedule.interval ?? 1,
-                startDate: schedule.startDate,
-                dayOfMonth: schedule.dayOfMonth ?? null,
-                dayOfWeek: schedule.dayOfWeek ?? null,
-              },
+        schedule: schedule === undefined ? current.schedule : schedule,
       };
       sources = sources.map((other) => (other.id === id ? source : other));
       return Promise.resolve(source);

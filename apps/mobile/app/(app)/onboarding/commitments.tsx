@@ -221,6 +221,11 @@ export default function CommitmentsStep() {
           >
             {draft.commitments.length > 0 ? t.next : t.skip}
           </Button>
+          {draft.commitments.length === 0 && (
+            <Text className="text-center font-sans text-sm text-muted-foreground">
+              {t.commitments.later}
+            </Text>
+          )}
         </>
       )}
       <Button

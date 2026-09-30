@@ -5,7 +5,7 @@ import { pl } from "../messages/pl";
 const t = pl.apiErrors;
 
 /** The screen that sent the request; the same status means different things per screen. */
-export type AuthAction = "login" | "register" | "delete-account" | "onboarding";
+export type AuthAction = "login" | "register" | "delete-account" | "onboarding" | "settings";
 
 /**
  * A message for the user from a failed request. Never the API's own
