@@ -7,6 +7,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import request from "supertest";
 
 import { AppModule } from "../src/app.module.js";
+import type { Clock } from "../src/common/clock.js";
 import { PrismaClient } from "../src/generated/prisma/client.js";
 import { TEST_DATABASE_URL } from "./test-env.js";
 
@@ -99,4 +100,17 @@ export async function registerUser(
     .send({ email, password })
     .expect(201);
   return res.body as TestSession;
+}
+
+/** Zegar, który test może przestawić — np. na noc zmiany czasu. */
+export class TestClock implements Clock {
+  private current = new Date();
+
+  now(): Date {
+    return this.current;
+  }
+
+  set(iso: string): void {
+    this.current = new Date(iso);
+  }
 }

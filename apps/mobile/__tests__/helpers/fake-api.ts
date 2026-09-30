@@ -1,6 +1,7 @@
 import type {
   BudgetSummary,
   Category,
+  CompleteOnboardingInput,
   CreateTransactionRequest,
   TransactionDraft,
   DeleteAccountInput,
@@ -24,6 +25,7 @@ export const testUser: PublicUser = {
   currency: "PLN",
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
+  onboardingCompleted: true,
 };
 
 /** Day 19 of 30; 1234,56 zł left for 12 days → 102,88 zł a day. */
@@ -103,11 +105,19 @@ export function transactionPage(items: Transaction[]): TransactionPage {
  */
 const saved: Transaction[] = [];
 let drafts = 0;
+/** Settings of the account; a new account starts before onboarding. */
+let account: PublicUser = testUser;
 
-/** Forgets expenses saved and keys handed out in the previous test. */
+/** Forgets expenses saved, keys handed out and account changes from the previous test. */
 export function resetFakeServer(): void {
   saved.length = 0;
   drafts = 0;
+  account = testUser;
+}
+
+/** The signed-in account has not finished onboarding (e.g. quit halfway last time). */
+export function startBeforeOnboarding(): void {
+  account = { ...testUser, periodStartDay: 1, onboardingCompleted: false };
 }
 
 /**
@@ -117,13 +127,25 @@ export function resetFakeServer(): void {
  */
 export const fakeApi = {
   auth: {
-    register: jest.fn((_input: RegisterInput) => Promise.resolve(testUser)),
-    login: jest.fn((_input: LoginInput) => Promise.resolve(testUser)),
+    register: jest.fn((_input: RegisterInput) => {
+      startBeforeOnboarding();
+      return Promise.resolve(account);
+    }),
+    login: jest.fn((_input: LoginInput) => Promise.resolve(account)),
     logout: jest.fn(() => Promise.resolve()),
   },
   users: {
-    me: jest.fn(() => Promise.resolve(testUser)),
+    me: jest.fn(() => Promise.resolve(account)),
     deleteMe: jest.fn((_input: DeleteAccountInput) => Promise.resolve()),
+    completeOnboarding: jest.fn((input: CompleteOnboardingInput) => {
+      account = {
+        ...account,
+        periodStartDay: input.periodStartDay,
+        timezone: input.timezone,
+        onboardingCompleted: true,
+      };
+      return Promise.resolve(account);
+    }),
   },
   budget: {
     simulate: jest.fn((_input: SimulatePurchaseRequest) => Promise.resolve(testSimulation())),

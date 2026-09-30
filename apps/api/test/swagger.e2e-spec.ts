@@ -43,6 +43,7 @@ describe("OpenAPI (e2e)", () => {
         "/budget/current",
         "/budget/simulate",
         "/users/me",
+        "/users/me/onboarding",
         "/auth/login",
       ]),
     );

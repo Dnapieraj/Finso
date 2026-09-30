@@ -23,13 +23,13 @@ async function submit(email: string, password: string) {
   await fireEvent.press(screen.getByRole("button", { name: "Załóż konto" }));
 }
 
-it("creates the account and opens the app", async () => {
+it("creates the account and starts onboarding", async () => {
   const app = await openRegister();
 
   await submit("ola@example.com", "tajne-haslo-123");
 
   await waitFor(() => {
-    expect(app).toHavePathname("/");
+    expect(app).toHavePathname("/onboarding");
   });
   expect(fakeApi.auth.register).toHaveBeenCalledWith({
     email: "ola@example.com",

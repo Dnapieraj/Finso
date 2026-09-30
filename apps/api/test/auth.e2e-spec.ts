@@ -54,6 +54,7 @@ describe("Auth (e2e)", () => {
           currency: "PLN",
           timezone: "Europe/Warsaw",
           periodStartDay: 1,
+          onboardingCompleted: false,
         },
         accessToken: anyString,
         refreshToken: anyString,

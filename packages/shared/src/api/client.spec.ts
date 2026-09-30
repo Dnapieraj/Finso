@@ -23,6 +23,7 @@ const me = {
   currency: "PLN",
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
+  onboardingCompleted: true,
 } as const;
 
 const credentials = { email: "ola@example.com", password: "tajne-haslo-123" };
@@ -328,6 +329,34 @@ describe("createApiClient", () => {
 
     expect(sentRequest(fetch, 0).body).toEqual({ password: "tajne-haslo-123" });
     expect(tokens.saved).toBeNull();
+  });
+
+  describe("users.completeOnboarding", () => {
+    const onboarding = {
+      periodStartDay: 10,
+      timezone: "Europe/Warsaw",
+      income: { kind: "REGULAR", name: "Wypłata", amount: 800_000, dayOfMonth: 10 },
+      commitments: [],
+    } as const;
+
+    it("posts the answers and returns the onboarded user", async () => {
+      const { api, fetch } = setup({ "POST /users/me/onboarding": [jsonResponse(200, me)] });
+
+      await expect(api.users.completeOnboarding(onboarding)).resolves.toEqual(me);
+
+      const request = sentRequest(fetch, 0);
+      expect(request.url).toBe(`${BASE_URL}/users/me/onboarding`);
+      expect(request.body).toEqual(onboarding);
+    });
+
+    it("rejects a user without the onboarding flag (API older than the app)", async () => {
+      const { onboardingCompleted: _missing, ...oldUser } = me;
+      const { api } = setup({ "POST /users/me/onboarding": [jsonResponse(200, oldUser)] });
+
+      await expect(api.users.completeOnboarding(onboarding)).rejects.toMatchObject({
+        kind: "invalid-response",
+      });
+    });
   });
 
   it("logs out on the server and clears tokens even if the call fails", async () => {

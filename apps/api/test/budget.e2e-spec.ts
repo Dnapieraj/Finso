@@ -1,30 +1,16 @@
 import type { BudgetSummary } from "@vireo/shared";
 import request from "supertest";
 
-import type { Clock } from "../src/common/clock.js";
 import { CLOCK } from "../src/common/clock.js";
 import type { PrismaClient } from "../src/generated/prisma/client.js";
 import type { TestApp, TestSession } from "./helpers.js";
-import { createTestApp, createTestDb, idOf, registerUser, resetDb } from "./helpers.js";
+import { createTestApp, createTestDb, idOf, registerUser, resetDb, TestClock } from "./helpers.js";
 
 /**
  * Logikę liczenia testuje @vireo/shared. Tu sprawdzamy klejenie: że API
  * ładuje właściwe dane (własne, nieusunięte, z bieżącego okresu), liczy
  * "dziś" w strefie użytkownika i zwraca wynik silnika bez przekłamań.
  */
-
-/** Zegar, który test może przestawić — np. na noc zmiany czasu. */
-class TestClock implements Clock {
-  private current = new Date();
-
-  now(): Date {
-    return this.current;
-  }
-
-  set(iso: string): void {
-    this.current = new Date(iso);
-  }
-}
 
 const clock = new TestClock();
 

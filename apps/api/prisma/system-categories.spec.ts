@@ -1,6 +1,7 @@
 import { categorySchema, createCategorySchema } from "@vireo/shared";
 
 import { toCategory } from "../src/categories/categories.service.js";
+import { OTHER_CATEGORY_ID } from "../src/categories/system-category-ids.js";
 import { SYSTEM_CATEGORIES } from "./system-categories.js";
 
 // Seed pisze prosto do bazy, z pominięciem walidacji na granicy API. Te testy
@@ -33,5 +34,9 @@ describe("dane z seeda przechodzą przez schematy API", () => {
   it("id i nazwy są unikalne", () => {
     expect(new Set(SYSTEM_CATEGORIES.map((c) => c.id)).size).toBe(SYSTEM_CATEGORIES.length);
     expect(new Set(SYSTEM_CATEGORIES.map((c) => c.name)).size).toBe(SYSTEM_CATEGORIES.length);
+  });
+
+  it("onboarding zapisuje „Wydatki przed Finso” w kategorii Inne — jej id jest w src", () => {
+    expect(SYSTEM_CATEGORIES.find((c) => c.id === OTHER_CATEGORY_ID)?.name).toBe("Inne");
   });
 });
