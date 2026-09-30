@@ -33,11 +33,15 @@ import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   transactionPageSchema,
   transactionSchema,
+  transactionSummarySchema,
   type CreateTransactionRequest,
   type TransactionDraft,
   type ListTransactionsQuery,
   type Transaction,
   type TransactionPage,
+  type TransactionSummary,
+  type TransactionSummaryQuery,
+  type UpdateTransactionInput,
 } from "../transactions/schemas.js";
 import {
   recurringRuleSchema,
@@ -187,6 +191,14 @@ export interface ApiClient {
     create(draft: TransactionDraft): Promise<Transaction>;
     /** Przenosi wydatek do kosza (miękkie usunięcie, da się przywrócić). */
     remove(id: string): Promise<void>;
+    /** Wyjmuje wydatek z kosza. */
+    restore(id: string): Promise<Transaction>;
+    /** Jeden wydatek (404, gdy nie ma go albo jest w koszu). */
+    get(id: string): Promise<Transaction>;
+    /** Zmienia tylko podane pola. */
+    update(id: string, input: UpdateTransactionInput): Promise<Transaction>;
+    /** Suma i liczba potwierdzonych wydatków okresu wg kategorii. */
+    summary(query: TransactionSummaryQuery): Promise<TransactionSummary>;
   };
 }
 
@@ -409,6 +421,18 @@ export function createApiClient({
       async remove(id) {
         await execute({ method: "DELETE", path: `/transactions/${encodeURIComponent(id)}` });
       },
+      restore: (id) =>
+        write(
+          "POST",
+          `/transactions/${encodeURIComponent(id)}/restore`,
+          undefined,
+          transactionSchema,
+        ),
+      get: (id) => read(`/transactions/${encodeURIComponent(id)}`, transactionSchema),
+      update: (id, input) =>
+        write("PATCH", `/transactions/${encodeURIComponent(id)}`, input, transactionSchema),
+      summary: (query) =>
+        read(`/transactions/summary${queryString(query)}`, transactionSummarySchema),
     },
   };
 }

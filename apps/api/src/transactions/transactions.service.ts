@@ -1,9 +1,11 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateTransactionInput,
+  IsoDate,
   ListTransactionsQuery,
   Transaction,
   TransactionPage,
+  TransactionSummary,
   UpdateTransactionInput,
 } from "@vireo/shared";
 
@@ -43,6 +45,43 @@ export class TransactionsService {
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });
     return toPage(rows, query.limit, toTransaction);
+  }
+
+  /**
+   * Suma i liczba wydatków okresu per kategoria, od największej sumy.
+   * Liczone w bazie, nie z listy: lista jest stronicowana, a wykres ma
+   * obejmować cały okres. Te same wydatki co w budżecie — potwierdzone,
+   * bez kosza (soft-delete extension obejmuje też groupBy).
+   */
+  async summary(
+    userId: string,
+    query: { from: IsoDate; to: IsoDate },
+  ): Promise<TransactionSummary> {
+    const groups = await this.db.transaction.groupBy({
+      by: ["categoryId"],
+      where: {
+        userId,
+        status: "CONFIRMED",
+        date: { gte: fromIsoDate(query.from), lte: fromIsoDate(query.to) },
+      },
+      _sum: { amount: true },
+      _count: { _all: true },
+    });
+    const byCategory = groups
+      .map((group) => ({
+        categoryId: group.categoryId,
+        amount: group._sum.amount ?? 0,
+        count: group._count._all,
+      }))
+      // Przy równych sumach stała kolejność: kategoria przed „bez kategorii”, potem po id.
+      .sort(
+        (a, b) => b.amount - a.amount || (a.categoryId ?? "~").localeCompare(b.categoryId ?? "~"),
+      );
+    return {
+      total: byCategory.reduce((sum, line) => sum + line.amount, 0),
+      count: byCategory.reduce((sum, line) => sum + line.count, 0),
+      byCategory,
+    };
   }
 
   async get(userId: string, id: string): Promise<Transaction> {

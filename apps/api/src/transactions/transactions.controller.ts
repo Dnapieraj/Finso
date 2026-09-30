@@ -13,7 +13,7 @@ import {
   Res,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
-import type { Transaction, TransactionPage } from "@vireo/shared";
+import type { Transaction, TransactionPage, TransactionSummary } from "@vireo/shared";
 import type { Response } from "express";
 import { ZodResponse } from "nestjs-zod";
 
@@ -24,6 +24,8 @@ import {
   ListTransactionsQueryDto,
   TransactionDto,
   TransactionPageDto,
+  TransactionSummaryDto,
+  TransactionSummaryQueryDto,
   UpdateTransactionDto,
 } from "./transactions.dto.js";
 import { idempotentPost } from "../idempotency/idempotent-post.js";
@@ -46,6 +48,19 @@ export class TransactionsController {
     @Query() query: ListTransactionsQueryDto,
   ): Promise<TransactionPage> {
     return this.transactions.list(user.id, query);
+  }
+
+  /**
+   * Sumy do wykresu wydatków wg kategorii. Przed `:id` — inaczej Nest
+   * dopasowałby "summary" jako id wydatku.
+   */
+  @Get("summary")
+  @ZodResponse({ type: TransactionSummaryDto })
+  summary(
+    @CurrentUser() user: AuthUser,
+    @Query() query: TransactionSummaryQueryDto,
+  ): Promise<TransactionSummary> {
+    return this.transactions.summary(user.id, query);
   }
 
   @Get(":id")

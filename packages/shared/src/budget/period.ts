@@ -49,6 +49,22 @@ export function currentBudgetPeriod(today: IsoDate, periodStartDay: number): Bud
 }
 
 /**
+ * Okres budżetowy `offset` okresów od bieżącego: -1 poprzedni, +1 następny.
+ * Okresy zaczynają się co miesiąc tego samego dnia, więc przesunięcie to
+ * przesunięcie miesiąca startu.
+ */
+export function budgetPeriodAt(
+  today: IsoDate,
+  periodStartDay: number,
+  offset: number,
+): BudgetPeriod {
+  const startMonth = monthIndexOf(currentBudgetPeriod(today, periodStartDay).start) + offset;
+  const start = clampedDayInMonth(startMonth, periodStartDay);
+  const nextStart = clampedDayInMonth(startMonth + 1, periodStartDay);
+  return { start, end: addDays(nextStart, -1) };
+}
+
+/**
  * Liczba okresów budżetowych (łącznie z bieżącym), w których jeszcze
  * można odkładać na cel z terminem `targetDate` — wejście dla
  * calculateGoalContribution.

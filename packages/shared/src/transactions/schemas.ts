@@ -42,6 +42,32 @@ export const listTransactionsQuerySchema = cursorPageQuerySchema.extend({
   status: confirmationStatusSchema.optional(),
 });
 
+/**
+ * Query `GET /transactions/summary` — sumy do wykresu wydatków wg kategorii.
+ * Zakres jest wymagany (włącznie z obu stron): wykres dotyczy okresu.
+ */
+export const transactionSummaryQuerySchema = z
+  .object({ from: isoDateInputSchema, to: isoDateInputSchema })
+  .superRefine((range, ctx) => {
+    if (range.to < range.from) {
+      ctx.addIssue({ code: "custom", path: ["to"], message: "before_from" });
+    }
+  });
+
+/** Suma i liczba wydatków jednej kategorii; `categoryId: null` = bez kategorii. */
+export const categoryTotalSchema = z.object({
+  categoryId: idSchema.nullable(),
+  amount: z.number().int(),
+  count: z.number().int(),
+});
+
+/** Odpowiedź `GET /transactions/summary`: kategorie od największej sumy. */
+export const transactionSummarySchema = z.object({
+  total: z.number().int(),
+  count: z.number().int(),
+  byCategory: z.array(categoryTotalSchema),
+});
+
 /** Transakcja w odpowiedzi API. */
 export const transactionSchema = z.object({
   id: idSchema,
@@ -66,6 +92,10 @@ export type TransactionDraft = IdempotentDraft<CreateTransactionRequest>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 /** Filtry listy transakcji. */
 export type ListTransactionsQuery = z.infer<typeof listTransactionsQuerySchema>;
+/** Zakres sum, jak wysyła go klient (daty jako tekst). */
+export type TransactionSummaryQuery = z.input<typeof transactionSummaryQuerySchema>;
+/** Sumy wydatków wg kategorii. */
+export type TransactionSummary = z.infer<typeof transactionSummarySchema>;
 /** Transakcja w odpowiedzi API. */
 export type Transaction = z.infer<typeof transactionSchema>;
 /** Strona transakcji. */
