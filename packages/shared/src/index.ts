@@ -13,6 +13,7 @@ export * from "./budget/period.js";
 export * from "./budget/recurrence.js";
 export * from "./budget/assemble-budget-input.js";
 export * from "./budget/rule-start-date.js";
+export * from "./budget/rebase-rule-starts.js";
 export * from "./budget/schemas.js";
 export * from "./common/schemas.js";
 export * from "./auth/schemas.js";

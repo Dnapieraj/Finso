@@ -52,21 +52,25 @@ export class IncomeSourcesService {
    * Z `schedule` — źródło i reguła INCOME w jednej transakcji: zerwane
    * połączenie nie zostawi samotnej reguły, której budżet i tak nie liczy.
    */
-  async create(userId: string, input: CreateIncomeSourceInput): Promise<IncomeSource> {
+  async create(
+    userId: string,
+    input: CreateIncomeSourceInput,
+    /** Transakcja klucza idempotencji; bez niej — własna. */
+    tx?: DbTransaction,
+  ): Promise<IncomeSource> {
     const { schedule, ...fields } = input;
     await this.refs.assertRecurringRule(userId, fields.recurringRuleId, "INCOME");
-    return withRuleConflict(() =>
-      this.db.$transaction(async (tx) => {
-        const recurringRuleId = schedule
-          ? (await createIncomeRule(tx, userId, schedule)).id
-          : fields.recurringRuleId;
-        const row = await tx.incomeSource.create({
-          data: { ...fields, recurringRuleId, userId },
-          include: withRule,
-        });
-        return toIncomeSource(row);
-      }),
-    );
+    const write = async (db: DbTransaction) => {
+      const recurringRuleId = schedule
+        ? (await createIncomeRule(db, userId, schedule)).id
+        : fields.recurringRuleId;
+      const row = await db.incomeSource.create({
+        data: { ...fields, recurringRuleId, userId },
+        include: withRule,
+      });
+      return toIncomeSource(row);
+    };
+    return withRuleConflict(() => (tx ? write(tx) : this.db.$transaction(write)));
   }
 
   /**

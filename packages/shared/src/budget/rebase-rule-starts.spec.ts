@@ -135,6 +135,12 @@ describe("rebaseRuleStarts", () => {
       expect(rebase([insurance], 10, 1)).toEqual([{ id: insurance.id, startDate: "2026-07-10" }]);
     });
 
+    it("yearly (possible through the API): moved back by whole years, keeping the month", () => {
+      const insurance = rule("EXPENSE", "2026-09-10", { frequency: "YEARLY" });
+
+      expect(rebase([insurance], 10, 1)).toEqual([{ id: insurance.id, startDate: "2025-09-10" }]);
+    });
+
     it("inactive rules move too, so switching one back on counts it right", () => {
       const paused = { ...rule("EXPENSE", "2026-09-10"), isActive: false };
 

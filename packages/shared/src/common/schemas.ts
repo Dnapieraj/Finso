@@ -41,3 +41,13 @@ export const cursorPageQuerySchema = z.object({
 export function pageSchema<T extends z.ZodType>(item: T) {
   return z.object({ items: z.array(item), nextCursor: idSchema.nullable() });
 }
+
+/**
+ * Dane do utworzenia zasobu z kluczem idempotencji nadanym raz — ponowne
+ * wysłanie tego samego draftu (np. „Spróbuj ponownie”) niesie ten sam klucz,
+ * więc API nie zapisze drugiej kopii.
+ */
+export interface IdempotentDraft<T> {
+  readonly input: T;
+  readonly idempotencyKey: string;
+}

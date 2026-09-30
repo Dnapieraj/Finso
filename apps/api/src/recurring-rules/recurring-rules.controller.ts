@@ -3,13 +3,16 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
   Post,
+  Res,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
+import type { Response } from "express";
 import type { RecurringRule } from "@vireo/shared";
 import {
   createRecurringRuleSchema,
@@ -20,6 +23,8 @@ import { createZodDto, ZodResponse } from "nestjs-zod";
 
 import type { AuthUser } from "../auth/decorators.js";
 import { CurrentUser } from "../auth/decorators.js";
+import { idempotentPost } from "../idempotency/idempotent-post.js";
+import { IdempotencyService } from "../idempotency/idempotency.service.js";
 import { RecurringRulesService } from "./recurring-rules.service.js";
 
 export class CreateRecurringRuleDto extends createZodDto(createRecurringRuleSchema) {}
@@ -31,7 +36,10 @@ export class RecurringRuleDto extends createZodDto(recurringRuleSchema) {}
 @ApiBearerAuth()
 @Controller("recurring-rules")
 export class RecurringRulesController {
-  constructor(private readonly rules: RecurringRulesService) {}
+  constructor(
+    private readonly rules: RecurringRulesService,
+    private readonly idempotency: IdempotencyService,
+  ) {}
 
   @Get()
   @ZodResponse({ type: [RecurringRuleDto] })
@@ -45,13 +53,28 @@ export class RecurringRulesController {
     return this.rules.get(user.id, id);
   }
 
+  /** Z `Idempotency-Key` ponowienie zwraca zapisaną regułę zamiast drugiej. */
   @Post()
   @ZodResponse({ status: HttpStatus.CREATED, type: RecurringRuleDto })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "UUID reguły; ten sam klucz przez 24 h zwraca ten sam wynik",
+  })
   create(
     @CurrentUser() user: AuthUser,
     @Body() body: CreateRecurringRuleDto,
+    @Headers("idempotency-key") rawKey: string | undefined,
+    @Res({ passthrough: true }) res: Response,
   ): Promise<RecurringRule> {
-    return this.rules.create(user.id, body);
+    return idempotentPost(this.idempotency, {
+      userId: user.id,
+      scope: "POST /recurring-rules",
+      rawKey,
+      request: body,
+      res,
+      perform: (tx) => this.rules.create(user.id, body, tx),
+    });
   }
 
   @Patch(":id")

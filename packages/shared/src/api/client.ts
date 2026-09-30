@@ -16,6 +16,7 @@ import {
   type SimulationResult,
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
+import type { IdempotentDraft } from "../common/schemas.js";
 import { goalSchema, type Goal } from "../goals/schemas.js";
 import {
   incomeSourceSchema,
@@ -132,7 +133,10 @@ export interface ApiClient {
   readonly recurringRules: {
     /** Reguły wydatków i dochodów, także wyłączone. */
     list(): Promise<RecurringRule[]>;
-    create(input: CreateRecurringRuleRequest): Promise<RecurringRule>;
+    /** Reguła z własnym kluczem idempotencji — jeden draft na jedną regułę. */
+    draft(input: CreateRecurringRuleRequest): IdempotentDraft<CreateRecurringRuleRequest>;
+    /** Ponowne wysłanie tego samego draftu zwraca zapisaną wcześniej regułę. */
+    create(draft: IdempotentDraft<CreateRecurringRuleRequest>): Promise<RecurringRule>;
     /** Zmienia tylko podane pola. */
     update(id: string, input: UpdateRecurringRuleInput): Promise<RecurringRule>;
     /** Usuwa regułę; wydatki, które z niej powstały, zostają. */
@@ -141,8 +145,13 @@ export interface ApiClient {
   readonly incomeSources: {
     /** Źródła z harmonogramem, także zarchiwizowane. */
     list(): Promise<IncomeSource[]>;
-    /** Tworzy źródło, z `schedule` — razem z regułą, w jednej transakcji. */
-    create(input: CreateIncomeSourceRequest): Promise<IncomeSource>;
+    /** Źródło z własnym kluczem idempotencji — jeden draft na jedno źródło. */
+    draft(input: CreateIncomeSourceRequest): IdempotentDraft<CreateIncomeSourceRequest>;
+    /**
+     * Tworzy źródło, z `schedule` — razem z regułą, w jednej transakcji.
+     * Ponowne wysłanie tego samego draftu zwraca zapisane wcześniej źródło.
+     */
+    create(draft: IdempotentDraft<CreateIncomeSourceRequest>): Promise<IncomeSource>;
     update(id: string, input: UpdateIncomeSourceInput): Promise<IncomeSource>;
     /** 409, gdy źródło ma wpływy — wtedy archiwizuje się je przez `isActive: false`. */
     remove(id: string): Promise<void>;
@@ -282,6 +291,23 @@ export function createApiClient({
     return parse(await execute({ method, path, body }), schema);
   }
 
+  /** POST z nagłówkiem `Idempotency-Key` z draftu — ten sam przy ponowieniu po 401. */
+  async function createKeyed<T>(
+    path: string,
+    { input, idempotencyKey }: IdempotentDraft<unknown>,
+    schema: z.ZodType<T>,
+  ): Promise<T> {
+    return parse(
+      await execute({
+        method: "POST",
+        path,
+        body: input,
+        headers: { "Idempotency-Key": idempotencyKey },
+      }),
+      schema,
+    );
+  }
+
   /** GET z walidacją odpowiedzi wspólnym schematem. */
   async function read<T>(path: string, schema: z.ZodType<T>): Promise<T> {
     return parse(await execute({ method: "GET", path }), schema);
@@ -335,7 +361,8 @@ export function createApiClient({
     },
     recurringRules: {
       list: () => read("/recurring-rules", z.array(recurringRuleSchema)),
-      create: (input) => write("POST", "/recurring-rules", input, recurringRuleSchema),
+      draft: (input) => ({ input, idempotencyKey: randomUUID() }),
+      create: (draft) => createKeyed("/recurring-rules", draft, recurringRuleSchema),
       update: (id, input) =>
         write("PATCH", `/recurring-rules/${encodeURIComponent(id)}`, input, recurringRuleSchema),
       async remove(id) {
@@ -344,7 +371,8 @@ export function createApiClient({
     },
     incomeSources: {
       list: () => read("/income/sources", z.array(incomeSourceSchema)),
-      create: (input) => write("POST", "/income/sources", input, incomeSourceSchema),
+      draft: (input) => ({ input, idempotencyKey: randomUUID() }),
+      create: (draft) => createKeyed("/income/sources", draft, incomeSourceSchema),
       update: (id, input) =>
         write("PATCH", `/income/sources/${encodeURIComponent(id)}`, input, incomeSourceSchema),
       async remove(id) {
@@ -354,16 +382,7 @@ export function createApiClient({
     transactions: {
       list: (query = {}) => read(`/transactions${queryString(query)}`, transactionPageSchema),
       draft: (input) => ({ input, idempotencyKey: randomUUID() }),
-      create: async ({ input, idempotencyKey }) =>
-        parse(
-          await execute({
-            method: "POST",
-            path: "/transactions",
-            body: input,
-            headers: { "Idempotency-Key": idempotencyKey },
-          }),
-          transactionSchema,
-        ),
+      create: (draft) => createKeyed("/transactions", draft, transactionSchema),
       async remove(id) {
         await execute({ method: "DELETE", path: `/transactions/${encodeURIComponent(id)}` });
       },

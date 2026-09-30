@@ -10,7 +10,7 @@ import { ZodValidationException } from "nestjs-zod";
 import { fromIsoDate, toIsoDate } from "../common/dates.js";
 import { OwnedReferencesService } from "../common/owned-references.service.js";
 import type { RecurringRule as RecurringRuleRow } from "../generated/prisma/client.js";
-import type { Db } from "../prisma/prisma.module.js";
+import type { Db, DbTransaction } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 @Injectable()
@@ -34,9 +34,14 @@ export class RecurringRulesService {
     return toRecurringRule(row);
   }
 
-  async create(userId: string, input: CreateRecurringRuleInput): Promise<RecurringRule> {
+  /** `db` — transakcja, gdy zapis idzie razem z kluczem idempotencji. */
+  async create(
+    userId: string,
+    input: CreateRecurringRuleInput,
+    db: Db | DbTransaction = this.db,
+  ): Promise<RecurringRule> {
     await this.refs.assertCategory(userId, input.categoryId);
-    const row = await this.db.recurringRule.create({
+    const row = await db.recurringRule.create({
       data: { ...input, userId, startDate: fromIsoDate(input.startDate) },
     });
     return toRecurringRule(row);

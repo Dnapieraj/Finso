@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -14,7 +13,7 @@ import {
   Res,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
-import { idSchema, type Transaction, type TransactionPage } from "@vireo/shared";
+import type { Transaction, TransactionPage } from "@vireo/shared";
 import type { Response } from "express";
 import { ZodResponse } from "nestjs-zod";
 
@@ -27,6 +26,7 @@ import {
   TransactionPageDto,
   UpdateTransactionDto,
 } from "./transactions.dto.js";
+import { idempotentPost } from "../idempotency/idempotent-post.js";
 import { IdempotencyService } from "../idempotency/idempotency.service.js";
 import { TransactionsService } from "./transactions.service.js";
 
@@ -72,21 +72,14 @@ export class TransactionsController {
     @Headers("idempotency-key") rawKey: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<Transaction> {
-    if (rawKey === undefined) return this.transactions.create(user.id, body);
-
-    const key = idSchema.safeParse(rawKey);
-    if (!key.success) throw new BadRequestException("Idempotency-Key must be a UUID");
-
-    const result = await this.idempotency.run({
+    return idempotentPost(this.idempotency, {
       userId: user.id,
       scope: "POST /transactions",
-      key: key.data,
+      rawKey,
       request: body,
-      status: HttpStatus.CREATED,
-      perform: (db) => this.transactions.create(user.id, body, db),
+      res,
+      perform: (tx) => this.transactions.create(user.id, body, tx),
     });
-    if (result.replayed) res.setHeader("Idempotent-Replayed", "true");
-    return result.body;
   }
 
   @Patch(":id")
