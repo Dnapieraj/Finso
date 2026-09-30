@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
+import { useRef } from "react";
 
-import type { Grosze } from "@vireo/shared";
+import type { Grosze, IdempotentDraft } from "@vireo/shared";
 
 import { pl } from "../messages/pl";
 import { queryClient } from "../query-client";
@@ -45,4 +46,24 @@ export function useSettingsMutation<Input, Result>(
       router.back();
     },
   });
+}
+
+/**
+ * One Idempotency-Key per thing being created: "Zapisz" again after a
+ * failure resends the same draft, so a save that did reach the server is
+ * not made twice. Once the form says something else, it is a new thing
+ * with a new key.
+ */
+export function useDraft<T>(
+  makeDraft: (input: T) => IdempotentDraft<T>,
+): (input: T) => IdempotentDraft<T> {
+  const last = useRef<IdempotentDraft<T> | null>(null);
+  return (input) => {
+    // Plain JSON data from the form, so equal text means equal input.
+    if (last.current && JSON.stringify(last.current.input) === JSON.stringify(input)) {
+      return last.current;
+    }
+    last.current = makeDraft(input);
+    return last.current;
+  };
 }

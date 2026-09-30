@@ -5,6 +5,7 @@ import { View } from "react-native";
 import {
   parseMoneyInput,
   type CreateIncomeSourceRequest,
+  type IdempotentDraft,
   type IncomeSource,
   type Schedule as SavedSchedule,
   type UpdateIncomeSourceInput,
@@ -20,7 +21,7 @@ import { TextField } from "../components/text-field";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
 import { ChoiceCard } from "../onboarding/step";
-import { toMoneyInput, useSettingsMutation, validateName } from "./forms";
+import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "./forms";
 import { INCOME_SOURCES_KEY, useBudgetClock } from "./queries";
 import {
   emptySchedule,
@@ -37,7 +38,7 @@ import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
 const t = pl.budgetSettings;
 
 type Save =
-  | { action: "create"; input: CreateIncomeSourceRequest }
+  | { action: "create"; draft: IdempotentDraft<CreateIncomeSourceRequest> }
   | { action: "update"; id: string; change: UpdateIncomeSourceInput };
 
 interface Errors extends ScheduleErrors {
@@ -62,10 +63,11 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
   );
   const [errors, setErrors] = useState<Errors>({});
   const budgetClock = useBudgetClock();
+  const draft = useDraft((input: CreateIncomeSourceRequest) => api.incomeSources.draft(input));
 
   const save = useSettingsMutation(INCOME_SOURCES_KEY, (request: Save) =>
     request.action === "create"
-      ? api.incomeSources.create(request.input)
+      ? api.incomeSources.create(request.draft)
       : api.incomeSources.update(request.id, request.change),
   );
 
@@ -111,7 +113,7 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
     if (!source) {
       save.mutate({
         action: "create",
-        input: { name: parsedName.name, kind, expectedAmount, schedule: nextSchedule },
+        draft: draft({ name: parsedName.name, kind, expectedAmount, schedule: nextSchedule }),
       });
       return;
     }

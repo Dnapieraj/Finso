@@ -5,6 +5,7 @@ import { Text, View } from "react-native";
 import {
   parseMoneyInput,
   type CreateRecurringRuleRequest,
+  type IdempotentDraft,
   type RecurringRule,
   type Schedule as SavedSchedule,
   type UpdateRecurringRuleInput,
@@ -22,7 +23,7 @@ import { CategoryChip } from "../expenses/category-chip";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
 import { FieldError } from "../onboarding/step";
-import { toMoneyInput, useSettingsMutation, validateName } from "./forms";
+import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "./forms";
 import { RECURRING_RULES_KEY, useBudgetClock } from "./queries";
 import {
   emptySchedule,
@@ -39,7 +40,7 @@ import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
 const t = pl.budgetSettings;
 
 type Save =
-  | { action: "create"; input: CreateRecurringRuleRequest }
+  | { action: "create"; draft: IdempotentDraft<CreateRecurringRuleRequest> }
   | { action: "update"; id: string; change: UpdateRecurringRuleInput };
 
 interface Errors extends ScheduleErrors {
@@ -113,10 +114,11 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
   const [schedule, setSchedule] = useState<Schedule>(rule ? scheduleFieldsOf(rule) : emptySchedule);
   const [errors, setErrors] = useState<Errors>({});
   const budgetClock = useBudgetClock();
+  const draft = useDraft((input: CreateRecurringRuleRequest) => api.recurringRules.draft(input));
 
   const save = useSettingsMutation(RECURRING_RULES_KEY, (request: Save) =>
     request.action === "create"
-      ? api.recurringRules.create(request.input)
+      ? api.recurringRules.create(request.draft)
       : api.recurringRules.update(request.id, request.change),
   );
   const remove = useSettingsMutation(RECURRING_RULES_KEY, (id: string) =>
@@ -150,13 +152,13 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
       if (!nextSchedule) return;
       save.mutate({
         action: "create",
-        input: {
+        draft: draft({
           kind: "EXPENSE",
           name: parsedName.name,
           ...nextSchedule,
           expectedAmount: parsedAmount.grosze,
           categoryId,
-        },
+        }),
       });
       return;
     }
