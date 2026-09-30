@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AccountProvider } from "../../src/auth/account";
 import { useMe } from "../../src/auth/hooks";
 import { LoadError, Skeleton } from "../../src/components/query-states";
+import { ExpenseTrashNoticeProvider } from "../../src/history/notice";
 import { pl } from "../../src/messages/pl";
 
 /**
@@ -36,15 +37,19 @@ export default function AppLayout() {
   const onboarded = me.data.onboardingCompleted;
   return (
     <AccountProvider value={me.data}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={onboarded}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="add-expense" options={{ presentation: "modal" }} />
-        </Stack.Protected>
-        <Stack.Protected guard={!onboarded}>
-          <Stack.Screen name="onboarding" />
-        </Stack.Protected>
-      </Stack>
+      <ExpenseTrashNoticeProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Protected guard={onboarded}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="add-expense" options={{ presentation: "modal" }} />
+            <Stack.Screen name="history" />
+            <Stack.Screen name="expense/[id]" />
+          </Stack.Protected>
+          <Stack.Protected guard={!onboarded}>
+            <Stack.Screen name="onboarding" />
+          </Stack.Protected>
+        </Stack>
+      </ExpenseTrashNoticeProvider>
     </AccountProvider>
   );
 }

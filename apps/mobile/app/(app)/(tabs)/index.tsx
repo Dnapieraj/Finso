@@ -206,7 +206,19 @@ function RecentExpenses() {
       );
     });
   }
-  return <Card title={t.expenses}>{body}</Card>;
+  return (
+    <Card title={t.expenses}>
+      {body}
+      <Button
+        variant="ghost"
+        onPress={() => {
+          router.push("/history");
+        }}
+      >
+        {t.allExpenses}
+      </Button>
+    </Card>
+  );
 }
 
 /**
