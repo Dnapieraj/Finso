@@ -4,6 +4,7 @@ import type {
   CompleteOnboardingInput,
   CreateIncomeSourceRequest,
   CreateRecurringRuleRequest,
+  IdempotentDraft,
   CreateTransactionRequest,
   IncomeSource,
   RecurringRule,
@@ -194,6 +195,12 @@ export function resetFakeServer(): void {
   sources = [testIncomeSource()];
 }
 
+/** A draft with the next key: "idempotency-key-1", "-2"… */
+function keyed<T>(input: T): IdempotentDraft<T> {
+  drafts += 1;
+  return { input, idempotencyKey: `idempotency-key-${String(drafts)}` };
+}
+
 /** Replaces what the fake server holds, e.g. to start with no commitments. */
 export function seedFakeServer(data: { rules?: RecurringRule[]; sources?: IncomeSource[] }) {
   if (data.rules) rules = data.rules;
@@ -252,7 +259,8 @@ export const fakeApi = {
   },
   recurringRules: {
     list: jest.fn(() => Promise.resolve(rules)),
-    create: jest.fn((input: CreateRecurringRuleRequest) => {
+    draft: jest.fn((input: CreateRecurringRuleRequest) => keyed(input)),
+    create: jest.fn(({ input }: IdempotentDraft<CreateRecurringRuleRequest>) => {
       const rule: RecurringRule = {
         id: nextId(),
         kind: input.kind,
@@ -283,7 +291,8 @@ export const fakeApi = {
   },
   incomeSources: {
     list: jest.fn(() => Promise.resolve(sources)),
-    create: jest.fn((input: CreateIncomeSourceRequest) => {
+    draft: jest.fn((input: CreateIncomeSourceRequest) => keyed(input)),
+    create: jest.fn(({ input }: IdempotentDraft<CreateIncomeSourceRequest>) => {
       const schedule = input.schedule
         ? {
             frequency: input.schedule.frequency,
@@ -329,10 +338,7 @@ export const fakeApi = {
     list: jest.fn((_query?: Partial<ListTransactionsQuery>) =>
       Promise.resolve(transactionPage([...saved].reverse().concat(testTransaction()).slice(0, 5))),
     ),
-    draft: jest.fn((input: CreateTransactionRequest): TransactionDraft => {
-      drafts += 1;
-      return { input, idempotencyKey: `idempotency-key-${String(drafts)}` };
-    }),
+    draft: jest.fn((input: CreateTransactionRequest): TransactionDraft => keyed(input)),
     create: jest.fn(({ input }: TransactionDraft) => {
       const expense = testTransaction({
         id: "01923b6e-0000-7000-8000-000000000099",

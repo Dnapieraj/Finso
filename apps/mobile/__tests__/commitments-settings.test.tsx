@@ -12,6 +12,9 @@ import {
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
+/** The draft `create` gets: the input with its own Idempotency-Key. */
+const withKey = (input: unknown) => ({ input, idempotencyKey: expect.any(String) as unknown });
+
 jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
 }));
@@ -150,18 +153,20 @@ describe("adding", () => {
     await waitFor(() => {
       expect(app).toHavePathname("/settings/commitments");
     });
-    expect(fakeApi.recurringRules.create).toHaveBeenCalledWith({
-      kind: "EXPENSE",
-      name: "Siłownia",
-      frequency: "MONTHLY",
-      interval: 1,
-      // testBudget.asOf: the budget's "today" in the user's zone.
-      startDate: "2026-09-28",
-      dayOfMonth: 15,
-      dayOfWeek: null,
-      expectedAmount: 12_000,
-      categoryId: billsCategory.id,
-    });
+    expect(fakeApi.recurringRules.create).toHaveBeenCalledWith(
+      withKey({
+        kind: "EXPENSE",
+        name: "Siłownia",
+        frequency: "MONTHLY",
+        interval: 1,
+        // testBudget.asOf: the budget's "today" in the user's zone.
+        startDate: "2026-09-28",
+        dayOfMonth: 15,
+        dayOfWeek: null,
+        expectedAmount: 12_000,
+        categoryId: billsCategory.id,
+      }),
+    );
     expect(await screen.findByRole("button", { name: "Siłownia" })).toBeOnTheScreen();
   });
 
@@ -175,13 +180,15 @@ describe("adding", () => {
 
     await waitFor(() => {
       expect(fakeApi.recurringRules.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          frequency: "WEEKLY",
-          interval: 1,
-          startDate: "2026-09-28",
-          dayOfMonth: null,
-          dayOfWeek: 5,
-        }),
+        withKey(
+          expect.objectContaining({
+            frequency: "WEEKLY",
+            interval: 1,
+            startDate: "2026-09-28",
+            dayOfMonth: null,
+            dayOfWeek: 5,
+          }),
+        ),
       );
     });
   });
@@ -197,12 +204,14 @@ describe("adding", () => {
 
     await waitFor(() => {
       expect(fakeApi.recurringRules.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          frequency: "WEEKLY",
-          interval: 2,
-          startDate: "2026-10-09",
-          dayOfWeek: 5,
-        }),
+        withKey(
+          expect.objectContaining({
+            frequency: "WEEKLY",
+            interval: 2,
+            startDate: "2026-10-09",
+            dayOfWeek: 5,
+          }),
+        ),
       );
     });
   });
@@ -243,6 +252,25 @@ describe("adding", () => {
       "Brak połączenia z serwerem. Sprawdź internet i spróbuj ponownie.",
     );
     expect(app).toHavePathname("/settings/commitments/new");
+  });
+
+  it("a retry after a failure sends the same Idempotency-Key", async () => {
+    fakeApi.recurringRules.create.mockRejectedValueOnce(
+      new ApiError("network", null, "Network request failed"),
+    );
+    await openNew();
+    await fillIn("Siłownia", "120");
+    await type("Dzień miesiąca", "15");
+    await press("Zapisz");
+    await screen.findByRole("alert");
+
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.recurringRules.create).toHaveBeenCalledTimes(2);
+    });
+    const [first, retry] = fakeApi.recurringRules.create.mock.calls;
+    expect(retry?.[0].idempotencyKey).toBe(first?.[0].idempotencyKey);
   });
 });
 

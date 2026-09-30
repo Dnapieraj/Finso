@@ -5,6 +5,9 @@ import { fakeApi, pending, seedFakeServer, testIncomeSource } from "./helpers/fa
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
+/** The draft `create` gets: the input with its own Idempotency-Key. */
+const withKey = (input: unknown) => ({ input, idempotencyKey: expect.any(String) as unknown });
+
 jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
 }));
@@ -149,19 +152,21 @@ describe("adding", () => {
     await waitFor(() => {
       expect(app).toHavePathname("/settings/income");
     });
-    expect(fakeApi.incomeSources.create).toHaveBeenCalledWith({
-      name: "Premia",
-      kind: "REGULAR",
-      expectedAmount: 100_000,
-      schedule: {
-        frequency: "MONTHLY",
-        interval: 1,
-        // The budget period of testBudget starts on 10 September.
-        startDate: "2026-09-10",
-        dayOfMonth: 25,
-        dayOfWeek: null,
-      },
-    });
+    expect(fakeApi.incomeSources.create).toHaveBeenCalledWith(
+      withKey({
+        name: "Premia",
+        kind: "REGULAR",
+        expectedAmount: 100_000,
+        schedule: {
+          frequency: "MONTHLY",
+          interval: 1,
+          // The budget period of testBudget starts on 10 September.
+          startDate: "2026-09-10",
+          dayOfMonth: 25,
+          dayOfWeek: null,
+        },
+      }),
+    );
     expect(await screen.findByRole("button", { name: "Premia" })).toBeOnTheScreen();
   });
 
@@ -177,16 +182,18 @@ describe("adding", () => {
 
     await waitFor(() => {
       expect(fakeApi.incomeSources.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          schedule: {
-            frequency: "WEEKLY",
-            interval: 2,
-            // Friday 2 October, moved back in 14-day steps to the period start.
-            startDate: "2026-09-04",
-            dayOfMonth: null,
-            dayOfWeek: 5,
-          },
-        }),
+        withKey(
+          expect.objectContaining({
+            schedule: {
+              frequency: "WEEKLY",
+              interval: 2,
+              // Friday 2 October, moved back in 14-day steps to the period start.
+              startDate: "2026-09-04",
+              dayOfMonth: null,
+              dayOfWeek: 5,
+            },
+          }),
+        ),
       );
     });
   });
@@ -202,15 +209,17 @@ describe("adding", () => {
 
     await waitFor(() => {
       expect(fakeApi.incomeSources.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          schedule: {
-            frequency: "WEEKLY",
-            interval: 1,
-            startDate: "2026-09-10",
-            dayOfMonth: null,
-            dayOfWeek: 1,
-          },
-        }),
+        withKey(
+          expect.objectContaining({
+            schedule: {
+              frequency: "WEEKLY",
+              interval: 1,
+              startDate: "2026-09-10",
+              dayOfMonth: null,
+              dayOfWeek: 1,
+            },
+          }),
+        ),
       );
     });
     expect(screen.queryByRole("radio", { name: "W tym tygodniu" })).not.toBeOnTheScreen();
@@ -226,12 +235,14 @@ describe("adding", () => {
     await press("Zapisz");
 
     await waitFor(() => {
-      expect(fakeApi.incomeSources.create).toHaveBeenCalledWith({
-        name: "Zlecenia",
-        kind: "IRREGULAR",
-        expectedAmount: null,
-        schedule: null,
-      });
+      expect(fakeApi.incomeSources.create).toHaveBeenCalledWith(
+        withKey({
+          name: "Zlecenia",
+          kind: "IRREGULAR",
+          expectedAmount: null,
+          schedule: null,
+        }),
+      );
     });
   });
 
@@ -275,6 +286,47 @@ describe("adding", () => {
     );
     expect(app).toHavePathname("/settings/income/new");
     expect(screen.getByLabelText("Nazwa")).toHaveDisplayValue("Premia");
+  });
+
+  it("a retry after a failure sends the same Idempotency-Key — one income, however many tries", async () => {
+    fakeApi.incomeSources.create.mockRejectedValueOnce(
+      new ApiError("network", null, "Network request failed"),
+    );
+    await openNew();
+    await type("Nazwa", "Premia");
+    await type("Kwota", "1000");
+    await type("Dzień miesiąca", "25");
+    await press("Zapisz");
+    await screen.findByRole("alert");
+
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.incomeSources.create).toHaveBeenCalledTimes(2);
+    });
+    const [first, retry] = fakeApi.incomeSources.create.mock.calls;
+    expect(retry?.[0].idempotencyKey).toBe(first?.[0].idempotencyKey);
+  });
+
+  it("changing the form after a failure makes it a new income, with a new key", async () => {
+    fakeApi.incomeSources.create.mockRejectedValueOnce(
+      new ApiError("network", null, "Network request failed"),
+    );
+    await openNew();
+    await type("Nazwa", "Premia");
+    await type("Kwota", "1000");
+    await type("Dzień miesiąca", "25");
+    await press("Zapisz");
+    await screen.findByRole("alert");
+
+    await type("Kwota", "1200");
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.incomeSources.create).toHaveBeenCalledTimes(2);
+    });
+    const [first, retry] = fakeApi.incomeSources.create.mock.calls;
+    expect(retry?.[0].idempotencyKey).not.toBe(first?.[0].idempotencyKey);
   });
 
   it("blocks a second tap while saving", async () => {

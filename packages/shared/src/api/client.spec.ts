@@ -638,7 +638,7 @@ describe("createApiClient", () => {
       await expect(api.recurringRules.list()).rejects.toMatchObject({ kind: "invalid-response" });
     });
 
-    it("recurringRules.create posts the rule", async () => {
+    it("recurringRules.create posts the draft with its Idempotency-Key", async () => {
       const { api, fetch } = setup({ "POST /recurring-rules": [jsonResponse(201, rent)] });
       const input = {
         kind: "EXPENSE",
@@ -649,8 +649,35 @@ describe("createApiClient", () => {
         expectedAmount: 250_000,
       } as const;
 
-      await expect(api.recurringRules.create(input)).resolves.toEqual(rent);
-      expect(sentRequest(fetch, 0).body).toEqual(input);
+      const draft = api.recurringRules.draft(input);
+
+      expect(draft).toEqual({ input, idempotencyKey: "0199a1b2-0000-7000-8000-000000000001" });
+      await expect(api.recurringRules.create(draft)).resolves.toEqual(rent);
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual(input);
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+    });
+
+    it("recurringRules: a retry of the same draft sends the same key", async () => {
+      const { api, fetch } = setup({
+        "POST /recurring-rules": [
+          jsonResponse(500, { statusCode: 500, message: "Internal Server Error" }),
+          jsonResponse(201, rent),
+        ],
+      });
+      const draft = api.recurringRules.draft({
+        kind: "EXPENSE",
+        name: "Czynsz",
+        frequency: "MONTHLY",
+        startDate: "2026-09-28",
+        dayOfMonth: 5,
+        expectedAmount: 250_000,
+      });
+
+      await expect(api.recurringRules.create(draft)).rejects.toMatchObject({ status: 500 });
+      await api.recurringRules.create(draft);
+
+      expect(sentRequest(fetch, 1).headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
     });
 
     it("recurringRules.update patches only the fields given", async () => {
@@ -678,7 +705,7 @@ describe("createApiClient", () => {
       await expect(api.incomeSources.list()).resolves.toEqual([salary]);
     });
 
-    it("incomeSources.create posts the source with its schedule", async () => {
+    it("incomeSources.create posts the draft with its schedule and Idempotency-Key", async () => {
       const { api, fetch } = setup({ "POST /income/sources": [jsonResponse(201, salary)] });
       const input = {
         name: "Wypłata",
@@ -687,8 +714,14 @@ describe("createApiClient", () => {
         schedule: { frequency: "MONTHLY", startDate: "2026-09-10", dayOfMonth: 10 },
       } as const;
 
-      await expect(api.incomeSources.create(input)).resolves.toEqual(salary);
-      expect(sentRequest(fetch, 0).body).toEqual(input);
+      const draft = api.incomeSources.draft(input);
+
+      await expect(api.incomeSources.create(draft)).resolves.toEqual(salary);
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual(input);
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+      // Another income, another key.
+      expect(api.incomeSources.draft(input).idempotencyKey).not.toBe(draft.idempotencyKey);
     });
 
     it("incomeSources.update patches the source", async () => {
