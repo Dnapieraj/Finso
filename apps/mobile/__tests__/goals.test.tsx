@@ -16,7 +16,7 @@ jest.mock("../src/api", () => ({
 beforeEach(resetSecureStore);
 
 /** formatMoney puts no-break spaces between digit groups and before "zł". */
-const zl = (text: string) => text.replaceAll(" ", " ");
+const zl = (text: string) => text.replaceAll(" ", "\u00A0");
 
 /** 1000 zł of 4000 zł, due June 2027; testBudget plans 500 zł for it this period. */
 const trip = testGoal();

@@ -21,7 +21,7 @@ jest.mock("../src/api", () => ({
 beforeEach(resetSecureStore);
 
 /** formatMoney puts no-break spaces between digit groups and before "zł". */
-const zl = (text: string) => text.replaceAll(" ", " ");
+const zl = (text: string) => text.replaceAll(" ", "\u00A0");
 
 /**
  * Network errors and 5xx are retried twice (src/query-client.ts), so a

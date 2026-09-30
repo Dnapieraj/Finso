@@ -17,7 +17,7 @@ jest.mock("../src/api", () => ({
 }));
 
 /** formatMoney puts no-break spaces between digit groups and before "zł". */
-const zl = (text: string) => text.replaceAll(" ", " ");
+const zl = (text: string) => text.replaceAll(" ", "\u00A0");
 
 const transport = {
   ...testCategory,
@@ -124,7 +124,8 @@ describe("list", () => {
     const lunchRow = within(await row("Jedzenie, 27 września"));
     expect(lunchRow.getByText(zl("45,00 zł"))).toBeOnTheScreen();
     expect(lunchRow.getByText("Obiad")).toBeOnTheScreen();
-    expect(await row(`Bez kategorii, 15 września, ${zl("50,00 zł")}`)).toBeOnTheScreen();
+    // Role names are matched after whitespace normalisation: a plain space here.
+    expect(await row("Bez kategorii, 15 września, 50,00 zł")).toBeOnTheScreen();
   });
 
   it("filters by category", async () => {
@@ -232,7 +233,7 @@ describe("chart: spending by category", () => {
 
     const chart = within(await screen.findByTestId("category-chart"));
     await chart.findAllByRole("button");
-    for (const bar of chart.getAllByTestId("chart-bar")) {
+    for (const bar of chart.getAllByTestId("chart-bar", { includeHiddenElements: true })) {
       expect(bar).toHaveProp("importantForAccessibility", "no-hide-descendants");
       expect(bar).toHaveProp("accessibilityElementsHidden", true);
     }
