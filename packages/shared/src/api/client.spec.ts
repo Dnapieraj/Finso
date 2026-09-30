@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthTokens } from "../auth/schemas.js";
+import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import { ApiError, createApiClient, type ApiClient, type TokenStore } from "./client.js";
 
 const BASE_URL = "https://api.finso.test";
@@ -332,12 +333,12 @@ describe("createApiClient", () => {
   });
 
   describe("users.completeOnboarding", () => {
-    const onboarding = {
+    const onboarding: CompleteOnboardingRequest = {
       periodStartDay: 10,
       timezone: "Europe/Warsaw",
       income: { kind: "REGULAR", name: "Wypłata", amount: 800_000, dayOfMonth: 10 },
       commitments: [],
-    } as const;
+    };
 
     it("posts the answers and returns the onboarded user", async () => {
       const { api, fetch } = setup({ "POST /users/me/onboarding": [jsonResponse(200, me)] });

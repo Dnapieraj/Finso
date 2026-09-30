@@ -17,6 +17,7 @@ import {
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
 import { goalSchema, type Goal } from "../goals/schemas.js";
+import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   transactionPageSchema,
   transactionSchema,
@@ -98,6 +99,11 @@ export interface ApiClient {
     me(): Promise<PublicUser>;
     /** Usuwa konto (kaskadowo, wymaga hasła) i czyści tokeny. */
     deleteMe(input: DeleteAccountInput): Promise<void>;
+    /**
+     * Zapisuje odpowiedzi z onboardingu naraz i zwraca użytkownika z
+     * `onboardingCompleted: true`. 409 = onboarding był już ukończony.
+     */
+    completeOnboarding(input: CompleteOnboardingRequest): Promise<PublicUser>;
   };
   readonly budget: {
     /** Ile zostało do końca bieżącego okresu i ile dziennie. */
@@ -264,6 +270,11 @@ export function createApiClient({
         await execute({ method: "DELETE", path: "/users/me", body: input });
         await tokens.clear();
       },
+      completeOnboarding: async (input) =>
+        parse(
+          await execute({ method: "POST", path: "/users/me/onboarding", body: input }),
+          publicUserSchema,
+        ),
     },
     budget: {
       current: () => read("/budget/current", budgetSummarySchema),

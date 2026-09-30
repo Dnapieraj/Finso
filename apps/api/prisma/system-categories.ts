@@ -1,3 +1,4 @@
+import { OTHER_CATEGORY_ID } from "../src/categories/system-category-ids.js";
 import type { PrismaClient } from "../src/generated/prisma/client.js";
 
 /**
@@ -57,7 +58,7 @@ export const SYSTEM_CATEGORIES = [
     color: "#6366F1",
   },
   {
-    id: "00000000-0000-7000-8000-000000000008",
+    id: OTHER_CATEGORY_ID,
     name: "Inne",
     icon: "more-horizontal",
     color: "#6B7280",

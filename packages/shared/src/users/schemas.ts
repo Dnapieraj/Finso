@@ -32,6 +32,8 @@ export const publicUserSchema = z.object({
   currency: z.string(),
   timezone: z.string(),
   periodStartDay: z.number().int(),
+  /** Onboarding pokazuje się, dopóki to `false` — także na nowym telefonie. */
+  onboardingCompleted: z.boolean(),
 });
 
 /** Body `PATCH /users/me` — ustawienia wpływające na liczenie budżetu. */

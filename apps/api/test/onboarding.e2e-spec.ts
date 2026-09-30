@@ -1,6 +1,6 @@
 import type {
   BudgetSummary,
-  CompleteOnboardingInput,
+  CompleteOnboardingRequest,
   IncomeEntryPage,
   IncomeSource,
   PublicUser,
@@ -43,11 +43,11 @@ describe("Onboarding (e2e)", () => {
   const as = (session: TestSession) => ({ Authorization: `Bearer ${session.accessToken}` });
   const get = async <T>(path: string, session: TestSession = me) =>
     (await http().get(path).set(as(session)).expect(200)).body as T;
-  const complete = (body: unknown, session: TestSession = me) =>
+  const complete = (body: object, session: TestSession = me) =>
     http().post("/users/me/onboarding").set(as(session)).send(body);
 
   /** Pensja 8000 zł 10. dnia, okres od 10., czynsz 2500 zł 5. i internet 60 zł 20. dnia. */
-  function typical(overrides: Partial<CompleteOnboardingInput> = {}): CompleteOnboardingInput {
+  function typical(overrides: Partial<CompleteOnboardingRequest> = {}): CompleteOnboardingRequest {
     return {
       periodStartDay: 10,
       timezone: "Europe/Warsaw",

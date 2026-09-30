@@ -13,6 +13,7 @@ import { ZodValidationPipe } from "./common/zod-validation.pipe.js";
 import { validateEnv } from "./config/env.js";
 import { GoalsModule } from "./goals/goals.module.js";
 import { IncomeModule } from "./income/income.module.js";
+import { OnboardingModule } from "./onboarding/onboarding.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { RecurringRulesModule } from "./recurring-rules/recurring-rules.module.js";
 import { TransactionsModule } from "./transactions/transactions.module.js";
@@ -31,6 +32,7 @@ import { UsersModule } from "./users/users.module.js";
     IncomeModule,
     RecurringRulesModule,
     BudgetModule,
+    OnboardingModule,
   ],
   controllers: [AppController],
   providers: [

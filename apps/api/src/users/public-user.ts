@@ -10,6 +10,7 @@ export const publicUserSelect = {
   currency: true,
   timezone: true,
   periodStartDay: true,
+  onboardingCompletedAt: true,
 } as const;
 
 /**
@@ -24,5 +25,6 @@ export function toPublicUser(user: Pick<User, keyof typeof publicUserSelect>): P
     currency: user.currency,
     timezone: user.timezone,
     periodStartDay: user.periodStartDay,
+    onboardingCompleted: user.onboardingCompletedAt !== null,
   };
 }

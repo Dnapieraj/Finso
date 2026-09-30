@@ -63,6 +63,11 @@ model User {
 
   revenueCatId String? @unique
 
+  /// Kiedy użytkownik ukończył onboarding. null = appka pokazuje onboarding
+  /// przy każdym uruchomieniu. Data zamiast Boolean — przyda się w analizie
+  /// (ile trwa od rejestracji), a flagę da się z niej wyliczyć.
+  onboardingCompletedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

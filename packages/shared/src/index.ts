@@ -21,6 +21,7 @@ export * from "./transactions/schemas.js";
 export * from "./goals/schemas.js";
 export * from "./income/schemas.js";
 export * from "./recurring-rules/schemas.js";
+export * from "./onboarding/schemas.js";
 
 // Jeszcze nie zbudowane (poza etapem 3): forecastIrregularIncome,
 // detectRecurringPatterns.
