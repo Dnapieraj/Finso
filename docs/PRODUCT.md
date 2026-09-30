@@ -326,6 +326,7 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
+- **Dochód nieregularny a plan Free:** onboarding pozwala dziś każdemu wybrać dochód nieregularny, choć „Nieregularne dochody / prognozy” są w planie Plus (sekcja 6). Przed włączeniem limitów zdecydować, co z darmowymi użytkownikami, którzy już mają źródło `IRREGULAR` (zostawić im je, zablokować tylko nowe, przełączyć na regularne?)
 - Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
