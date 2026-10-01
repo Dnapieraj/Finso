@@ -90,29 +90,45 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 3. Dodawanie wydatków (ręcznie, szybko — max 3 tapnięcia)
 4. **Symulator „czy mnie na to stać"** ← wyróżnik, musi być w MVP
 5. Cele oszczędnościowe z automatycznym wyliczeniem rat
-6. Potwierdzanie cyklicznych wydatków (tak/nie/inna kwota)
+6. Potwierdzanie wpływów i stałych płatności — pierwotny pomysł appki.
+   W dniu wypłaty: „Wpłynęło X zł — potwierdzasz?” (Tak / Inna kwota).
+   W dniu stałej płatności: „Zapłaciłeś czynsz 1500 zł?” z odpowiedziami:
+   - **Tak** / **Inna kwota** — płatność potwierdzona (z kwotą od użytkownika)
+   - **Jeszcze nie** — płatność dalej odliczana z budżetu, appka pyta znów jutro
+   - **Nie w tym okresie** — płatność pominięta, kwota wraca do „Możesz wydać”
+
+   Oczekujące pozycje widoczne na Dashboardzie
+
 7. Dashboard: ile zostało, ile dziennie, prognoza do końca okresu
 8. Historia + wykres wg kategorii
+9. Powiadomienia (`expo-notifications`) — bez nich potwierdzanie z punktu 6
+   nie działa w praktyce, więc wchodzą zaraz po nim
+10. Szybkie dodawanie: szablony („Kawa 14 zł”) i ostatnio używane pozycje
+11. Dzienny limit z przenoszeniem, pokazany wprost — niewydane wczoraj
+    zwiększa limit na dziś („Wczoraj zostało 20 zł, dziś masz 254 zł”)
+12. **Detektor subskrypcji i podwyżek cen** — główna funkcja planu Plus
 
-### Faza 2
+### Faza 2 (po publikacji)
 
-9. Detektor subskrypcji i podwyżek cen
-10. Nieregularne dochody — uczenie się wzorca
-11. Wspólne wydatki / rozliczenia
-12. Widżety iOS/Android
-13. Tryb offline z synchronizacją
-14. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
+13. Nieregularne dochody — uczenie się wzorca
+14. Wspólne wydatki / rozliczenia
+15. Widżety iOS/Android („Możesz dziś wydać X zł”)
+16. Tryb offline z synchronizacją
+17. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
     i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
     przy zmianie w trakcie okresu
-15. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
+18. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
     kwoty. Wpłaty jako osobne zapisy (data, kwota, cofnięcie) dałyby
     historię postępu i mogłyby zmniejszać dostępne środki w okresie wpłaty
+19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3
+20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
+21. Limity na kategorie (np. jedzenie do 800 zł w okresie)
 
 ### Faza 3
 
-16. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
-17. Wielowalutowość
-18. Eksport PDF/CSV, raporty roczne
+22. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
+23. Wielowalutowość
+24. Eksport PDF/CSV, raporty roczne
 
 ### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
 
@@ -344,7 +360,29 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
 - **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
 
+**Dopracowanie mobile przed testami e2e (od 1.10.2026, po przeglądzie ekranów):**
+kolejność, jeden punkt na raz, testy do akceptacji przed każdym:
+
+1. 1a — ekrany otwarte linkiem (Historia, edycja wydatku, „Nowy wydatek”) mają
+   dokąd wrócić; dziś „Wstecz” zamyka appkę
+2. Potwierdzanie wpływów i stałych płatności (Faza 1, punkt 6)
+3. Powiadomienia (`expo-notifications`)
+4. Ustawienia wyglądu: rozmiar tekstu i motyw; żaden ekran nie rozsypuje się
+   przy największym tekście systemowym
+5. Blokada biometrią (`expo-local-authentication`) z kodem zapasowym
+6. Tryb prywatny — ukrywanie kwot jednym tapnięciem
+7. Odczucie: wibracje (`expo-haptics`), animacja głównej liczby, komunikat
+   „Brak połączenia” (NetInfo)
+8. Sprzątanie: nieużywany kod i paczki (knip), importy fontów (dziś do appki
+   trafia 26 plików, używamy 3), `expo-system-ui`
+
+Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
+
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
+
+- Ikona i ekran startowy — dziś domyślne grafiki Expo
+- Linki do regulaminu i polityki prywatności przy rejestracji
+- Dzień wypłaty „ostatni dzień miesiąca” — dziś 29–31 każe wybrać 28
 
 - **Dochód nieregularny a plan Free:** onboarding pozwala dziś każdemu wybrać dochód nieregularny, choć „Nieregularne dochody / prognozy” są w planie Plus (sekcja 6). Przed włączeniem limitów zdecydować, co z darmowymi użytkownikami, którzy już mają źródło `IRREGULAR` (zostawić im je, zablokować tylko nowe, przełączyć na regularne?)
 - Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
