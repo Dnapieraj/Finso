@@ -42,7 +42,7 @@ export const privacyPolicy = {
               "Dane konta: adres e-mail i hasło. Hasła nie przechowujemy wprost — zapisujemy tylko jego skrót (hash) wyliczony algorytmem argon2.",
             ],
             [
-              "Dane finansowe, które sam wpisujesz: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania i cele oszczędnościowe.",
+              "Dane finansowe, które wpisujesz w aplikacji: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania i cele oszczędnościowe.",
             ],
             [
               "Ustawienia: waluta, strefa czasowa i dzień miesiąca, od którego liczy się twój okres budżetowy.",
@@ -164,7 +164,7 @@ export const privacyPolicy = {
           type: "ul",
           items: [
             ["dostępu do swoich danych i otrzymania ich kopii,"],
-            ["sprostowania danych — większość z nich poprawisz sam w aplikacji,"],
+            ["sprostowania danych — większość z nich poprawisz samodzielnie w aplikacji,"],
             [
               "usunięcia danych — instrukcja jest na stronie ",
               { href: legalLinks.deleteAccount, text: "Usuwanie konta" },

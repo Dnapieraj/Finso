@@ -334,7 +334,7 @@ describe("deleting", () => {
 
     await press("Usuń zobowiązanie");
 
-    expect(screen.getByText("Wydatki, które już zapisałeś, zostaną.")).toBeOnTheScreen();
+    expect(screen.getByText("Zapisane wydatki zostaną.")).toBeOnTheScreen();
     expect(fakeApi.recurringRules.remove).not.toHaveBeenCalled();
   });
 

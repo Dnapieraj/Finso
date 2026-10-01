@@ -432,7 +432,7 @@ describe("deleting", () => {
 
     await press("Usuń dochód");
 
-    expect(screen.getByText("Wpływy, które już zapisałeś, zostaną w historii.")).toBeOnTheScreen();
+    expect(screen.getByText("Zapisane wpływy zostaną w historii.")).toBeOnTheScreen();
     expect(fakeApi.incomeSources.remove).not.toHaveBeenCalled();
   });
 

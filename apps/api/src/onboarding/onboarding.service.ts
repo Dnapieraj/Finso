@@ -11,7 +11,7 @@ import type { Db, DbTransaction } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 import { publicUserSelect, toPublicUser } from "../users/public-user.js";
 
-/** Notatka wydatku z kroku „Ile już wydałeś od ostatniej wypłaty?”. */
+/** Notatka wydatku z kroku „Ile już wydano od ostatniej wypłaty?”. */
 export const PRE_FINSO_EXPENSE_NOTE = "Wydatki przed Finso";
 
 @Injectable()

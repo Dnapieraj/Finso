@@ -164,12 +164,12 @@ Gdy użytkownik zmieni dzień wypłaty tak, że bieżący okres zaczyna się
 wcześniej (np. z 10. na 1.), dni między nowym a starym początkiem okresu
 wchodzą do budżetu. Stałe płatności z tych dni się liczą — `PATCH /users/me`
 przesuwa start reguł (`rebaseRuleStarts`). Ale zwykłe wydatki sprzed
-onboardingu z tych dni nie istnieją nigdzie: krok „Ile już wydałeś od
+onboardingu z tych dni nie istnieją nigdzie: krok „Ile już wydano od
 ostatniej wypłaty?” pytał od STAREGO dnia wypłaty. Do końca tego jednego
 okresu budżet może więc pokazać za dużo o te wydatki.
 
 Nie da się tego naprawić bez pytania użytkownika. Kandydat na Fazę 2:
-po takiej zmianie zapytać „Ile wydałeś od DD.MM do DD.MM?” i zapisać to jak
+po takiej zmianie zapytać „Ile wydano od DD.MM do DD.MM?” i zapisać to jak
 „Wydatki przed Finso”. (Implementacja:
 `packages/shared/src/budget/rebase-rule-starts.ts`.)
 

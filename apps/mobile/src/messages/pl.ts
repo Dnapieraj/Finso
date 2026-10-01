@@ -221,7 +221,7 @@ export const pl = {
       categoriesError: "Nie udało się wczytać kategorii.",
     },
     spent: {
-      title: "Ile już wydałeś od ostatniej wypłaty?",
+      title: "Ile już wydano od ostatniej wypłaty?",
       amount: "Kwota",
       hint: "Bez stałych zobowiązań z poprzedniego kroku — te liczymy osobno. Zapiszemy to jako jeden wydatek „Wydatki przed Finso”.",
     },
@@ -372,7 +372,7 @@ export const pl = {
       empty: "Nie masz jeszcze dochodów.",
       notFound: "Nie znaleziono tego dochodu.",
       delete: "Usuń dochód",
-      deleteWarning: "Wpływy, które już zapisałeś, zostaną w historii.",
+      deleteWarning: "Zapisane wpływy zostaną w historii.",
     },
     commitments: {
       title: "Stałe zobowiązania",
@@ -388,7 +388,7 @@ export const pl = {
       empty: "Nie masz stałych zobowiązań.",
       notFound: "Nie znaleziono tego zobowiązania.",
       delete: "Usuń zobowiązanie",
-      deleteWarning: "Wydatki, które już zapisałeś, zostaną.",
+      deleteWarning: "Zapisane wydatki zostaną.",
     },
   },
   // Wording must match apps/web/src/messages/legal/delete-account.ts:

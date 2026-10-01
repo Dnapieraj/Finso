@@ -94,7 +94,7 @@ async function reachCommitments() {
 /** Step 3 → step 4: "Pomiń" with no commitments listed, "Dalej" with some. */
 async function toSpending(button: "Pomiń" | "Dalej" = "Pomiń") {
   await press(button);
-  await header("Ile już wydałeś od ostatniej wypłaty?");
+  await header("Ile już wydano od ostatniej wypłaty?");
 }
 
 /** Skips steps 3 and 4, which finishes onboarding. */
@@ -680,7 +680,7 @@ describe("finishing", () => {
 
     expect(app).toHavePathname("/");
     expect(
-      screen.queryByRole("header", { name: "Ile już wydałeś od ostatniej wypłaty?" }),
+      screen.queryByRole("header", { name: "Ile już wydano od ostatniej wypłaty?" }),
     ).not.toBeOnTheScreen();
     expect(screen.queryByRole("button", { name: "Wstecz" })).not.toBeOnTheScreen();
   });
