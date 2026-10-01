@@ -83,6 +83,15 @@ describe("editing", () => {
     expect(await screen.findByText(zl("50,00 zł"))).toBeOnTheScreen();
   });
 
+  it("Wstecz returns to the history it was opened from, not to the dashboard", async () => {
+    const app = await openEdit();
+
+    await press("Wstecz");
+
+    await header("Historia wydatków");
+    expect(app).toHavePathname("/history");
+  });
+
   it("a new category and a cleared note (sent as null)", async () => {
     await openEdit();
 
@@ -182,6 +191,35 @@ describe("editing", () => {
     await renderApp("/expense/01923b6e-0000-7000-8000-00000000dead", { signedIn: true });
 
     expect(await screen.findByText("Nie znaleziono tego wydatku.")).toBeOnTheScreen();
+  });
+});
+
+// A notification or a shared link opens the screen with nothing under it.
+describe("opened by a link", () => {
+  async function openByLink() {
+    const app = await renderApp(`/expense/${lunch.id}`, { signedIn: true });
+    await header("Edytuj wydatek");
+    return app;
+  }
+
+  it("Wstecz goes to the dashboard instead of leaving the app", async () => {
+    const app = await openByLink();
+
+    await press("Wstecz");
+
+    await header("Twój budżet");
+    expect(app).toHavePathname("/");
+  });
+
+  it("saving goes to the dashboard", async () => {
+    const app = await openByLink();
+
+    await type("Kwota", "50");
+    await press("Zapisz");
+
+    await header("Twój budżet");
+    expect(app).toHavePathname("/");
+    expect(fakeApi.transactions.update).toHaveBeenCalledWith(lunch.id, { amount: 5_000 });
   });
 });
 

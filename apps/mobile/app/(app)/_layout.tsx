@@ -17,6 +17,13 @@ import { pl } from "../../src/messages/pl";
  * The account decides which, so it loads first — once per launch; after
  * login or registration it is already cached.
  */
+/**
+ * A link straight to a screen of this stack (e.g. /history from a
+ * notification) still has the tabs under it, so "Wstecz" lands on the
+ * dashboard instead of closing the app.
+ */
+export const unstable_settings = { initialRouteName: "(tabs)" };
+
 export default function AppLayout() {
   const me = useMe();
 

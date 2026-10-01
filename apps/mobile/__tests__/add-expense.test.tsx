@@ -122,6 +122,27 @@ describe("quick add", () => {
     });
     expect(fakeApi.transactions.create).not.toHaveBeenCalled();
   });
+
+  it("opened by a link, Anuluj goes to the dashboard instead of leaving the app", async () => {
+    const app = await renderApp("/add-expense", { signedIn: true });
+    await screen.findByRole("header", { name: "Nowy wydatek" });
+
+    await fireEvent.press(screen.getByRole("button", { name: "Anuluj" }));
+
+    await screen.findByRole("header", { name: "Twój budżet" });
+    expect(app).toHavePathname("/");
+  });
+
+  it("opened by a link, saving goes to the dashboard", async () => {
+    const app = await renderApp("/add-expense", { signedIn: true });
+    await screen.findByRole("header", { name: "Nowy wydatek" });
+
+    await addExpense("12,50");
+
+    await screen.findByRole("header", { name: "Twój budżet" });
+    expect(app).toHavePathname("/");
+    expect(fakeApi.transactions.create).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("optimistic update", () => {

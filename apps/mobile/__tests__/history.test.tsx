@@ -75,6 +75,15 @@ describe("where", () => {
     await header("Historia wydatków");
     expect(app).toHavePathname("/history");
   });
+
+  it("opened by a link, Wstecz goes to the dashboard instead of leaving the app", async () => {
+    const app = await openHistory();
+
+    await press("Wstecz");
+
+    await header("Twój budżet");
+    expect(app).toHavePathname("/");
+  });
 });
 
 describe("period", () => {
@@ -199,15 +208,29 @@ describe("list", () => {
   });
 
   it("shows an error with a retry", async () => {
-    fakeApi.transactions.list.mockRejectedValueOnce(
-      new ApiError("invalid-response", 200, "Response does not match the schema"),
-    );
-    await openHistory();
+    // The dashboard sits under the history and lists recent expenses too;
+    // only the history's request (a period, so `from`) fails, once.
+    const listExpenses = fakeApi.transactions.list.getMockImplementation();
+    let failed = false;
+    fakeApi.transactions.list.mockImplementation((query) => {
+      if (!failed && query?.from) {
+        failed = true;
+        return Promise.reject(
+          new ApiError("invalid-response", 200, "Response does not match the schema"),
+        );
+      }
+      return listExpenses ? listExpenses(query) : Promise.reject(new Error("no fake"));
+    });
+    try {
+      await openHistory();
 
-    expect(await screen.findByText("Nie udało się wczytać wydatków.")).toBeOnTheScreen();
-    await press("Spróbuj ponownie");
+      expect(await screen.findByText("Nie udało się wczytać wydatków.")).toBeOnTheScreen();
+      await press("Spróbuj ponownie");
 
-    expect(await row("Jedzenie, 27 września")).toBeOnTheScreen();
+      expect(await row("Jedzenie, 27 września")).toBeOnTheScreen();
+    } finally {
+      if (listExpenses) fakeApi.transactions.list.mockImplementation(listExpenses);
+    }
   });
 });
 
