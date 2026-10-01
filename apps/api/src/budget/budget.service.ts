@@ -8,6 +8,7 @@ import type {
 } from "@vireo/shared";
 import {
   assembleBudgetInput,
+  awaitingIncome,
   calculateAvailableBalance,
   currentBudgetPeriod,
   grosze,
@@ -38,7 +39,8 @@ export class BudgetService {
   ) {}
 
   async current(userId: string): Promise<BudgetSummary> {
-    const input = assembleBudgetInput(await this.loadSnapshot(userId));
+    const snapshot = await this.snapshot(userId);
+    const input = assembleBudgetInput(snapshot);
     const result = calculateAvailableBalance(input);
     return {
       period: input.period,
@@ -47,6 +49,7 @@ export class BudgetService {
       daysRemaining: result.daysRemaining,
       dailyAllowance: result.dailyAllowance,
       breakdown: result.breakdown,
+      awaitingIncome: awaitingIncome(snapshot),
       fixedCommitments: input.remainingFixedCommitments,
       goalContributions: input.goalContributions,
     };
@@ -54,7 +57,7 @@ export class BudgetService {
 
   async simulate(userId: string, request: SimulatePurchaseRequest): Promise<SimulationResult> {
     await this.refs.assertCategory(userId, request.categoryId);
-    const input = assembleBudgetInput(await this.loadSnapshot(userId));
+    const input = assembleBudgetInput(await this.snapshot(userId));
     const before = calculateAvailableBalance(input);
     const result = simulatePurchase(input, grosze(request.amount), request.categoryId);
     return {
@@ -70,7 +73,11 @@ export class BudgetService {
     };
   }
 
-  private async loadSnapshot(userId: string): Promise<BudgetSnapshot> {
+  /**
+   * Stan użytkownika dla silnika z @vireo/shared — budżet i terminy do
+   * potwierdzenia liczą się z tego samego snapshotu, więc się nie rozjadą.
+   */
+  async snapshot(userId: string): Promise<BudgetSnapshot> {
     const user = await this.db.user.findUnique({
       where: { id: userId },
       select: { timezone: true, periodStartDay: true },
@@ -84,11 +91,19 @@ export class BudgetService {
     const inPeriod = { gte: fromIsoDate(period.start), lte: fromIsoDate(period.end) };
 
     // Soft-delete extension pomija usunięte transakcje, wpływy i cele.
+    // Zapisy powiązane z regułą — wszystkie, w każdym statusie i z każdego
+    // okresu: dopiero one mówią, które terminy są zaległe, a które
+    // „Jeszcze nie”. Wpływów jest kilka w miesiącu, więc bierzemy całość.
     const [sources, entries, expenseRules, transactions, goals] = await Promise.all([
       this.db.incomeSource.findMany({ where: { userId }, include: { recurringRule: true } }),
-      this.db.incomeEntry.findMany({ where: { userId, status: "CONFIRMED", date: inPeriod } }),
+      this.db.incomeEntry.findMany({ where: { userId } }),
       this.db.recurringRule.findMany({ where: { userId, kind: "EXPENSE", isActive: true } }),
-      this.db.transaction.findMany({ where: { userId, status: "CONFIRMED", date: inPeriod } }),
+      this.db.transaction.findMany({
+        where: {
+          userId,
+          OR: [{ status: "CONFIRMED", date: inPeriod }, { recurringRuleId: { not: null } }],
+        },
+      }),
       this.db.goal.findMany({ where: { userId } }),
     ]);
 
@@ -97,15 +112,20 @@ export class BudgetService {
       periodStartDay: user.periodStartDay,
       incomeSources: sources.map((source) => ({
         id: source.id,
+        name: source.name,
         kind: source.kind,
         expectedAmount: source.expectedAmount === null ? null : grosze(source.expectedAmount),
         isActive: source.isActive,
         schedule: source.recurringRule ? toSchedule(source.recurringRule) : null,
+        ...(source.recurringRule && {
+          trackedSince: todayInTimeZone(source.recurringRule.createdAt, user.timezone),
+        }),
       })),
       incomeEntries: entries.map((entry) => ({
         incomeSourceId: entry.incomeSourceId,
         amount: grosze(entry.amount),
         date: toIsoDate(entry.date),
+        occurrenceDate: entry.occurrenceDate && toIsoDate(entry.occurrenceDate),
         status: entry.status,
       })),
       // Reguła EXPENSE bez kwoty nie przejdzie walidacji API, ale gdyby
@@ -123,12 +143,16 @@ export class BudgetService {
                 expectedAmount: grosze(rule.expectedAmount),
                 isActive: rule.isActive,
                 schedule: toSchedule(rule),
+                // Dzień dodania reguły: wcześniejsze terminy płacono bez Finso,
+                // więc nie są zaległe, nawet gdy start harmonogramu jest dawniej.
+                trackedSince: todayInTimeZone(rule.createdAt, user.timezone),
               },
             ],
       ),
       transactions: transactions.map((tx) => ({
         amount: grosze(tx.amount),
         date: toIsoDate(tx.date),
+        occurrenceDate: tx.occurrenceDate && toIsoDate(tx.occurrenceDate),
         status: tx.status,
         recurringRuleId: tx.recurringRuleId,
       })),
@@ -142,7 +166,8 @@ export class BudgetService {
   }
 }
 
-function toSchedule(rule: RecurringRule): RecurrenceSchedule {
+/** Harmonogram reguły z Prismy w kształcie silnika. */
+export function toSchedule(rule: RecurringRule): RecurrenceSchedule {
   return {
     frequency: rule.frequency,
     interval: rule.interval,

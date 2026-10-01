@@ -37,6 +37,7 @@ describe("budgetSummarySchema", () => {
         goalContributions: 0,
         alreadySpent: 50_000,
       },
+      awaitingIncome: 0,
       fixedCommitments: [],
       goalContributions: [],
     });

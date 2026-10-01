@@ -28,10 +28,14 @@ function snapshot(overrides: Partial<BudgetSnapshot> = {}): BudgetSnapshot {
   };
 }
 
+/**
+ * Reguły od 1.09, czyli od początku okresu z testów: nieodpowiedziane
+ * terminy z wcześniejszych okresów byłyby zaległe (patrz osobne testy).
+ */
 const monthlyOn = (dayOfMonth: number): RecurrenceSchedule => ({
   frequency: "MONTHLY",
   interval: 1,
-  startDate: d("2026-01-01"),
+  startDate: d("2026-09-01"),
   dayOfMonth,
   dayOfWeek: null,
 });
@@ -47,6 +51,7 @@ const biweeklyFriday: RecurrenceSchedule = {
 
 const salary = (overrides: Partial<BudgetIncomeSource> = {}): BudgetIncomeSource => ({
   id: "salary",
+  name: "Pensja",
   kind: "REGULAR",
   expectedAmount: g(800_000),
   isActive: true,
@@ -155,7 +160,14 @@ describe("assembleBudgetInput — periodIncome", () => {
     const input = assembleBudgetInput(
       snapshot({
         incomeSources: [
-          { id: "gigs", kind: "IRREGULAR", expectedAmount: null, isActive: true, schedule: null },
+          {
+            id: "gigs",
+            name: "Zlecenia",
+            kind: "IRREGULAR",
+            expectedAmount: null,
+            isActive: true,
+            schedule: null,
+          },
         ],
         incomeEntries: [
           {
@@ -243,7 +255,7 @@ describe("assembleBudgetInput — remainingFixedCommitments", () => {
       schedule: {
         frequency: "WEEKLY",
         interval: 1,
-        startDate: d("2026-01-01"),
+        startDate: d("2026-09-01"),
         dayOfMonth: null,
         dayOfWeek: 5,
       },
@@ -281,6 +293,162 @@ describe("assembleBudgetInput — remainingFixedCommitments", () => {
     );
     expect(input.remainingFixedCommitments).toEqual([{ label: "Czynsz", amount: 250_000 }]);
     expect(input.alreadySpent).toBe(0);
+  });
+
+  it("„Nie w tym okresie” (DECLINED z terminem) zamyka czynsz, ale nic nie wydaje", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        expenseRules: [rent()],
+        transactions: [
+          {
+            amount: g(250_000),
+            date: d("2026-09-10"),
+            occurrenceDate: d("2026-09-10"),
+            status: "DECLINED",
+            recurringRuleId: "rent",
+          },
+        ],
+      }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([]);
+    expect(input.alreadySpent).toBe(0);
+  });
+
+  it("zaległy czynsz potwierdzony w nowym okresie: wydany teraz, ale nie zamyka nowego terminu", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        today: d("2026-09-12"),
+        expenseRules: [rent({ schedule: { ...monthlyOn(10), startDate: d("2026-08-01") } })],
+        transactions: [
+          {
+            amount: g(250_000),
+            date: d("2026-09-02"),
+            occurrenceDate: d("2026-08-10"),
+            status: "CONFIRMED",
+            recurringRuleId: "rent",
+          },
+        ],
+      }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([{ label: "Czynsz", amount: 250_000 }]);
+    expect(input.alreadySpent).toBe(250_000);
+  });
+});
+
+describe("assembleBudgetInput — zaległe z poprzednich okresów", () => {
+  const sinceAugust = { ...monthlyOn(10), startDate: d("2026-08-01") };
+
+  it("nieodpowiedziany czynsz z sierpnia dalej odliczany, osobną pozycją „zaległe”", () => {
+    const input = assembleBudgetInput(
+      snapshot({ expenseRules: [rent({ schedule: sinceAugust })] }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([
+      { label: "Czynsz", amount: 250_000, overdue: true },
+      { label: "Czynsz", amount: 250_000 },
+    ]);
+  });
+
+  it("dwa zaległe terminy tej samej reguły to jedna pozycja z sumą", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        today: d("2026-10-05"),
+        expenseRules: [rent({ schedule: sinceAugust })],
+      }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([
+      { label: "Czynsz", amount: 500_000, overdue: true },
+      { label: "Czynsz", amount: 250_000 },
+    ]);
+  });
+
+  it("„Nie w tym okresie” na zaległy termin go zamyka", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        expenseRules: [rent({ schedule: sinceAugust })],
+        transactions: [
+          {
+            amount: g(250_000),
+            date: d("2026-09-15"),
+            occurrenceDate: d("2026-08-10"),
+            status: "DECLINED",
+            recurringRuleId: "rent",
+          },
+        ],
+      }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([{ label: "Czynsz", amount: 250_000 }]);
+  });
+
+  it("czynsz z sierpnia sprzed dodania reguły do Finso nie jest zaległy", () => {
+    const input = assembleBudgetInput(
+      snapshot({ expenseRules: [rent({ schedule: sinceAugust, trackedSince: d("2026-09-01") })] }),
+    );
+    expect(input.remainingFixedCommitments).toEqual([{ label: "Czynsz", amount: 250_000 }]);
+  });
+
+  it("zaległy wpływ NIE zwiększa budżetu — liczy się dopiero, gdy wpłynie", () => {
+    // Bezpieczniej: pieniądze, których nie ma od miesiąca, nie są do wydania.
+    const input = assembleBudgetInput(
+      snapshot({ incomeSources: [salary({ schedule: sinceAugust })] }),
+    );
+    expect(input.periodIncome).toBe(800_000);
+  });
+
+  it("zaległy wpływ potwierdzony teraz liczy się w tym okresie", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        incomeSources: [salary({ schedule: sinceAugust })],
+        incomeEntries: [
+          {
+            incomeSourceId: "salary",
+            amount: g(800_000),
+            date: d("2026-09-15"),
+            occurrenceDate: d("2026-08-10"),
+            status: "CONFIRMED",
+          },
+        ],
+      }),
+    );
+    // Sierpniowa wpłynęła 15.09, wrześniowa (10.09) wciąż oczekiwana.
+    expect(input.periodIncome).toBe(1_600_000);
+  });
+});
+
+describe("assembleBudgetInput — wpływy przypisane do terminu", () => {
+  it("co 2 tygodnie: potwierdzona tylko druga wypłata — pierwsza dalej oczekiwana", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        incomeSources: [salary({ expectedAmount: g(300_000), schedule: biweeklyFriday })],
+        incomeEntries: [
+          {
+            incomeSourceId: "salary",
+            amount: g(320_000),
+            date: d("2026-09-18"),
+            occurrenceDate: d("2026-09-18"),
+            status: "CONFIRMED",
+          },
+        ],
+      }),
+    );
+    expect(input.periodIncome).toBe(620_000);
+  });
+
+  it("wypłata „Jeszcze nie” (PENDING) liczy się jako oczekiwana, nie podwójnie", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        incomeSources: [salary()],
+        incomeEntries: [
+          {
+            incomeSourceId: "salary",
+            amount: g(800_000),
+            date: d("2026-09-11"),
+            occurrenceDate: d("2026-09-10"),
+            status: "PENDING",
+          },
+        ],
+      }),
+    );
+    expect(input.periodIncome).toBe(800_000);
   });
 });
 

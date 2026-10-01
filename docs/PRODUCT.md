@@ -97,7 +97,17 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
    - **Jeszcze nie** — płatność dalej odliczana z budżetu, appka pyta znów jutro
    - **Nie w tym okresie** — płatność pominięta, kwota wraca do „Możesz wydać”
 
-   Oczekujące pozycje widoczne na Dashboardzie
+   Oczekujące pozycje widoczne na Dashboardzie. Wpływ też ma **Jeszcze nie**.
+
+   W budżecie:
+   - spóźniony wpływ z bieżącego okresu dalej się liczy (to plan na okres),
+     ale Dashboard mówi wprost, ile z „Możesz wydać” jeszcze nie wpłynęło
+     (`awaitingIncome`);
+   - nieodpowiedziana płatność z poprzedniego okresu przechodzi jako
+     **zaległa**, dalej odliczana, a appka pyta o nią, dopóki nie padnie
+     odpowiedź; zaległy wpływ nie zwiększa budżetu, dopóki nie wpłynie;
+   - zaległe liczą się od dnia dodania reguły do Finso — wcześniejsze
+     terminy użytkownik płacił bez appki
 
 7. Dashboard: ile zostało, ile dziennie, prognoza do końca okresu
 8. Historia + wykres wg kategorii

@@ -22,6 +22,8 @@ export interface FixedCommitment {
   /** Do wyświetlenia w breakdown — nie wpływa na liczby. */
   label: string;
   amount: Grosze;
+  /** Zaległe terminy z poprzednich okresów, wciąż do zapłacenia. */
+  overdue?: true;
 }
 
 /** Jedna linia wkładu w cel oszczędnościowy w tym okresie — wynik {@link calculateGoalContribution} dla danego celu. */

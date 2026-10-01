@@ -89,6 +89,7 @@ describe("Budget (e2e)", () => {
         daysRemaining: 8,
         dailyAllowance: 0,
         breakdown: { periodIncome: 0, fixedCommitments: 0, goalContributions: 0, alreadySpent: 0 },
+        awaitingIncome: 0,
         fixedCommitments: [],
         goalContributions: [],
       });

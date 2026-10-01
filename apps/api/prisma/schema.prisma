@@ -217,12 +217,22 @@ model IncomeEntry {
 
   status ConfirmationStatus @default(PENDING)
 
+  /// Termin harmonogramu źródła, na który ten wpis odpowiada („Pensja
+  /// z 10.09 — wpłynęła?”). null = wpis ręczny albo sprzed potwierdzania.
+  /// Przy PENDING („Jeszcze nie”) `date` to dzień, od którego appka pyta
+  /// znowu; po potwierdzeniu — dzień wpływu.
+  occurrenceDate DateTime? @db.Date
+
   /// Jak Transaction: wpływ to fakt finansowy — usunięcie da się cofnąć.
   deletedAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Jedna odpowiedź na termin — potwierdzenie z powiadomienia i z
+  /// Dashboardu trafia w ten sam wiersz. Wiele NULL-i (wpisy ręczne)
+  /// Postgres dopuszcza.
+  @@unique([incomeSourceId, occurrenceDate])
   /// Kolejność jak w Transaction — patrz komentarz przy tamtym indeksie.
   @@index([userId, deletedAt, date])
   @@index([incomeSourceId])
@@ -251,6 +261,12 @@ model Transaction {
 
   status ConfirmationStatus @default(CONFIRMED)
 
+  /// Termin reguły, na który ta transakcja odpowiada („Czynsz z 10.09 —
+  /// zapłacone?”). null = wydatek ręczny albo sprzed potwierdzania.
+  /// Przy PENDING („Jeszcze nie”) `date` to dzień, od którego appka pyta
+  /// znowu; przy DECLINED („Nie w tym okresie”) — dzień odpowiedzi.
+  occurrenceDate DateTime? @db.Date
+
   /// Transakcja finansowa nie znika bez śladu jednym klikiem — użytkownik
   /// może cofnąć usunięcie. Twarde kasowanie tylko kaskadowo przy
   /// usunięciu całego konta (RODO).
@@ -262,6 +278,8 @@ model Transaction {
   /// Kolejność [userId, deletedAt, date]: soft-delete extension dokłada
   /// `deletedAt: null` do praktycznie każdego odczytu, więc predykaty
   /// równościowe (userId, deletedAt) idą przed zakresowym (date).
+  /// Jedna odpowiedź na termin reguły (patrz IncomeEntry).
+  @@unique([recurringRuleId, occurrenceDate])
   @@index([userId, deletedAt, date])
   @@index([categoryId])
   @@index([recurringRuleId])

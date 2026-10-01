@@ -19,8 +19,18 @@ export const budgetSummarySchema = z.object({
     goalContributions: amountOutput,
     alreadySpent: amountOutput,
   }),
-  /** Nieopłacone jeszcze stałe zobowiązania — pozycje składające się na breakdown.fixedCommitments. */
-  fixedCommitments: z.array(z.object({ label: z.string(), amount: amountOutput })),
+  /**
+   * Ile z breakdown.periodIncome jeszcze nie wpłynęło: wpływy, których
+   * termin minął, a potwierdzenia brak. Dashboard mówi to wprost.
+   */
+  awaitingIncome: amountOutput,
+  /**
+   * Nieopłacone jeszcze stałe zobowiązania — pozycje składające się na
+   * breakdown.fixedCommitments; `overdue` = zaległe z poprzednich okresów.
+   */
+  fixedCommitments: z.array(
+    z.object({ label: z.string(), amount: amountOutput, overdue: z.literal(true).optional() }),
+  ),
   /** Rata każdego celu w tym okresie — pozycje breakdown.goalContributions. */
   goalContributions: z.array(z.object({ goalId: idSchema, amount: amountOutput })),
 });

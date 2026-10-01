@@ -382,6 +382,7 @@ describe("createApiClient", () => {
         goalContributions: 50_000,
         alreadySpent: 176_544,
       },
+      awaitingIncome: 0,
       fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
       goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
     };
