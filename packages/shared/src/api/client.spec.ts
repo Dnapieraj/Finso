@@ -883,4 +883,47 @@ describe("createApiClient", () => {
       vi.unstubAllGlobals();
     }
   });
+
+  describe("confirmations: what is due, answering", () => {
+    const due = {
+      kind: "EXPENSE",
+      id: "01923b6e-0000-7000-8000-000000000080",
+      label: "Czynsz",
+      occurrenceDate: "2026-09-10",
+      expectedAmount: 150_000,
+      askToday: true,
+      overdue: false,
+    };
+
+    it("confirmations.list validates the due items", async () => {
+      const { api } = setup({ "GET /confirmations": [jsonResponse(200, [due])] });
+
+      await expect(api.confirmations.list()).resolves.toEqual([due]);
+    });
+
+    it("confirmations.list rejects items that break the schema", async () => {
+      const { api } = setup({
+        "GET /confirmations": [jsonResponse(200, [{ ...due, askToday: "yes" }])],
+      });
+
+      await expect(api.confirmations.list()).rejects.toMatchObject({ kind: "invalid-response" });
+    });
+
+    it("confirmations.answer posts the answer and resolves the 204 without a body", async () => {
+      const { api, fetch } = setup({
+        "POST /confirmations": [new Response(null, { status: 204 })],
+      });
+      const answer = {
+        kind: "EXPENSE",
+        recurringRuleId: due.id,
+        occurrenceDate: "2026-09-10",
+        answer: "CONFIRMED",
+        amount: 160_000,
+      } as const;
+
+      await expect(api.confirmations.answer(answer)).resolves.toBeUndefined();
+
+      expect(sentRequest(fetch, 0)).toMatchObject({ method: "POST", body: answer });
+    });
+  });
 });

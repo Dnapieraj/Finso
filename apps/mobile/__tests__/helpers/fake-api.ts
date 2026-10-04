@@ -1,4 +1,5 @@
 import type {
+  AnswerConfirmationRequest,
   BudgetSummary,
   Category,
   CompleteOnboardingInput,
@@ -11,6 +12,7 @@ import type {
   RecurringRule,
   TransactionDraft,
   DeleteAccountInput,
+  DueConfirmation,
   Goal,
   ListTransactionsQuery,
   LoginInput,
@@ -205,6 +207,22 @@ let goals: Goal[] = [];
 /** Goals in the trash: soft-deleted, so they can come back. */
 let trashedGoals: Goal[] = [];
 let created = 0;
+/** Income and payments waiting for an answer — none unless a test seeds them. */
+let due: DueConfirmation[] = [];
+
+/** Rent of 1500 zł due on 28.09 (testBudget.asOf), still unanswered. */
+export function testDue(overrides: Partial<DueConfirmation> = {}): DueConfirmation {
+  return {
+    kind: "EXPENSE",
+    id: "01923b6e-0000-7000-8000-000000000041",
+    label: "Czynsz",
+    occurrenceDate: "2026-09-28",
+    expectedAmount: 150_000,
+    askToday: true,
+    overdue: false,
+    ...overrides,
+  };
+}
 
 /** A new id for something the fake server creates. */
 function nextId(): string {
@@ -224,6 +242,7 @@ export function resetFakeServer(): void {
   sources = [testIncomeSource()];
   goals = [testGoal()];
   trashedGoals = [];
+  due = [];
 }
 
 /** A draft with the next key: "idempotency-key-1", "-2"… */
@@ -238,8 +257,10 @@ export function seedFakeServer(data: {
   sources?: IncomeSource[];
   goals?: Goal[];
   transactions?: Transaction[];
+  due?: DueConfirmation[];
 }) {
   if (data.transactions) earlier = data.transactions;
+  if (data.due) due = data.due;
   if (data.rules) rules = data.rules;
   if (data.sources) sources = data.sources;
   if (data.goals) goals = data.goals;
@@ -279,6 +300,20 @@ export const fakeApi = {
         onboardingCompleted: true,
       };
       return Promise.resolve(account);
+    }),
+  },
+  confirmations: {
+    list: jest.fn(() => Promise.resolve(due.map((item) => ({ ...item })))),
+    // Like the API: an answer closes the item; „Jeszcze nie” keeps it, not asked again today.
+    answer: jest.fn((body: AnswerConfirmationRequest) => {
+      const id = body.kind === "EXPENSE" ? body.recurringRuleId : body.incomeSourceId;
+      const matches = (item: DueConfirmation) =>
+        item.id === id && item.occurrenceDate === body.occurrenceDate;
+      due =
+        body.answer === "NOT_YET"
+          ? due.map((item) => (matches(item) ? { ...item, askToday: false } : item))
+          : due.filter((item) => !matches(item));
+      return Promise.resolve();
     }),
   },
   budget: {
