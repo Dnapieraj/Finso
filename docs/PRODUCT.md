@@ -370,21 +370,32 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
 - **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
 
-**Dopracowanie mobile przed testami e2e (od 1.10.2026, po przeglądzie ekranów):**
-kolejność, jeden punkt na raz, testy do akceptacji przed każdym:
+### Plan przed publikacją
 
-1. 1a — ekrany otwarte linkiem (Historia, edycja wydatku, „Nowy wydatek”) mają
-   dokąd wrócić; dziś „Wstecz” zamyka appkę
-2. Potwierdzanie wpływów i stałych płatności (Faza 1, punkt 6)
-3. Powiadomienia (`expo-notifications`)
-4. Ustawienia wyglądu: rozmiar tekstu i motyw; żaden ekran nie rozsypuje się
-   przy największym tekście systemowym
-5. Blokada biometrią (`expo-local-authentication`) z kodem zapasowym
-6. Tryb prywatny — ukrywanie kwot jednym tapnięciem
-7. Odczucie: wibracje (`expo-haptics`), animacja głównej liczby, komunikat
-   „Brak połączenia” (NetInfo)
-8. Sprzątanie: nieużywany kod i paczki (knip), importy fontów (dziś do appki
-   trafia 26 plików, używamy 3), `expo-system-ui`
+Ustalony 4.10.2026 (pierwsza wersja 1.10.2026, po przeglądzie ekranów).
+Kolejność obowiązuje; jeden punkt na raz, testy do akceptacji przed każdym.
+Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
+„Nowy wydatek”) mają dokąd wrócić (`52f0e74`).
+
+1. **Potwierdzanie wpływów i stałych płatności** (Faza 1, punkt 6) —
+   **W TRAKCIE**: silnik i API gotowe (`d9295aa`), karta „Do potwierdzenia”
+   na Dashboardzie w realizacji
+2. **Powiadomienia** (`expo-notifications`): dzień wypłaty, stała płatność,
+   zaległe pozycje
+3. **Wygląd:** rozmiar tekstu (Systemowy / Duży / Bardzo duży) i motyw
+   (Systemowy / Jasny / Ciemny); naprawa ekranów, które rozsypują się przy
+   dużym tekście
+4. **Blokada biometrią** (`expo-local-authentication`) z kodem zapasowym
+5. **Tryb prywatny** (ukrywanie kwot), wibracje (`expo-haptics`), animacja
+   głównej liczby, komunikat „Brak połączenia” (NetInfo)
+6. **Szablony i ostatnio używane wydatki**; dzienny limit z przenoszeniem
+   pokazany wprost (Faza 1, punkty 10–11)
+7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12)
+8. **Sprzątanie:** nieużywany kod i paczki (knip), importy fontów (dziś do
+   appki trafia 26 plików, używamy 3), `expo-system-ui`, aktualizacje Expo
+9. **Testy e2e mobile**
+
+Potem etap 8 (RevenueCat, publikacja). Faza 2 bez zmian.
 
 Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 
