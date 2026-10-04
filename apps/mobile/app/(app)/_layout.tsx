@@ -7,6 +7,7 @@ import { useMe } from "../../src/auth/hooks";
 import { LoadError, Skeleton } from "../../src/components/query-states";
 import { ExpenseTrashNoticeProvider } from "../../src/history/notice";
 import { pl } from "../../src/messages/pl";
+import { ReminderSync } from "../../src/notifications/reminder-sync";
 
 /**
  * The signed-in app. Until onboarding is finished only onboarding is
@@ -45,6 +46,7 @@ export default function AppLayout() {
   return (
     <AccountProvider value={me.data}>
       <ExpenseTrashNoticeProvider>
+        {onboarded && <ReminderSync />}
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Protected guard={onboarded}>
             <Stack.Screen name="(tabs)" />

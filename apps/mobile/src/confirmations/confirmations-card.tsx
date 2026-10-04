@@ -1,6 +1,4 @@
 import {
-  formatMoney,
-  grosze,
   parseMoneyInput,
   type AnswerConfirmationRequest,
   type DueConfirmation,
@@ -14,26 +12,21 @@ import { LoadError } from "../components/query-states";
 import { TextField } from "../components/text-field";
 import { formatDayMonth } from "../format/date";
 import { pl } from "../messages/pl";
+import {
+  markRemindersPrompted,
+  requestNotificationPermission,
+  shouldAskForReminders,
+} from "../notifications/preferences";
 import { amountError } from "../onboarding/draft";
 import { toMoneyInput } from "../settings/forms";
+import { formatExpected } from "./format";
 import { useAnswerConfirmation, useConfirmations } from "./queries";
 
 const t = pl.confirmations;
 
 type Answer = AnswerConfirmationRequest["answer"];
 
-/**
- * The amount as the user will see it on the bank statement: exact grosze,
- * but "1500 zł" rather than "1500,00 zł" when there are none. Whole zloty
- * need no rounding, so the direction does not matter.
- */
-function formatExpected(amount: number): string {
-  return amount % 100 === 0
-    ? formatMoney(grosze(amount), { whole: "down" })
-    : formatMoney(grosze(amount));
-}
-
-function DueItem({ item }: { item: DueConfirmation }) {
+function DueItem({ item, onAnswered }: { item: DueConfirmation; onAnswered: () => void }) {
   const answer = useAnswerConfirmation();
   const [editing, setEditing] = useState(false);
   const [amountText, setAmountText] = useState(() => toMoneyInput(item.expectedAmount));
@@ -44,13 +37,16 @@ function DueItem({ item }: { item: DueConfirmation }) {
   const named = (action: string) => t.forItem(action, item.label);
 
   function send(reply: Answer, confirmedAmount?: number) {
-    answer.mutate({
-      kind: item.kind,
-      ...(item.kind === "INCOME" ? { incomeSourceId: item.id } : { recurringRuleId: item.id }),
-      occurrenceDate: item.occurrenceDate,
-      answer: reply,
-      ...(confirmedAmount === undefined ? {} : { amount: confirmedAmount }),
-    });
+    answer.mutate(
+      {
+        kind: item.kind,
+        ...(item.kind === "INCOME" ? { incomeSourceId: item.id } : { recurringRuleId: item.id }),
+        occurrenceDate: item.occurrenceDate,
+        answer: reply,
+        ...(confirmedAmount === undefined ? {} : { amount: confirmedAmount }),
+      },
+      { onSuccess: onAnswered },
+    );
   }
 
   function saveOtherAmount() {
@@ -156,8 +152,54 @@ function DueItem({ item }: { item: DueConfirmation }) {
  * nothing waits, because most days there is nothing to answer and a
  * placeholder would only make the budget jump down the screen.
  */
+/**
+ * Asked in the app first, right after the user has seen what the reminders
+ * would be about; the system dialog comes only after „Tak”, because a
+ * refusal there can only be undone in the phone settings.
+ */
+function RemindersPrompt({ onDone }: { onDone: () => void }) {
+  async function answer(wantsReminders: boolean) {
+    await markRemindersPrompted();
+    if (wantsReminders) await requestNotificationPermission();
+    onDone();
+  }
+
+  return (
+    <Card>
+      <Text className="font-sans-semibold text-base text-card-foreground">
+        {pl.notifications.ask}
+      </Text>
+      <View className="flex-row flex-wrap gap-2">
+        <View className="grow">
+          <Button onPress={() => void answer(true)}>{pl.notifications.askYes}</Button>
+        </View>
+        <View className="grow">
+          <Button variant="outline" onPress={() => void answer(false)}>
+            {pl.notifications.askLater}
+          </Button>
+        </View>
+      </View>
+    </Card>
+  );
+}
+
 export function ConfirmationsCard() {
   const due = useConfirmations();
+  const [askingAboutReminders, setAskingAboutReminders] = useState(false);
+
+  function answered() {
+    void shouldAskForReminders().then((ask) => {
+      if (ask) setAskingAboutReminders(true);
+    });
+  }
+
+  const prompt = askingAboutReminders && (
+    <RemindersPrompt
+      onDone={() => {
+        setAskingAboutReminders(false);
+      }}
+    />
+  );
 
   if (due.isPending) return null;
   if (due.isError) {
@@ -167,16 +209,20 @@ export function ConfirmationsCard() {
       </Card>
     );
   }
-  if (due.data.length === 0) return null;
+  // The last answer empties the card, but the question still has to show.
+  if (due.data.length === 0) return prompt || null;
   return (
-    <Card title={t.title}>
-      {due.data.map((item, index) => (
-        <View key={`${item.id}:${item.occurrenceDate}`} className="gap-4">
-          {/* Decorative: the text and buttons carry the meaning, so no 3:1 needed. */}
-          {index > 0 && <View className="h-px bg-border" />}
-          <DueItem item={item} />
-        </View>
-      ))}
-    </Card>
+    <>
+      {prompt}
+      <Card title={t.title}>
+        {due.data.map((item, index) => (
+          <View key={`${item.id}:${item.occurrenceDate}`} className="gap-4">
+            {/* Decorative: the text and buttons carry the meaning, so no 3:1 needed. */}
+            {index > 0 && <View className="h-px bg-border" />}
+            <DueItem item={item} onAnswered={answered} />
+          </View>
+        ))}
+      </Card>
+    </>
   );
 }

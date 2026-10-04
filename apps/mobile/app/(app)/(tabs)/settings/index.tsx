@@ -49,6 +49,12 @@ export default function SettingsScreen() {
           <SettingsLink label={t.commitments} href="/settings/commitments" />
         </View>
       </View>
+      <View className="gap-2">
+        <Text className="font-sans-semibold text-sm text-muted-foreground">{t.app}</Text>
+        <View className="divide-y divide-border rounded-2xl bg-card">
+          <SettingsLink label={t.notifications} href="/settings/notifications" />
+        </View>
+      </View>
       <Button
         variant="outline"
         loading={logout.isPending}

@@ -29,6 +29,11 @@ const permissionResult = () => ({
   expires: "never",
 });
 
+export const PermissionStatus = {
+  GRANTED: "granted",
+  DENIED: "denied",
+  UNDETERMINED: "undetermined",
+} as const;
 export const SchedulableTriggerInputTypes = { DATE: "date" } as const;
 export const AndroidImportance = { DEFAULT: 3, HIGH: 4 } as const;
 export const DEFAULT_ACTION_IDENTIFIER = "expo.modules.notifications.actions.DEFAULT";

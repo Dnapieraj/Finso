@@ -18,8 +18,8 @@ jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
 }));
 
-/** formatMoney puts no-break spaces between digit groups and before "zł". */
-const zl = (text: string) => text.replaceAll(" ", " ");
+/** formatMoney puts a no-break space before "zł"; no other space is special. */
+const zl = (text: string) => text.replaceAll(" zł", "\u00A0zł");
 
 // Only the clock is fake: 28.09 at 8:00, the day testBudget is computed for,
 // an hour before reminders fire. Timers stay real for the rendering.
@@ -265,6 +265,8 @@ describe("Ustawienia → Powiadomienia", () => {
       expect(bodies()).toEqual([SALARY]);
     });
 
+    // The app closed and opened again: only the device storage remains.
+    await screen.unmount();
     await openNotificationSettings();
     expect(await screen.findByRole("switch", { name: "Stałe płatności" })).not.toBeChecked();
     expect(screen.getByRole("switch", { name: "Dzień wypłaty" })).toBeChecked();
@@ -336,6 +338,7 @@ describe("Ustawienia → Powiadomienia", () => {
       ]);
     });
 
+    await screen.unmount();
     await openNotificationSettings();
     expect(
       await screen.findByRole("switch", { name: "Pokazuj kwoty w powiadomieniach" }),

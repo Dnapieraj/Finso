@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 import type { TokenStore } from "@vireo/shared/api";
 
+import { cancelReminders } from "./notifications/schedule";
 import { queryClient } from "./query-client";
 import { secureTokenStore } from "./secure-token-store";
 
@@ -105,6 +106,7 @@ export const session = createSessionStore({
   tokens: secureTokenStore,
   onSignedOut: () => {
     queryClient.clear();
+    void cancelReminders();
   },
 });
 

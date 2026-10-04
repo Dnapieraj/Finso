@@ -1,8 +1,8 @@
 import { planReminders, type ReminderPreferences } from "../src/notifications/plan";
 import { testDue, testIncomeSource, testRule } from "./helpers/fake-api";
 
-/** formatMoney puts no-break spaces between digit groups and before "zł". */
-const zl = (text: string) => text.replaceAll(" ", " ");
+/** formatMoney puts a no-break space before "zł"; no other space is special. */
+const zl = (text: string) => text.replaceAll(" zł", "\u00A0zł");
 
 /** The defaults: every kind on, amounts hidden (the lock screen is public). */
 const DEFAULTS: ReminderPreferences = {
