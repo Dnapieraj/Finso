@@ -7,9 +7,12 @@ import Plus from "lucide-react-native/icons/plus";
 import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
 import { Button } from "../../../src/components/button";
+import { Card } from "../../../src/components/card";
 import { ProgressBar } from "../../../src/components/progress-bar";
 import { LoadError, Skeleton } from "../../../src/components/query-states";
 import { Screen } from "../../../src/components/screen";
+import { ConfirmationsCard } from "../../../src/confirmations/confirmations-card";
+import { useConfirmations } from "../../../src/confirmations/queries";
 import { goalProgress } from "../../../src/dashboard/goal-progress";
 import { periodProgress } from "../../../src/dashboard/period-progress";
 import {
@@ -25,19 +28,6 @@ import { pl } from "../../../src/messages/pl";
 
 const t = pl.dashboard;
 const GOALS_SHOWN = 3;
-
-function Card({ title, children }: { title?: string; children: ReactNode }) {
-  return (
-    <View className="gap-4 rounded-2xl bg-card p-5">
-      {title && (
-        <Text accessibilityRole="header" className="font-heading text-xl text-card-foreground">
-          {title}
-        </Text>
-      )}
-      {children}
-    </View>
-  );
-}
 
 function BudgetOverview({ budget }: { budget: BudgetSummary }) {
   const progress = periodProgress(budget);
@@ -64,6 +54,12 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
           <Text className="font-sans-semibold text-lg text-card-foreground">
             {t.perDay(formatMoney(grosze(budget.dailyAllowance), { whole: "down" }))}
           </Text>
+          {budget.awaitingIncome > 0 && (
+            // Rounded up: better to overstate what has not arrived yet.
+            <Text className="font-sans text-sm text-muted-foreground">
+              {t.awaitingIncome(formatMoney(grosze(budget.awaitingIncome), { whole: "up" }))}
+            </Text>
+          )}
           {budget.daysRemaining > 0 && (
             <Text className="font-sans text-sm text-muted-foreground">
               {t.untilPayday(
@@ -230,12 +226,18 @@ export default function DashboardScreen() {
   const budget = useBudget();
   const goals = useGoals();
   const expenses = useRecentExpenses();
+  const confirmations = useConfirmations();
   const [refreshing, setRefreshing] = useState(false);
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
 
   async function refresh() {
     setRefreshing(true);
-    await Promise.all([budget.refetch(), goals.refetch(), expenses.refetch()]);
+    await Promise.all([
+      budget.refetch(),
+      confirmations.refetch(),
+      goals.refetch(),
+      expenses.refetch(),
+    ]);
     setRefreshing(false);
   }
 
@@ -265,6 +267,7 @@ export default function DashboardScreen() {
         ) : (
           <BudgetOverview budget={budget.data} />
         )}
+        <ConfirmationsCard />
         <Goals asOf={budget.data?.asOf ?? null} />
         <RecentExpenses />
       </Screen>

@@ -99,6 +99,29 @@ export const pl = {
     loadingExpenses: "Wczytywanie wydatków",
     expensesError: "Nie udało się wczytać wydatków.",
     allExpenses: "Wszystkie wydatki",
+    awaitingIncome: (amount: string) => `W tym ${amount} jeszcze nie wpłynęło.`,
+  },
+  confirmations: {
+    title: "Do potwierdzenia",
+    // Neutral forms: „zapłacone?”, not „Zapłaciłeś?” — the app does not know the user's gender.
+    ask: (label: string, amount: string, kind: "INCOME" | "EXPENSE") =>
+      `${label} ${amount} — ${kind === "INCOME" ? "wpłynęło?" : "zapłacone?"}`,
+    notYetState: (label: string, amount: string, kind: "INCOME" | "EXPENSE") =>
+      `${label} ${amount} — ${kind === "INCOME" ? "jeszcze nie wpłynęło" : "jeszcze nie zapłacone"}`,
+    due: (date: string) => `Termin ${date}`,
+    overdue: (date: string) => `Zaległe, termin ${date}`,
+    yes: "Tak",
+    otherAmount: "Inna kwota",
+    notYet: "Jeszcze nie",
+    skip: "Nie w tym okresie",
+    amount: "Kwota",
+    save: "Zapisz",
+    cancel: "Anuluj",
+    saving: "Zapisywanie…",
+    // Names of the buttons for screen readers: one card lists several items.
+    forItem: (action: string, label: string) => `${action}: ${label}`,
+    answerFailed: "Nie udało się zapisać odpowiedzi. Spróbuj ponownie.",
+    loadError: "Nie udało się sprawdzić, co czeka na potwierdzenie.",
   },
   history: {
     title: "Historia wydatków",

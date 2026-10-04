@@ -9,9 +9,12 @@ export function TextField({
   hint,
   error,
   secure = false,
+  accessibilityLabel,
   ...input
 }: {
   label: string;
+  /** When the visible label alone is ambiguous, e.g. „Kwota” in a list. */
+  accessibilityLabel?: string;
   hint?: string;
   error?: string;
   secure?: boolean;
@@ -38,7 +41,7 @@ export function TextField({
       >
         <TextInput
           {...input}
-          accessibilityLabel={label}
+          accessibilityLabel={accessibilityLabel ?? label}
           // Screen readers read the error with the field, not only when found.
           accessibilityHint={error ?? hint}
           autoCapitalize="none"

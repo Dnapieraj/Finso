@@ -24,9 +24,12 @@ export function Button({
   loadingLabel,
   loading = false,
   variant = "primary",
+  accessibilityLabel,
   onPress,
 }: {
   children: string;
+  /** When the visible label alone is ambiguous, e.g. „Tak” in a list. */
+  accessibilityLabel?: string;
   loadingLabel?: string;
   loading?: boolean;
   variant?: Variant;
@@ -35,6 +38,7 @@ export function Button({
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: loading, busy: loading }}
       disabled={loading}
       onPress={onPress}
