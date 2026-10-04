@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as Notifications from "expo-notifications";
 import * as SecureStore from "expo-secure-store";
 
 import { queryClient } from "../query-client";
+import { loadNotifications } from "./native";
 import type { ReminderPreferences } from "./plan";
 
 // On the device, not the account: a second phone may want other reminders.
@@ -49,9 +49,12 @@ export function useSaveReminderPreferences() {
   });
 }
 
-export type PermissionState = "granted" | "denied" | "undetermined";
+/** `unavailable`: Expo Go on Android, where notifications cannot work at all. */
+export type PermissionState = "granted" | "denied" | "undetermined" | "unavailable";
 
 async function readPermission(): Promise<PermissionState> {
+  const Notifications = await loadNotifications();
+  if (!Notifications) return "unavailable";
   const { status } = await Notifications.getPermissionsAsync();
   if (status === Notifications.PermissionStatus.GRANTED) return "granted";
   if (status === Notifications.PermissionStatus.DENIED) return "denied";
@@ -65,6 +68,8 @@ export function useNotificationPermission() {
 
 /** Shows the system dialog (once — after a refusal only the phone settings help). */
 export async function requestNotificationPermission(): Promise<PermissionState> {
+  const Notifications = await loadNotifications();
+  if (!Notifications) return "unavailable";
   await Notifications.requestPermissionsAsync();
   const status = await readPermission();
   queryClient.setQueryData(PERMISSION_QUERY, status);

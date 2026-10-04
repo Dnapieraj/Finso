@@ -12,3 +12,10 @@ process.env.EXPO_PUBLIC_API_URL ??= "http://api.test";
 
 // The OS notification centre does not exist under Jest; tests read what the app scheduled.
 jest.mock("expo-notifications", () => require("./__tests__/helpers/fake-notifications"));
+// Jest (CommonJS) cannot run the dynamic import() the loader uses on
+// devices; hand it the fake above instead. Where notifications are
+// supported is tested on its own (notificationsSupportedOn).
+jest.mock("./src/notifications/native", () => ({
+  ...jest.requireActual("./src/notifications/native"),
+  loadNotifications: () => Promise.resolve(require("expo-notifications")),
+}));

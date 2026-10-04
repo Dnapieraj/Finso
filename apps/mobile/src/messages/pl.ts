@@ -273,6 +273,7 @@ export const pl = {
     time: "Przypomnienia przychodzą o 9:00.",
     blocked: "Powiadomienia są wyłączone w ustawieniach telefonu.",
     loadError: "Nie udało się wczytać ustawień powiadomień.",
+    unavailable: "Powiadomienia działają w zainstalowanej aplikacji, nie w Expo Go.",
     openSystemSettings: "Otwórz ustawienia telefonu",
     ask: "Przypominać w dniu wypłaty i płatności?",
     askYes: "Tak, przypominaj",

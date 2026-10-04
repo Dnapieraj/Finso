@@ -1,4 +1,3 @@
-import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { AppState } from "react-native";
@@ -7,6 +6,7 @@ import { useConfirmations } from "../confirmations/queries";
 import { useBudget } from "../dashboard/queries";
 import { queryClient } from "../query-client";
 import { useIncomeSources, useRecurringRules } from "../settings/queries";
+import { loadNotifications } from "./native";
 import { planReminders } from "./plan";
 import { PERMISSION_QUERY, useNotificationPermission, useReminderPreferences } from "./preferences";
 import { replaceReminders } from "./schedule";
@@ -52,12 +52,18 @@ export function ReminderSync() {
       if (state === "active") void queryClient.invalidateQueries({ queryKey: PERMISSION_QUERY });
     });
     // Every reminder is about something to answer on the dashboard.
-    const taps = Notifications.addNotificationResponseReceivedListener(() => {
-      router.navigate("/");
+    let taps: { remove(): void } | undefined;
+    let unmounted = false;
+    void loadNotifications().then((Notifications) => {
+      if (!Notifications || unmounted) return;
+      taps = Notifications.addNotificationResponseReceivedListener(() => {
+        router.navigate("/");
+      });
     });
     return () => {
+      unmounted = true;
       appState.remove();
-      taps.remove();
+      taps?.remove();
     };
   }, []);
 

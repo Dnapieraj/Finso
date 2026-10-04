@@ -1,7 +1,7 @@
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 
 import { pl } from "../messages/pl";
+import { loadNotifications, type NotificationsModule } from "./native";
 import type { Reminder } from "./plan";
 
 const CHANNEL_ID = "reminders";
@@ -15,20 +15,29 @@ function enqueue(job: () => Promise<void>): Promise<void> {
   return queue;
 }
 
+let handlerSet = false;
+
 /** Shown while the app is open too: the reminder may be about another screen. */
-Notifications.setNotificationHandler({
-  handleNotification: () =>
-    Promise.resolve({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-    }),
-});
+function showWhileOpen(Notifications: NotificationsModule) {
+  if (handlerSet) return;
+  handlerSet = true;
+  Notifications.setNotificationHandler({
+    handleNotification: () =>
+      Promise.resolve({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+  });
+}
 
 /** Replaces everything scheduled with `reminders`. */
 export function replaceReminders(reminders: readonly Reminder[]): Promise<void> {
   return enqueue(async () => {
+    const Notifications = await loadNotifications();
+    if (!Notifications) return;
+    showWhileOpen(Notifications);
     if (Platform.OS === "android") {
       await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
         name: pl.notifications.channel,
@@ -52,5 +61,8 @@ export function replaceReminders(reminders: readonly Reminder[]): Promise<void> 
 
 /** After logout: reminders name the user's payments and must not stay behind. */
 export function cancelReminders(): Promise<void> {
-  return enqueue(() => Notifications.cancelAllScheduledNotificationsAsync());
+  return enqueue(async () => {
+    const Notifications = await loadNotifications();
+    await Notifications?.cancelAllScheduledNotificationsAsync();
+  });
 }

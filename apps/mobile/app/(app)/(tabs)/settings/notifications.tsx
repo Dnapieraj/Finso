@@ -89,6 +89,7 @@ export default function NotificationSettings() {
 
   const granted = permission.data === "granted";
   const blocked = permission.data === "denied";
+  const unavailable = permission.data === "unavailable";
   const prefs = preferences.data;
 
   async function change(key: keyof ReminderPreferences, value: boolean) {
@@ -100,6 +101,7 @@ export default function NotificationSettings() {
 
   return (
     <Screen title={t.title}>
+      {unavailable && <Text className="font-sans text-base text-foreground">{t.unavailable}</Text>}
       {blocked && (
         <View className="gap-3">
           <Text className="font-sans text-base text-foreground">{t.blocked}</Text>
@@ -114,7 +116,7 @@ export default function NotificationSettings() {
             key={key}
             label={label}
             value={granted && prefs[key]}
-            disabled={blocked}
+            disabled={blocked || unavailable}
             onChange={(value) => void change(key, value)}
           />
         ))}
@@ -124,7 +126,7 @@ export default function NotificationSettings() {
           label={t.showAmounts}
           hint={t.showAmountsHint}
           value={granted && prefs.showAmounts}
-          disabled={blocked}
+          disabled={blocked || unavailable}
           onChange={(value) => void change("showAmounts", value)}
         />
       </View>
