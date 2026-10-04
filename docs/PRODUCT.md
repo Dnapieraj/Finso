@@ -133,12 +133,13 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
 21. Limity na kategorie (np. jedzenie do 800 zł w okresie)
+22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
 
 ### Faza 3
 
-22. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
-23. Wielowalutowość
-24. Eksport PDF/CSV, raporty roczne
+23. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
+24. Wielowalutowość
+25. Eksport PDF/CSV, raporty roczne
 
 ### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
 
@@ -381,7 +382,23 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    **W TRAKCIE**: silnik i API gotowe (`d9295aa`), karta „Do potwierdzenia”
    na Dashboardzie w realizacji
 2. **Powiadomienia** (`expo-notifications`): dzień wypłaty, stała płatność,
-   zaległe pozycje
+   zaległe pozycje. Ustalone 4.10.2026:
+   - **lokalne**, planowane na telefonie z harmonogramu — bez serwera push
+     i bez wysyłania danych finansowych do Apple/Google;
+   - stała godzina 9:00 (wybór godziny — Faza 2);
+   - zgoda: własne pytanie po pierwszej odpowiedzi na kartę „Do potwierdzenia”,
+     systemowe okno dopiero po „Tak, przypominaj”;
+   - Ustawienia → Powiadomienia: trzy przełączniki rodzajów i „Pokazuj kwoty
+     w powiadomieniach” — **domyślnie bez kwot** („Masz płatność do
+     potwierdzenia: Czynsz”), bo powiadomienia widać na zablokowanym ekranie;
+     ustawienia zapisane na urządzeniu, wylogowanie usuwa zaplanowane.
+
+   **Znane ograniczenie:** plan obejmuje 30 dni i odświeża się przy każdym
+   otwarciu appki i po każdej odpowiedzi. Kto nie otworzy appki przez ponad
+   30 dni, przestaje dostawać przypomnienia; przypomnienie o zaległych mówi
+   o pozycjach znanych w chwili planowania. Rozwiązanie (push z serwera) —
+   dopiero jeśli okaże się potrzebne
+
 3. **Wygląd:** rozmiar tekstu (Systemowy / Duży / Bardzo duży) i motyw
    (Systemowy / Jasny / Ciemny); naprawa ekranów, które rozsypują się przy
    dużym tekście
