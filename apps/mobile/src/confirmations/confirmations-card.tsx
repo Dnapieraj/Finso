@@ -170,8 +170,12 @@ export function ConfirmationsCard() {
   if (due.data.length === 0) return null;
   return (
     <Card title={t.title}>
-      {due.data.map((item) => (
-        <DueItem key={`${item.id}:${item.occurrenceDate}`} item={item} />
+      {due.data.map((item, index) => (
+        <View key={`${item.id}:${item.occurrenceDate}`} className="gap-4">
+          {/* Decorative: the text and buttons carry the meaning, so no 3:1 needed. */}
+          {index > 0 && <View className="h-px bg-border" />}
+          <DueItem item={item} />
+        </View>
       ))}
     </Card>
   );

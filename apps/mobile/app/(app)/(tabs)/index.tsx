@@ -46,6 +46,12 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
             ? formatMoney(grosze(-budget.availableBalance), { whole: "up" })
             : formatMoney(grosze(budget.availableBalance), { whole: "down" })}
         </Text>
+        {/* Right under the amount it qualifies; rounded up, better to overstate what is missing. */}
+        {!below && budget.awaitingIncome > 0 && (
+          <Text className="font-sans text-sm text-muted-foreground">
+            {t.awaitingIncome(formatMoney(grosze(budget.awaitingIncome), { whole: "up" }))}
+          </Text>
+        )}
       </View>
       {below ? (
         <Text className="font-sans text-base text-card-foreground">{t.noFreeMoney}</Text>
@@ -54,12 +60,6 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
           <Text className="font-sans-semibold text-lg text-card-foreground">
             {t.perDay(formatMoney(grosze(budget.dailyAllowance), { whole: "down" }))}
           </Text>
-          {budget.awaitingIncome > 0 && (
-            // Rounded up: better to overstate what has not arrived yet.
-            <Text className="font-sans text-sm text-muted-foreground">
-              {t.awaitingIncome(formatMoney(grosze(budget.awaitingIncome), { whole: "up" }))}
-            </Text>
-          )}
           {budget.daysRemaining > 0 && (
             <Text className="font-sans text-sm text-muted-foreground">
               {t.untilPayday(
