@@ -16,6 +16,11 @@ import {
   type SimulationResult,
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
+import {
+  dueConfirmationListSchema,
+  type AnswerConfirmationRequest,
+  type DueConfirmation,
+} from "../confirmations/schemas.js";
 import type { IdempotentDraft } from "../common/schemas.js";
 import {
   goalSchema,
@@ -134,6 +139,15 @@ export interface ApiClient {
     current(): Promise<BudgetSummary>;
     /** „Czy stać mnie na to teraz” — nic nie zapisuje. */
     simulate(input: SimulatePurchaseRequest): Promise<SimulationResult>;
+  };
+  readonly confirmations: {
+    /** Wpływy i stałe płatności czekające na odpowiedź — bieżące i zaległe. */
+    list(): Promise<DueConfirmation[]>;
+    /**
+     * Odpowiedź na pytanie o termin. Po niej trzeba odświeżyć budżet —
+     * potwierdzenie albo „Nie w tym okresie” zmienia „Możesz wydać”.
+     */
+    answer(input: AnswerConfirmationRequest): Promise<void>;
   };
   readonly goals: {
     /** Cele posortowane po terminie, najbliższy pierwszy (bez tych w koszu). */
@@ -379,6 +393,12 @@ export function createApiClient({
           await execute({ method: "POST", path: "/budget/simulate", body: input }),
           simulationResultSchema,
         ),
+    },
+    confirmations: {
+      list: () => read("/confirmations", dueConfirmationListSchema),
+      async answer(input) {
+        await execute({ method: "POST", path: "/confirmations", body: input });
+      },
     },
     goals: {
       list: () => read("/goals", z.array(goalSchema)),
