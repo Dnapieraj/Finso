@@ -55,10 +55,11 @@ export type PermissionState = "granted" | "denied" | "undetermined" | "unavailab
 async function readPermission(): Promise<PermissionState> {
   const Notifications = await loadNotifications();
   if (!Notifications) return "unavailable";
-  const { status } = await Notifications.getPermissionsAsync();
+  const { status, canAskAgain } = await Notifications.getPermissionsAsync();
   if (status === Notifications.PermissionStatus.GRANTED) return "granted";
-  if (status === Notifications.PermissionStatus.DENIED) return "denied";
-  return "undetermined";
+  // Android 13+ has no "undetermined": before the first request it reports
+  // "denied". Only a refusal that can no longer be asked again is a block.
+  return canAskAgain ? "undetermined" : "denied";
 }
 
 /** What the system allows; asked again when the app comes back to the front. */
