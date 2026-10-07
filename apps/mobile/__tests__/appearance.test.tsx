@@ -33,7 +33,9 @@ async function openAppearance() {
   await screen.findByRole("header", { name: "Wygląd" });
 }
 
-const group = (name: string) => within(screen.getByRole("radiogroup", { name }));
+// By label, not role: RNTL finds roles only on `accessible` elements, and an
+// accessible radio group would merge its options into one for screen readers.
+const group = (name: string) => within(screen.getByLabelText(name));
 const choose = async (groupName: string, option: string) => {
   await fireEvent.press(group(groupName).getByRole("radio", { name: option }));
 };

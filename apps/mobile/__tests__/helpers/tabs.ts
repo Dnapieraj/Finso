@@ -1,8 +1,8 @@
 import { screen } from "expo-router/testing-library";
 
-// The tab bar exposes each tab as a button labelled "Start, tab, 1 of 2" —
-// what VoiceOver reads — rather than as role "tab".
-const tabName = (name: string) => new RegExp(`^${name}, tab,`);
+// The tab bar exposes each tab as a button named after the tab ("Start"),
+// rather than as role "tab"; the screen reader adds "tab" itself.
+const tabName = (name: string) => name;
 
 /** The tab bar item called `name`. */
 export const getTab = (name: string) => screen.getByRole("button", { name: tabName(name) });

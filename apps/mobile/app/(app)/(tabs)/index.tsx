@@ -41,7 +41,14 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
           {below ? t.underTheLine : t.canSpend}
         </Text>
         {/* Rounded towards the user's safety: money left goes down, a debt goes up. */}
-        <Text className={`font-heading text-5xl ${below ? "text-risk" : "text-card-foreground"}`}>
+        {/* One line whatever the text size: it shrinks to the card's width
+            rather than breaking a number in two or running off the screen. */}
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.4}
+          className={`font-heading text-5xl ${below ? "text-risk" : "text-card-foreground"}`}
+        >
           {below
             ? formatMoney(grosze(-budget.availableBalance), { whole: "up" })
             : formatMoney(grosze(budget.availableBalance), { whole: "down" })}
@@ -74,7 +81,7 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
         <Text className="font-sans text-sm text-muted-foreground">{t.noIncome}</Text>
       )}
       <View className="gap-2">
-        <View className="flex-row justify-between">
+        <View className="flex-row flex-wrap justify-between gap-x-3">
           <Text className="font-sans text-sm text-muted-foreground">{t.period}</Text>
           <Text className="font-sans text-sm text-muted-foreground">{dayCount}</Text>
         </View>
@@ -102,7 +109,7 @@ function GoalRow({ goal, asOf }: { goal: Goal; asOf: string | null }) {
         <Text className="font-sans text-sm text-muted-foreground">{percentText}</Text>
       </View>
       <ProgressBar label={goal.name} now={percent} max={100} valueText={percentText} />
-      <View className="flex-row justify-between gap-3">
+      <View className="flex-row flex-wrap justify-between gap-x-3">
         <Text className="font-sans text-sm text-muted-foreground">
           {t.goalSaved(
             formatMoney(grosze(goal.currentAmount), { whole: "down" }),

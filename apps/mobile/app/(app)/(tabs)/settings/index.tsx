@@ -19,10 +19,12 @@ function SettingsLink({ label, value, href }: { label: string; value?: string; h
       onPress={() => {
         router.push(href);
       }}
-      className="min-h-12 flex-row items-center justify-between gap-3 px-4 py-3 active:opacity-70"
+      // Wraps at large text sizes: the value moves under the label instead of
+      // running off the card.
+      className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 active:opacity-70"
     >
-      <Text className="font-sans-semibold text-base text-card-foreground">{label}</Text>
-      <Text className="font-sans text-sm text-muted-foreground">{value ?? "›"}</Text>
+      <Text className="shrink font-sans-semibold text-base text-card-foreground">{label}</Text>
+      <Text className="shrink font-sans text-sm text-muted-foreground">{value ?? "›"}</Text>
     </Pressable>
   );
 }
@@ -52,6 +54,7 @@ export default function SettingsScreen() {
       <View className="gap-2">
         <Text className="font-sans-semibold text-sm text-muted-foreground">{t.app}</Text>
         <View className="divide-y divide-border rounded-2xl bg-card">
+          <SettingsLink label={t.appearance} href="/settings/appearance" />
           <SettingsLink label={t.notifications} href="/settings/notifications" />
         </View>
       </View>

@@ -17,6 +17,34 @@ const colors = Object.fromEntries(
   }),
 );
 
+/*
+ * Tailwind's default type scale (size, line height in rem), multiplied by
+ * --text-scale, which the root layout sets from Settings → Wygląd. Only
+ * text grows; spacing and icons keep their size. The phone's own font size
+ * still applies on top, as React Native scales every Text by it.
+ */
+const TYPE_SCALE = {
+  xs: [0.75, 1],
+  sm: [0.875, 1.25],
+  base: [1, 1.5],
+  lg: [1.125, 1.75],
+  xl: [1.25, 1.75],
+  "2xl": [1.5, 2],
+  "3xl": [1.875, 2.25],
+  "4xl": [2.25, 2.5],
+  // Tailwind gives 5xl a unitless line height of 1, i.e. the font size itself.
+  "5xl": [3, 3],
+} as const;
+
+const scaled = (rem: number) => `calc(${String(rem)}rem * var(--text-scale))`;
+
+const fontSize = Object.fromEntries(
+  Object.entries(TYPE_SCALE).map(([name, [size, lineHeight]]) => [
+    name,
+    [scaled(size), { lineHeight: scaled(lineHeight) }] as [string, { lineHeight: string }],
+  ]),
+);
+
 export default {
   content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   presets: [nativewindPreset],
@@ -24,6 +52,7 @@ export default {
     extend: {
       colors,
       borderRadius: radius,
+      fontSize,
       fontFamily: {
         heading: ["BricolageGrotesque_700Bold"],
         sans: ["HankenGrotesk_400Regular"],

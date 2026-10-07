@@ -11,21 +11,30 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { useColorScheme, View } from "react-native";
+import { Appearance, useColorScheme, View } from "react-native";
 
 import { theme } from "@vireo/tokens";
 
 // Imported for its side effect: it validates EXPO_PUBLIC_API_URL at startup.
 import "../src/api";
+import {
+  appearance,
+  TEXT_SCALES,
+  useAppearance,
+  useAppearanceLoaded,
+} from "../src/appearance/store";
 import { queryClient } from "../src/query-client";
 import { session, useSession } from "../src/session";
-import { themeVars } from "../src/theme";
+import { textScaleVars, themeVars } from "../src/theme";
 
 // Keep the splash screen until the fonts load, so text never flashes in a fallback font.
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const scheme = useColorScheme() === "dark" ? "dark" : "light";
+  const choice = useAppearance();
+  const appearanceLoaded = useAppearanceLoaded();
+  const systemScheme = useColorScheme() === "dark" ? "dark" : "light";
+  const scheme = choice.theme === "system" ? systemScheme : choice.theme;
   const [fontsLoaded, fontError] = useFonts({
     BricolageGrotesque_700Bold,
     HankenGrotesk_400Regular,
@@ -34,13 +43,20 @@ export default function RootLayout() {
   const { status } = useSession();
   // A font that fails to load must not block the app; system fonts take over.
   // Waiting for the session keeps login from flashing before the app opens.
-  const ready = (fontsLoaded || fontError !== null) && status !== "restoring";
+  const ready = (fontsLoaded || fontError !== null) && status !== "restoring" && appearanceLoaded;
 
   useEffect(() => {
     // Only at app start: restoring again would blank the whole tree and
     // remount the navigator, losing where the user was.
     if (session.getState().status === "restoring") void session.restore();
+    void appearance.load();
   }, []);
+
+  useEffect(() => {
+    // Native parts (switches, keyboard, status bar, date pickers) follow
+    // this, not the CSS variables; "unspecified" hands it back to the phone.
+    Appearance.setColorScheme(choice.theme === "system" ? "unspecified" : choice.theme);
+  }, [choice.theme]);
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
@@ -50,7 +66,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <View style={themeVars[scheme]} className="flex-1 bg-background">
+      <View
+        testID="app-root"
+        style={[themeVars[scheme], textScaleVars(TEXT_SCALES[choice.textSize])]}
+        className="flex-1 bg-background"
+      >
         <Stack
           screenOptions={{
             headerShown: false,

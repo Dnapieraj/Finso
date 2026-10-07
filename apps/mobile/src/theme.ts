@@ -19,3 +19,11 @@ export const themeVars: Record<ThemeName, ReturnType<typeof vars>> = {
   light: paletteVars("light"),
   dark: paletteVars("dark"),
 };
+
+/**
+ * The `--text-scale` variable every font size in tailwind.config.ts is
+ * multiplied by: "Rozmiar tekstu" in Settings → Wygląd.
+ */
+export function textScaleVars(scale: number) {
+  return vars({ "--text-scale": scale });
+}
