@@ -4,6 +4,7 @@ import { Linking } from "react-native";
 import { fakeApi, seedFakeServer, testDue, testRule } from "./helpers/fake-api";
 import {
   answerDialogWith,
+  neverAskedOnAndroid,
   cancelAllScheduledNotificationsAsync,
   requestPermissionsAsync,
   scheduled,
@@ -359,5 +360,53 @@ describe("Ustawienia → Powiadomienia", () => {
     await openNotificationSettings();
 
     expect(await screen.findByText("Przypomnienia przychodzą o 9:00.")).toBeOnTheScreen();
+  });
+});
+
+describe("Android: przed pierwszym pytaniem system mówi „denied”", () => {
+  it("to nie jest blokada — po odpowiedzi na kartę appka pyta o przypomnienia", async () => {
+    neverAskedOnAndroid();
+    seedFakeServer({ due: [dueRent], rules: [rentToday] });
+    await openDashboard();
+
+    await press("Tak: Czynsz");
+    await press("Tak, przypominaj");
+
+    expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(bodies()).toContain(SALARY);
+    });
+  });
+
+  it("Ustawienia nie mówią o blokadzie, a przełącznik prosi o zgodę", async () => {
+    neverAskedOnAndroid();
+    await openNotificationSettings();
+
+    expect(
+      screen.queryByText("Powiadomienia są wyłączone w ustawieniach telefonu."),
+    ).not.toBeOnTheScreen();
+    await fireEvent(
+      await screen.findByRole("switch", { name: "Dzień wypłaty" }),
+      "valueChange",
+      true,
+    );
+
+    expect(requestPermissionsAsync).toHaveBeenCalledTimes(1);
+  });
+
+  it("dopiero odmowa w oknie systemowym to blokada", async () => {
+    neverAskedOnAndroid();
+    answerDialogWith("denied");
+    await openNotificationSettings();
+
+    await fireEvent(
+      await screen.findByRole("switch", { name: "Dzień wypłaty" }),
+      "valueChange",
+      true,
+    );
+
+    expect(
+      await screen.findByText("Powiadomienia są wyłączone w ustawieniach telefonu."),
+    ).toBeOnTheScreen();
   });
 });

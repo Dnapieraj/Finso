@@ -17,6 +17,8 @@ interface Response {
 }
 
 let permission: PermissionStatus = "undetermined";
+/** Whether the system dialog can still be shown. */
+let canAskAgain = true;
 /** What the system dialog answers when the app asks. */
 let dialogAnswer: PermissionStatus = "granted";
 let pending: Scheduled[] = [];
@@ -25,7 +27,7 @@ const responseListeners = new Set<(response: Response) => void>();
 const permissionResult = () => ({
   status: permission,
   granted: permission === "granted",
-  canAskAgain: permission === "undetermined",
+  canAskAgain,
   expires: "never",
 });
 
@@ -42,7 +44,10 @@ export const setNotificationHandler = jest.fn();
 export const setNotificationChannelAsync = jest.fn(() => Promise.resolve(null));
 export const getPermissionsAsync = jest.fn(() => Promise.resolve(permissionResult()));
 export const requestPermissionsAsync = jest.fn(() => {
-  if (permission === "undetermined") permission = dialogAnswer;
+  if (canAskAgain && permission !== "granted") {
+    permission = dialogAnswer;
+    canAskAgain = false;
+  }
   return Promise.resolve(permissionResult());
 });
 export const scheduleNotificationAsync = jest.fn(
@@ -68,6 +73,16 @@ export const addNotificationResponseReceivedListener = jest.fn(
 /** The permission as if the user had already answered the system dialog. */
 export function setPermission(status: PermissionStatus): void {
   permission = status;
+  canAskAgain = status === "undetermined";
+}
+
+/**
+ * Android 13+ before the app ever asked: reported as "denied", but the
+ * dialog can still be shown — there is no "undetermined" there.
+ */
+export function neverAskedOnAndroid(): void {
+  permission = "denied";
+  canAskAgain = true;
 }
 
 /** How the user will answer the system dialog when the app asks. */
@@ -94,6 +109,7 @@ export function tapNotification(identifier: string): void {
 
 export function resetNotifications(): void {
   permission = "undetermined";
+  canAskAgain = true;
   dialogAnswer = "granted";
   pending = [];
   responseListeners.clear();
