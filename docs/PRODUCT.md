@@ -419,6 +419,13 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
 - Ikona i ekran startowy — dziś domyślne grafiki Expo
+- **Build na iPhone'a wymaga EAS Build w chmurze** — pracujemy na Windowsie,
+  a lokalny build iOS (`expo run:ios`) potrzebuje macOS z Xcode. Do zrobienia:
+  konto Apple Developer (99 USD/rok), `eas.json` z profilami `development`
+  (dev client na iPhone'a do testów, m.in. powiadomień) i `production`,
+  certyfikaty i provisioning zarządzane przez EAS. Android buduje się lokalnie
+  (`expo run:android`), do sklepu też przez EAS. Identyfikator `app.finso`
+  (Android i iOS) ustalony 4.10.2026 — po pierwszej publikacji nie do zmiany
 - Linki do regulaminu i polityki prywatności przy rejestracji
 - Dzień wypłaty „ostatni dzień miesiąca” — dziś 29–31 każe wybrać 28
 
@@ -431,7 +438,7 @@ Na ekranach logowania i rejestracji są już przyciski „Kontynuuj z Apple / Go
 - **API:** weryfikacja tokenów tożsamości od Apple i Google po stronie serwera, powiązanie z kontem (e-mail / identyfikator dostawcy), konta bez hasła (`passwordHash` opcjonalny)
 - **Usuwanie konta:** konto bez hasła nie potwierdzi usunięcia hasłem — inne potwierdzenie (np. ponowne logowanie u dostawcy) w appce i ta sama zmiana na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`), w jednym etapie; test `apps/mobile/__tests__/delete-account.test.tsx` pilnuje zgodności
 - **Polityka prywatności:** Apple i Google jako nowi odbiorcy danych logowania (TODO w `apps/web/src/messages/legal/privacy.ts`)
-- **Development build zamiast Expo Go:** natywne logowanie (`expo-apple-authentication`, Google Sign-In) wymaga własnego buildu przez EAS — Expo Go go nie obsługuje
+- **Development build zamiast Expo Go** (Android: lokalnie od 4.10.2026, iOS: EAS Build): natywne logowanie (`expo-apple-authentication`, Google Sign-In) wymaga własnego buildu przez EAS — Expo Go go nie obsługuje
 - Apple na iOS jest obowiązkowe, jeśli jest Google (App Store 4.8); na Androidzie Apple działa przez przeglądarkę
 
 _Pierwotny plan zakładał dashboard na webie i port na Expo; zmieniony we wrześniu 2026 — web jest tylko wizytówką._

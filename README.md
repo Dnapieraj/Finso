@@ -60,11 +60,13 @@ pnpm build --filter=@vireo/shared
 # 6. Start
 pnpm --filter api start:dev    # API:  http://localhost:3000, dokumentacja: /docs
 pnpm --filter web dev          # web:  http://localhost:3000 (albo kolejny wolny port)
-pnpm --filter mobile start     # mobile: kod QR dla Expo Go — najpierw ustaw apps/mobile/.env
+pnpm --filter mobile android   # mobile: build i instalacja na emulatorze (raz i po zmianach natywnych)
+pnpm --filter mobile start     # mobile: Metro na co dzień — najpierw ustaw apps/mobile/.env
 ```
 
 Aplikacja mobilna na telefonie łączy się z API po **adresie IP komputera w sieci Wi-Fi**,
-nie po `localhost` — szczegóły w [`apps/mobile/README.md`](apps/mobile/README.md).
+nie po `localhost`. Appka działa jako **development build** (nie Expo Go) — jednorazowa konfiguracja
+JDK i Android SDK oraz szczegóły w [`apps/mobile/README.md`](apps/mobile/README.md).
 
 Bazę zatrzymasz przez `pnpm db:down` (dane zostają w wolumenie Dockera).
 

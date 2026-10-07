@@ -7,9 +7,11 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "app.finso"
     },
     "android": {
+      "package": "app.finso",
       "adaptiveIcon": {
         "backgroundColor": "#F5F6F1",
         "foregroundImage": "./assets/android-icon-foreground.png",
