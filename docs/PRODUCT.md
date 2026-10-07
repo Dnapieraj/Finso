@@ -342,6 +342,21 @@ Rocznie z wyraźnym rabatem (~36%) — to standard, bo poprawia retencję i cash
 
 Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez RevenueCat). Strona web pokazuje ten cennik i linki do sklepów.
 
+**Model płatności — decyzja z 7.10.2026, wdrożenie w etapie 8 (bez zmian w kodzie przed nim):**
+
+- **Free na zawsze**, z limitami wyżej (1 cel, historia 60 dni, 5 symulacji dziennie)
+- **Plus: 7 dni za darmo**, potem **12,99 zł/mies.** albo **99 zł/rok**
+- Okres próbny jako oferta wprowadzająca w App Store i Google Play, obsługiwany przez
+  RevenueCat (bez własnej logiki próby w API — o uprawnieniach decyduje RevenueCat)
+- **Przed startem próby** paywall pokazuje wyraźnie cenę po próbie i informację
+  o automatycznym odnowieniu oraz jak anulować (wymóg App Store 3.1.2 i Google Play)
+- **Przypomnienie dzień przed końcem próby** — lokalne powiadomienie, tym samym
+  mechanizmem co przypomnienia o wypłacie; termin z daty końca próby z RevenueCat
+- Paywall pokazuje **plan roczny jako korzystniejszy** (domyślnie zaznaczony,
+  z wyliczoną oszczędnością względem 12 × 12,99 zł)
+- Przy wdrożeniu: cennik na stronie web (`apps/web`) i regulamin muszą wspomnieć
+  o 7 dniach próby i automatycznym odnowieniu
+
 ---
 
 ## 7. Kolejność budowania
@@ -385,7 +400,9 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    zaległe pozycje. Ustalone 4.10.2026:
    - **lokalne**, planowane na telefonie z harmonogramu — bez serwera push
      i bez wysyłania danych finansowych do Apple/Google;
-   - stała godzina 9:00 (wybór godziny — Faza 2);
+   - stała godzina 9:00 (wybór godziny — Faza 2); Android dostarcza takie
+     alarmy z opóźnieniem do godziny, więc appka mówi „około 9:00” — dokładne
+     alarmy odrzucone (osobne uprawnienie, ograniczone przez Google Play);
    - zgoda: własne pytanie po pierwszej odpowiedzi na kartę „Do potwierdzenia”,
      systemowe okno dopiero po „Tak, przypominaj”;
    - Ustawienia → Powiadomienia: trzy przełączniki rodzajów i „Pokazuj kwoty
