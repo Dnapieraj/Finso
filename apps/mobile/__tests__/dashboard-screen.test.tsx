@@ -68,6 +68,30 @@ describe("budget", () => {
     expect(screen.getByText("Dzień 19 z 30")).toBeOnTheScreen();
   });
 
+  // At "Bardzo duży" × the largest system font the amount would be wider
+  // than the phone: it shrinks to fit instead of breaking or overflowing.
+  it("the main amount stays on one line and shrinks to fit the width", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({ ...testBudget, availableBalance: 1_234_567_89 });
+    await openDashboard();
+
+    const amount = await screen.findByText(zl("1 234 567 zł"));
+    expect(amount).toHaveProp("numberOfLines", 1);
+    expect(amount).toHaveProp("adjustsFontSizeToFit", true);
+  });
+
+  it("the amount under the line fits the same way", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      availableBalance: -1_234_567_89,
+      dailyAllowance: -720,
+    });
+    await openDashboard();
+
+    const amount = await screen.findByText(zl("1 234 568 zł"));
+    expect(amount).toHaveProp("numberOfLines", 1);
+    expect(amount).toHaveProp("adjustsFontSizeToFit", true);
+  });
+
   it("below zero: says how far under the line, rounded up, and hides the daily amount", async () => {
     fakeApi.budget.current.mockResolvedValueOnce({
       ...testBudget,
