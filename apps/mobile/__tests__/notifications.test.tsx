@@ -355,11 +355,11 @@ describe("Ustawienia → Powiadomienia", () => {
     ).toBeDisabled();
   });
 
-  it("mówi, o której przychodzą przypomnienia", async () => {
+  it("mówi, że przypomnienia przychodzą około 9:00 (Android może je opóźnić)", async () => {
     setPermission("granted");
     await openNotificationSettings();
 
-    expect(await screen.findByText("Przypomnienia przychodzą o 9:00.")).toBeOnTheScreen();
+    expect(await screen.findByText("Przypomnienia przychodzą około 9:00.")).toBeOnTheScreen();
   });
 });
 

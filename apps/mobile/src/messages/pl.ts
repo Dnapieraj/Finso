@@ -270,7 +270,8 @@ export const pl = {
     overdue: "Zaległe pozycje",
     showAmounts: "Pokazuj kwoty w powiadomieniach",
     showAmountsHint: "Powiadomienia widać na zablokowanym ekranie.",
-    time: "Przypomnienia przychodzą o 9:00.",
+    // "około": Android delivers inexact alarms up to an hour late to save battery.
+    time: "Przypomnienia przychodzą około 9:00.",
     blocked: "Powiadomienia są wyłączone w ustawieniach telefonu.",
     loadError: "Nie udało się wczytać ustawień powiadomień.",
     unavailable: "Powiadomienia działają w zainstalowanej aplikacji, nie w Expo Go.",
