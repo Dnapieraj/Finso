@@ -75,6 +75,19 @@ na Androidzie. **iPhone:** z Windowsa tylko przez EAS Build w chmurze — plan w
 Po zmianie `.env` uruchom serwer ponownie z czyszczeniem cache: `pnpm --filter mobile start --clear`.
 Bez poprawnego `EXPO_PUBLIC_API_URL` aplikacja zatrzyma się od razu z komunikatem, co ustawić.
 
+## Konta testowe (lokalna baza)
+
+Tylko do lokalnego Postgresa z Dockera — to nie są konta na żadnym serwerze.
+
+| E-mail                    | Hasło                   | Co ma                                                              |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| `demo@finso.app`          | `demo-haslo-123`        | Pełne dane demo: dochód, zobowiązania, cele, wydatki               |
+| `potwierdzenia@finso.app` | `potwierdzenia-haslo-1` | Wypłata i czynsz 4. dnia miesiąca — karta „Do potwierdzenia”, push |
+| `przeglad0@finso.app`     | `przeglad-haslo-1`      | 400 wydatków — test wydajności historii                            |
+
+`pnpm --filter api db:seed` **ich nie tworzy** (seed dodaje tylko kategorie systemowe) — powstały
+ręcznie w bazie dewelopera. Na świeżej bazie załóż konto w aplikacji („Nie masz konta? Załóż je”).
+
 ## Jak to jest zbudowane
 
 - `app/` — ekrany (Expo Router: plik = ekran). `_layout.tsx` ładuje fonty, motyw i TanStack Query
