@@ -1,6 +1,7 @@
+import { theme } from "@vireo/tokens";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Switch, Text, useColorScheme, View } from "react-native";
 
 import { Button } from "../components/button";
 import { pl } from "../messages/pl";
@@ -92,6 +93,40 @@ export function DeleteWithConfirmation({
       >
         {t.cancel}
       </Button>
+    </View>
+  );
+}
+
+/** A labelled switch on a settings card; `hint` explains it under the label. */
+export function SwitchRow({
+  label,
+  hint,
+  value,
+  disabled,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: boolean;
+  disabled: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
+  return (
+    <View className="min-h-12 flex-row items-center justify-between gap-3 px-4 py-3">
+      <View className="shrink gap-0.5">
+        <Text className="font-sans-semibold text-base text-card-foreground">{label}</Text>
+        {hint && <Text className="font-sans text-sm text-muted-foreground">{hint}</Text>}
+      </View>
+      <Switch
+        accessibilityLabel={label}
+        accessibilityHint={hint}
+        accessibilityState={{ disabled, checked: value }}
+        value={value}
+        disabled={disabled}
+        onValueChange={onChange}
+        trackColor={{ true: colors.primary, false: colors.input }}
+      />
     </View>
   );
 }

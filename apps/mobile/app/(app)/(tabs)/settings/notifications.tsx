@@ -1,5 +1,4 @@
-import { theme } from "@vireo/tokens";
-import { Linking, Switch, Text, useColorScheme, View } from "react-native";
+import { Linking, Text, View } from "react-native";
 
 import { Button } from "../../../../src/components/button";
 import { LoadError, Skeleton } from "../../../../src/components/query-states";
@@ -12,7 +11,7 @@ import {
   useReminderPreferences,
   useSaveReminderPreferences,
 } from "../../../../src/notifications/preferences";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
+import { BackButton, SwitchRow } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.notifications;
 
@@ -21,39 +20,6 @@ const KINDS = [
   ["payments", t.payments],
   ["overdue", t.overdue],
 ] as const satisfies readonly (readonly [keyof ReminderPreferences, string])[];
-
-function SwitchRow({
-  label,
-  hint,
-  value,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  hint?: string;
-  value: boolean;
-  disabled: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
-  return (
-    <View className="min-h-12 flex-row items-center justify-between gap-3 px-4 py-3">
-      <View className="shrink gap-0.5">
-        <Text className="font-sans-semibold text-base text-card-foreground">{label}</Text>
-        {hint && <Text className="font-sans text-sm text-muted-foreground">{hint}</Text>}
-      </View>
-      <Switch
-        accessibilityLabel={label}
-        accessibilityHint={hint}
-        accessibilityState={{ disabled, checked: value }}
-        value={value}
-        disabled={disabled}
-        onValueChange={onChange}
-        trackColor={{ true: colors.primary, false: colors.input }}
-      />
-    </View>
-  );
-}
 
 /**
  * Which reminders the phone shows. A switch reads "on" only when the
