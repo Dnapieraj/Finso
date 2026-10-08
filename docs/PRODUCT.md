@@ -394,10 +394,11 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
 „Nowy wydatek”) mają dokąd wrócić (`52f0e74`).
 
 1. **Potwierdzanie wpływów i stałych płatności** (Faza 1, punkt 6) —
-   **W TRAKCIE**: silnik i API gotowe (`d9295aa`), karta „Do potwierdzenia”
-   na Dashboardzie w realizacji
-2. **Powiadomienia** (`expo-notifications`): dzień wypłaty, stała płatność,
-   zaległe pozycje. Ustalone 4.10.2026:
+   **ZROBIONE**: silnik i API (`d9295aa`), karta „Do potwierdzenia”
+   na Dashboardzie (`ca2c1b6`, `b8795fa`)
+2. **Powiadomienia** (`expo-notifications`) — **ZROBIONE** (`27718a7`,
+   poprawki do `f175fe4`): dzień wypłaty, stała płatność, zaległe pozycje.
+   Ustalone 4.10.2026:
    - **lokalne**, planowane na telefonie z harmonogramu — bez serwera push
      i bez wysyłania danych finansowych do Apple/Google;
    - stała godzina 9:00 (wybór godziny — Faza 2); Android dostarcza takie
