@@ -58,8 +58,12 @@ function PhoneLockLostNotice() {
 
 /**
  * Wraps the signed-in app. The app stays mounted under the lock, so after
- * unlocking the user is exactly where they were; while hidden it is also
- * hidden from screen readers.
+ * unlocking the user is exactly where they were.
+ *
+ * Hidden with display: none, not just covered: on Android the screen
+ * reader still walks into the navigator's native screens under an overlay
+ * (importantForAccessibility does not reach them), so TalkBack would read
+ * the amounts and never find "Odblokuj".
  */
 export function LockGate({ active, children }: { active: boolean; children: ReactNode }) {
   const lock = useAppLock();
@@ -79,14 +83,10 @@ export function LockGate({ active, children }: { active: boolean; children: Reac
 
   return (
     <View className="flex-1">
-      <View
-        className="flex-1"
-        accessibilityElementsHidden={hidden}
-        importantForAccessibility={hidden ? "no-hide-descendants" : "auto"}
-      >
+      <View className="flex-1" style={hidden ? { display: "none" } : undefined}>
         {children}
       </View>
-      {hidden && <View className="absolute inset-0 bg-background">{locked && <LockScreen />}</View>}
+      {hidden && <View className="flex-1 bg-background">{locked && <LockScreen />}</View>}
       {active && lock.phoneLockLost && <PhoneLockLostNotice />}
     </View>
   );
