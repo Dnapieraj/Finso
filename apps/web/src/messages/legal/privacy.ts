@@ -10,7 +10,7 @@ export const privacyPolicy = {
   title: "Polityka prywatności",
   description:
     "Jakie dane zbiera aplikacja Finso, w jakim celu, komu je przekazujemy, jak długo je przechowujemy i jakie masz prawa.",
-  updated: { iso: "2026-09-24", label: "24 września 2026" },
+  updated: { iso: "2026-10-08", label: "8 października 2026" },
   intro: [
     "Ta polityka opisuje, jak aplikacja mobilna Finso i ta strona przetwarzają dane osobowe. Staramy się pisać prosto i konkretnie.",
   ],
@@ -64,13 +64,13 @@ export const privacyPolicy = {
       ],
     },
     {
-      id: "biometria",
-      title: "Logowanie biometryczne",
+      id: "blokada-aplikacji",
+      title: "Blokada aplikacji",
       blocks: [
         {
           type: "p",
           text: [
-            "Jeśli włączysz logowanie odciskiem palca lub twarzą, sprawdza je system telefonu (Face ID, Touch ID lub biometria Androida). Finso dostaje tylko odpowiedź, czy weryfikacja się udała, i nie zbiera danych biometrycznych.",
+            "Jeśli włączysz blokadę aplikacji w Ustawieniach, przy otwarciu Finso i po powrocie do niego sprawdza cię system telefonu: odciskiem palca, twarzą (Face ID, Touch ID lub biometria Androida) albo kodem blokady ekranu telefonu. Finso dostaje tylko odpowiedź, czy weryfikacja się udała. Nie zbiera danych biometrycznych i nie zna kodu telefonu.",
           ],
         },
       ],

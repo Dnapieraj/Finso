@@ -130,11 +130,16 @@ test("privacy policy names only the processors in use", async ({ page }) => {
   await expect(page.locator("main")).not.toContainText(/Sentry|PostHog/);
 });
 
-test("privacy policy says biometrics stay on the phone", async ({ page }) => {
+// Matches the app lock in apps/mobile (src/lock): biometrics or the phone's
+// own code, checked by the system, and the app only learns yes or no.
+test("privacy policy says the app lock is checked by the phone", async ({ page }) => {
   await page.goto("/polityka-prywatnosci");
-  const biometrics = page.getByRole("region", { name: "Logowanie biometryczne" });
-  await expect(biometrics).toContainText("nie zbiera danych biometrycznych");
-  await expect(biometrics).toContainText("system telefonu");
+  const lock = page.getByRole("region", { name: "Blokada aplikacji" });
+  await expect(lock).toContainText("system telefonu");
+  await expect(lock).toContainText("kodem blokady ekranu");
+  await expect(lock).toContainText("Nie zbiera danych biometrycznych");
+  await expect(lock).toContainText("nie zna kodu");
+  await expect(page.locator("main time")).toHaveAttribute("datetime", "2026-10-08");
 });
 
 test("terms say payments go through the stores and are not financial advice", async ({ page }) => {
