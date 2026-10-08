@@ -1,0 +1,20 @@
+# Every text file is stored and checked out with LF, whatever core.autocrlf
+# says on the machine: Prettier and CI expect LF, and Windows checkouts with
+# CRLF showed unchanged files as modified.
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run in cmd.exe.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.jar binary
