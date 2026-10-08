@@ -4,3 +4,5 @@ apps/web/test-results/
 apps/web/playwright-report/
 apps/mobile/.expo/
 apps/api/src/generated/
+apps/mobile/android/
+apps/mobile/ios/
