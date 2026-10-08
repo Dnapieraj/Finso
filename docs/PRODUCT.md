@@ -416,9 +416,9 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    o pozycjach znanych w chwili planowania. Rozwiązanie (push z serwera) —
    dopiero jeśli okaże się potrzebne
 
-3. **Wygląd:** rozmiar tekstu (Systemowy / Duży / Bardzo duży) i motyw
-   (Systemowy / Jasny / Ciemny); naprawa ekranów, które rozsypują się przy
-   dużym tekście
+3. **Wygląd** — **ZROBIONE** (`32eaae2`, `07b00cb`): rozmiar tekstu
+   (Systemowy / Duży / Bardzo duży) i motyw (Systemowy / Jasny / Ciemny);
+   naprawa ekranów, które rozsypują się przy dużym tekście
 4. **Blokada biometrią** (`expo-local-authentication`) z kodem zapasowym
 5. **Tryb prywatny** (ukrywanie kwot), wibracje (`expo-haptics`), animacja
    głównej liczby, komunikat „Brak połączenia” (NetInfo)
