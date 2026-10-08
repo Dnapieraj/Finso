@@ -260,9 +260,31 @@ export const pl = {
     app: "Aplikacja",
     notifications: "Powiadomienia",
     appearance: "Wygląd",
+    lock: "Blokada aplikacji",
+    lockOn: "Włączona",
+    lockOff: "Wyłączona",
     logout: "Wyloguj się",
     loggingOut: "Wylogowywanie…",
     deleteAccount: "Usuń konto",
+  },
+  lock: {
+    title: "Blokada aplikacji",
+    what: "Przy otwarciu i po minucie w tle Finso poprosi o odcisk palca, twarz albo kod telefonu.",
+    privacy:
+      "Sprawdza je telefon. Finso dostaje tylko odpowiedź, czy się udało — nie widzi odcisku ani twarzy.",
+    preview:
+      "Gdy blokada jest włączona, podgląd Finso w ostatnich aplikacjach jest zasłonięty, a zrzuty ekranu są puste.",
+    noScreenLock:
+      "Telefon nie ma ustawionej blokady ekranu. Ustaw w nim kod, odcisk palca albo rozpoznawanie twarzy, a potem wróć tutaj.",
+    loadError: "Nie udało się sprawdzić blokady ekranu telefonu.",
+    locked: "Finso jest zablokowane",
+    lockedHint: "Odblokuj odciskiem palca, twarzą albo kodem telefonu.",
+    unlock: "Odblokuj",
+    prompt: "Odblokuj Finso",
+    cancel: "Anuluj",
+    phoneLockLost:
+      "Blokada aplikacji jest wyłączona, bo telefon nie ma już ustawionej blokady ekranu.",
+    dismiss: "OK",
   },
   appearance: {
     title: "Wygląd",

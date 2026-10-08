@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 import type { TokenStore } from "@vireo/shared/api";
 
+import { appLock } from "./lock/store";
 import { cancelReminders } from "./notifications/schedule";
 import { queryClient } from "./query-client";
 import { secureTokenStore } from "./secure-token-store";
@@ -107,6 +108,8 @@ export const session = createSessionStore({
   onSignedOut: () => {
     queryClient.clear();
     void cancelReminders();
+    // The next person to sign in on this phone starts without it.
+    void appLock.disable();
   },
 });
 

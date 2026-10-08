@@ -5,6 +5,7 @@ import { useAccount } from "../../../../src/auth/account";
 import { useLogout } from "../../../../src/auth/hooks";
 import { Button } from "../../../../src/components/button";
 import { Screen } from "../../../../src/components/screen";
+import { useAppLock } from "../../../../src/lock/store";
 import { pl } from "../../../../src/messages/pl";
 
 const t = pl.settings;
@@ -32,6 +33,7 @@ function SettingsLink({ label, value, href }: { label: string; value?: string; h
 export default function SettingsScreen() {
   const logout = useLogout();
   const account = useAccount();
+  const lock = useAppLock();
 
   return (
     <Screen title={t.title}>
@@ -56,6 +58,11 @@ export default function SettingsScreen() {
         <View className="divide-y divide-border rounded-2xl bg-card">
           <SettingsLink label={t.appearance} href="/settings/appearance" />
           <SettingsLink label={t.notifications} href="/settings/notifications" />
+          <SettingsLink
+            label={t.lock}
+            value={lock.enabled ? t.lockOn : t.lockOff}
+            href="/settings/lock"
+          />
         </View>
       </View>
       <Button

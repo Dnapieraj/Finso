@@ -19,8 +19,6 @@ import { findTab } from "./helpers/tabs";
 jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
 }));
-jest.mock("expo-local-authentication", () => require("./helpers/fake-local-authentication"));
-jest.mock("expo-screen-capture", () => require("./helpers/fake-screen-capture"));
 
 /** formatMoney puts a no-break space before "zł"; testBudget leaves 1234 zł. */
 const AMOUNT = "1234 zł";
@@ -64,22 +62,31 @@ const press = async (name: string) => {
   await fireEvent.press(await button(name));
 };
 const lockSwitch = () => screen.findByRole("switch", { name: LOCK_SWITCH });
+// For waitFor: a findBy inside it would nest one waitFor in another.
+const getLockSwitch = () => screen.getByRole("switch", { name: LOCK_SWITCH });
 
 async function openLockSettings() {
   await renderApp("/", { signedIn: true });
   await fireEvent.press(await findTab("Ustawienia"));
   await press("Blokada aplikacji");
   await screen.findByRole("header", { name: "Blokada aplikacji" });
+  // The switch appears once the app knows whether the phone has a screen lock.
+  await lockSwitch();
 }
 
-/** Turns the lock on through the settings, then starts the app again. */
-async function enableLockAndRestart() {
+/**
+ * Turns the lock on through the settings, then starts the app again.
+ * `beforeRestart` sets up the prompt shown at the restart, not the one
+ * that confirmed turning the lock on.
+ */
+async function enableLockAndRestart(beforeRestart?: () => void) {
   await openLockSettings();
   await fireEvent(await lockSwitch(), "valueChange", true);
-  await waitFor(async () => {
-    expect(await lockSwitch()).toBeChecked();
+  await waitFor(() => {
+    expect(getLockSwitch()).toBeChecked();
   });
   authenticateAsync.mockClear();
+  beforeRestart?.();
   await renderApp("/", { signedIn: true });
 }
 
@@ -127,8 +134,8 @@ describe("Ustawienia → Blokada aplikacji", () => {
     await fireEvent(await lockSwitch(), "valueChange", true);
 
     expect(authenticateAsync).toHaveBeenCalledTimes(1);
-    await waitFor(async () => {
-      expect(await lockSwitch()).toBeChecked();
+    await waitFor(() => {
+      expect(getLockSwitch()).toBeChecked();
     });
     expect(await getItemAsync("app-lock")).toBe("on");
     expect(previewHidden()).toBe(true);
@@ -164,8 +171,8 @@ describe("Ustawienia → Blokada aplikacji", () => {
 
     await fireEvent(await lockSwitch(), "valueChange", true);
 
-    await waitFor(async () => {
-      expect(await lockSwitch()).toBeChecked();
+    await waitFor(() => {
+      expect(getLockSwitch()).toBeChecked();
     });
   });
 
@@ -185,15 +192,15 @@ describe("Ustawienia → Blokada aplikacji", () => {
   it("wyłączenie nie pyta o odblokowanie (appka i tak jest otwarta) i odsłania podgląd", async () => {
     await openLockSettings();
     await fireEvent(await lockSwitch(), "valueChange", true);
-    await waitFor(async () => {
-      expect(await lockSwitch()).toBeChecked();
+    await waitFor(() => {
+      expect(getLockSwitch()).toBeChecked();
     });
     authenticateAsync.mockClear();
 
     await fireEvent(await lockSwitch(), "valueChange", false);
 
-    await waitFor(async () => {
-      expect(await lockSwitch()).not.toBeChecked();
+    await waitFor(() => {
+      expect(getLockSwitch()).not.toBeChecked();
     });
     expect(authenticateAsync).not.toHaveBeenCalled();
     expect(await getItemAsync("app-lock")).toBeNull();
@@ -211,8 +218,7 @@ describe("przy otwarciu appki", () => {
   });
 
   it("blokada włączona — kwoty zasłonięte, systemowe okno samo się pokazuje, po sukcesie Dashboard", async () => {
-    holdNextPrompt();
-    await enableLockAndRestart();
+    await enableLockAndRestart(holdNextPrompt);
 
     expect(await screen.findByText(LOCKED)).toBeOnTheScreen();
     expect(screen.queryByText(AMOUNT)).not.toBeOnTheScreen();
@@ -226,8 +232,9 @@ describe("przy otwarciu appki", () => {
   });
 
   it("anulowane okno — zostaje zablokowana, „Odblokuj” pyta ponownie", async () => {
-    answerPromptWith("user_cancel");
-    await enableLockAndRestart();
+    await enableLockAndRestart(() => {
+      answerPromptWith("user_cancel");
+    });
 
     expect(await screen.findByText(LOCKED)).toBeOnTheScreen();
     expect(screen.queryByText(AMOUNT)).not.toBeOnTheScreen();
@@ -239,8 +246,9 @@ describe("przy otwarciu appki", () => {
   });
 
   it("zablokowana appka pozwala się wylogować — wyjście, gdy odblokowanie nie działa", async () => {
-    answerPromptWith("user_cancel");
-    await enableLockAndRestart();
+    await enableLockAndRestart(() => {
+      answerPromptWith("user_cancel");
+    });
     await screen.findByText(LOCKED);
 
     await press("Wyloguj się");

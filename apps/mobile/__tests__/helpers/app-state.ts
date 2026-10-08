@@ -9,9 +9,9 @@ const listeners = new Set<(state: AppStateStatus) => void>();
 
 jest.spyOn(AppState, "addEventListener").mockImplementation((type, listener) => {
   if (type !== "change") return { remove: () => undefined };
-  const handler = listener as (state: AppStateStatus) => void;
-  listeners.add(handler);
-  return { remove: () => listeners.delete(handler) };
+
+  listeners.add(listener);
+  return { remove: () => listeners.delete(listener) };
 });
 
 export async function moveAppTo(state: AppStateStatus): Promise<void> {

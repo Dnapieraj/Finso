@@ -19,3 +19,10 @@ jest.mock("./src/notifications/native", () => ({
   ...jest.requireActual("./src/notifications/native"),
   loadNotifications: () => Promise.resolve(require("expo-notifications")),
 }));
+
+// Biometrics, the phone code screen and the app switcher do not exist under
+// Jest; tests set what the phone has enrolled and read what the app hid.
+jest.mock("expo-local-authentication", () =>
+  require("./__tests__/helpers/fake-local-authentication"),
+);
+jest.mock("expo-screen-capture", () => require("./__tests__/helpers/fake-screen-capture"));
