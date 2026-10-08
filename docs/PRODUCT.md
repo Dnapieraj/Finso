@@ -420,7 +420,17 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
 3. **Wygląd** — **ZROBIONE** (`32eaae2`, `07b00cb`): rozmiar tekstu
    (Systemowy / Duży / Bardzo duży) i motyw (Systemowy / Jasny / Ciemny);
    naprawa ekranów, które rozsypują się przy dużym tekście
-4. **Blokada biometrią** (`expo-local-authentication`) z kodem zapasowym
+4. **Blokada biometrią** — **ZROBIONE** (`fd92aaf`..`817ec46`), ustalone 8.10.2026:
+   - Ustawienia → Blokada aplikacji, domyślnie wyłączona; włączenie wymaga
+     udanego odblokowania; bez blokady ekranu w telefonie się nie da;
+   - prosi przy otwarciu i po **1 minucie** w tle; zapasowo **kod telefonu**
+     (systemowy) — bez własnego PIN-u w appce;
+   - podgląd w ostatnich aplikacjach zasłonięty (`expo-screen-capture`,
+     zaakceptowane 8.10.2026): na Androidzie FLAG_SECURE, więc przy włączonej
+     blokadzie zrzuty ekranu Finso są puste;
+   - telefon bez blokady ekranu → appka sama wyłącza blokadę i mówi dlaczego;
+   - każde zakończenie sesji (wylogowanie, wygaśnięcie, usunięcie konta)
+     wyłącza blokadę; polityka prywatności opisuje to samo
 5. **Tryb prywatny** (ukrywanie kwot), wibracje (`expo-haptics`), animacja
    głównej liczby, komunikat „Brak połączenia” (NetInfo)
 6. **Szablony i ostatnio używane wydatki**; dzienny limit z przenoszeniem
