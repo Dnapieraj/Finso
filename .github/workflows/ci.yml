@@ -3,9 +3,17 @@ name: CI
 on:
   push:
   pull_request:
+  # Every morning, without the Turborepo cache: a test that starts failing
+  # because the date moved on (not because the code changed) would otherwise
+  # keep "passing" from the cache. Happened with the history tests in
+  # October 2026. GitHub e-mails the author of this schedule on failure.
+  schedule:
+    - cron: "0 4 * * *"
+  workflow_dispatch:
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # The event in the group: a push must not cancel the daily run, nor the other way round.
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 # prisma.config.ts requires DATABASE_URL even for `prisma generate` (run on
@@ -52,6 +60,9 @@ jobs:
 
       - name: Lint, typecheck, test
         run: pnpm turbo run lint typecheck test
+        env:
+          # Scheduled and manual runs ignore cached results (see `schedule` above).
+          TURBO_FORCE: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
   web-e2e:
     name: Web e2e (Playwright)
