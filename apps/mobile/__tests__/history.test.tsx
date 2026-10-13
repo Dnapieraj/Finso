@@ -16,6 +16,34 @@ jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
 }));
 
+// Only the clock is fake: 28.09, the day testBudget is computed for. Until
+// the budget loads, the screen takes "today" from the phone; on a real day
+// outside the test period it would open another period.
+beforeEach(() => {
+  jest.useFakeTimers({
+    now: new Date(2026, 8, 28, 8, 0),
+    doNotFake: [
+      "nextTick",
+      "setImmediate",
+      "clearImmediate",
+      "setTimeout",
+      "clearTimeout",
+      "setInterval",
+      "clearInterval",
+      "queueMicrotask",
+      "requestAnimationFrame",
+      "cancelAnimationFrame",
+      "requestIdleCallback",
+      "cancelIdleCallback",
+      "hrtime",
+      "performance",
+    ],
+  });
+});
+afterEach(() => {
+  jest.useRealTimers();
+});
+
 /** formatMoney puts no-break spaces between digit groups and before "zł". */
 const zl = (text: string) => text.replaceAll(" ", "\u00A0");
 
