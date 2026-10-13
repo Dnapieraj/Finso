@@ -481,7 +481,11 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
     wersję appki, starsza wersja pokazuje ekran z przyciskiem do sklepu.
     Musi być w pierwszej opublikowanej wersji — wersji już zainstalowanych
     w telefonach nie da się później tego nauczyć
-13. **Testy e2e mobile**
+13. **Testy e2e mobile.** Przed nimi: nowy development build Androida
+    (`expo-haptics` i NetInfo z punktu 5 to moduły natywne) i sprawdzenie
+    punktu 5 na urządzeniu — wibracje (zapis, błąd, wyłączenie
+    w Ustawieniach) i „Brak połączenia” (tryb samolotowy, powrót sieci,
+    odświeżenie danych)
 
 Potem etap 8 (RevenueCat, publikacja). Faza 2 bez zmian.
 
