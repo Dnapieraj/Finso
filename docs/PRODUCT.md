@@ -432,8 +432,26 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    - telefon bez blokady ekranu → appka sama wyłącza blokadę i mówi dlaczego;
    - każde zakończenie sesji (wylogowanie, wygaśnięcie, usunięcie konta)
      wyłącza blokadę; polityka prywatności opisuje to samo
-5. **Tryb prywatny** (ukrywanie kwot), wibracje (`expo-haptics`), animacja
-   głównej liczby, komunikat „Brak połączenia” (NetInfo)
+5. **Tryb prywatny, wibracje, animacja, „Brak połączenia”** — **ZROBIONE**
+   (`d98b7f4`..`ea9f735`), ustalone 13.10.2026:
+   - tryb prywatny: oko przy „Możesz wydać”, kwoty jako `•••` wszędzie
+     (Dashboard, Historia z wykresem, Cele, Symulator, komunikaty, karta
+     „Do potwierdzenia”, listy w Ustawieniach), czytnik ekranu mówi „ukryta
+     kwota”; pola, w które się wpisuje, zostają widoczne; słowa i procenty
+     zostają; zapamiętane na urządzeniu (też po wylogowaniu), wczytane przed
+     pierwszym widokiem. Powiadomienia mają osobne „Pokazuj kwoty”;
+   - wibracje (`expo-haptics`): lekka przy zapisie (szybkie dodanie już
+     przy tapnięciu kategorii), wzór błędu przy nieudanym zapisie i przy
+     formularzu z błędami; Ustawienia → Wibracje, domyślnie włączone;
+   - „Możesz wydać” liczy się płynnie (600 ms, wyhamowanie); czytnik ekranu
+     dostaje od razu wynik; bez animacji przy „Ogranicz ruch” i przy
+     przejściu przez zero (zmienia się napis);
+   - NetInfo steruje stanem online TanStack Query: pasek „Brak połączenia”
+     u góry, zapytania czekają zamiast padać, po powrocie appka sama
+     odświeża dane. Dostęp do internetu sprawdzany przez `/health` API —
+     domyślnie NetInfo na iOS pyta co minutę serwer Google. Skutek: gdy API
+     nie działa, appka też pokazuje „Brak połączenia”;
+   - obie biblioteki natywne: emulator potrzebuje nowego development buildu
 6. **Szablony i ostatnio używane wydatki**; dzienny limit z przenoszeniem
    pokazany wprost (Faza 1, punkty 10–11)
 7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12)
