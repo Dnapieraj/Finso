@@ -7,6 +7,11 @@ import { Button } from "../../../../src/components/button";
 import { Screen } from "../../../../src/components/screen";
 import { useAppLock } from "../../../../src/lock/store";
 import { pl } from "../../../../src/messages/pl";
+import {
+  devicePreferences,
+  useDevicePreferences,
+} from "../../../../src/preferences/device-preferences";
+import { SwitchRow } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.settings;
 
@@ -34,6 +39,7 @@ export default function SettingsScreen() {
   const logout = useLogout();
   const account = useAccount();
   const lock = useAppLock();
+  const preferences = useDevicePreferences();
 
   return (
     <Screen title={t.title}>
@@ -62,6 +68,15 @@ export default function SettingsScreen() {
             label={t.lock}
             value={lock.enabled ? t.lockOn : t.lockOff}
             href="/settings/lock"
+          />
+          <SwitchRow
+            label={t.haptics}
+            hint={t.hapticsHint}
+            value={preferences.haptics}
+            disabled={false}
+            onChange={(on) => {
+              void devicePreferences.set({ haptics: on });
+            }}
           />
         </View>
       </View>

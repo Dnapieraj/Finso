@@ -1,4 +1,4 @@
-import { formatMoney, grosze, type IncomeSource } from "@vireo/shared";
+import { grosze, type IncomeSource } from "@vireo/shared";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
@@ -7,6 +7,7 @@ import { Button } from "../../../../../src/components/button";
 import { LoadError, Skeleton } from "../../../../../src/components/query-states";
 import { Screen } from "../../../../../src/components/screen";
 import { pl } from "../../../../../src/messages/pl";
+import { useMoney, type Money } from "../../../../../src/privacy/money";
 import { useIncomeSources } from "../../../../../src/settings/queries";
 import { scheduleSummary } from "../../../../../src/settings/schedule";
 import { BackButton, ListRow } from "../../../../../src/settings/settings-screen-parts";
@@ -14,10 +15,10 @@ import { BackButton, ListRow } from "../../../../../src/settings/settings-screen
 const t = pl.budgetSettings;
 
 /** "5000 zł · co miesiąc, 10. dnia", or "Nieregularny". */
-function describe(source: IncomeSource): string {
+function describe(source: IncomeSource, money: Money): string {
   if (source.kind === "IRREGULAR" || source.expectedAmount === null) return t.summary.irregular;
   // Income rounds down: the list must not promise more than comes in.
-  const amount = formatMoney(grosze(source.expectedAmount), { whole: "down" });
+  const amount = money.format(grosze(source.expectedAmount), { whole: "down" });
   return t.summary.row(
     amount,
     source.schedule ? scheduleSummary(source.schedule) : t.summary.oncePerPeriod,
@@ -27,6 +28,7 @@ function describe(source: IncomeSource): string {
 /** Incomes the budget counts. Archived ones keep their history but are not listed. */
 export default function IncomeList() {
   const sources = useIncomeSources();
+  const money = useMoney();
 
   let list: ReactNode;
   if (sources.isPending) {
@@ -44,7 +46,7 @@ export default function IncomeList() {
             <ListRow
               key={source.id}
               name={source.name}
-              details={[describe(source)]}
+              details={[describe(source, money)]}
               onPress={() => {
                 router.push(`/settings/income/${source.id}`);
               }}

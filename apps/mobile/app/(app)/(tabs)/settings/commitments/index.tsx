@@ -1,4 +1,4 @@
-import { formatMoney, grosze, type RecurringRule } from "@vireo/shared";
+import { grosze, type RecurringRule } from "@vireo/shared";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { Text, View } from "react-native";
@@ -8,6 +8,7 @@ import { LoadError, Skeleton } from "../../../../../src/components/query-states"
 import { Screen } from "../../../../../src/components/screen";
 import { useCategories } from "../../../../../src/dashboard/queries";
 import { pl } from "../../../../../src/messages/pl";
+import { useMoney, type Money } from "../../../../../src/privacy/money";
 import { useRecurringRules } from "../../../../../src/settings/queries";
 import { scheduleSummary } from "../../../../../src/settings/schedule";
 import { BackButton, ListRow } from "../../../../../src/settings/settings-screen-parts";
@@ -15,9 +16,9 @@ import { BackButton, ListRow } from "../../../../../src/settings/settings-screen
 const t = pl.budgetSettings;
 
 /** "1500 zł · co miesiąc, 5. dnia" — a cost rounds up, never promising more money. */
-function describe(rule: RecurringRule): string {
+function describe(rule: RecurringRule, money: Money): string {
   return t.summary.row(
-    formatMoney(grosze(rule.expectedAmount ?? 0), { whole: "up" }),
+    money.format(grosze(rule.expectedAmount ?? 0), { whole: "up" }),
     scheduleSummary(rule),
   );
 }
@@ -28,6 +29,7 @@ function describe(rule: RecurringRule): string {
  */
 export default function CommitmentList() {
   const rules = useRecurringRules();
+  const money = useMoney();
   const categories = useCategories();
   const categoryName = (id: string | null) =>
     categories.data?.find((category) => category.id === id)?.name;
@@ -51,7 +53,7 @@ export default function CommitmentList() {
                 key={rule.id}
                 // Required for expense rules by the API; `??` only satisfies the type.
                 name={rule.name ?? ""}
-                details={category ? [describe(rule), category] : [describe(rule)]}
+                details={category ? [describe(rule, money), category] : [describe(rule, money)]}
                 onPress={() => {
                   router.push(`/settings/commitments/${rule.id}`);
                 }}

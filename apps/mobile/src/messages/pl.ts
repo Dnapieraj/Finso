@@ -263,6 +263,8 @@ export const pl = {
     lock: "Blokada aplikacji",
     lockOn: "Włączona",
     lockOff: "Wyłączona",
+    haptics: "Wibracje",
+    hapticsHint: "Lekka przy zapisie, inna przy błędzie.",
     logout: "Wyloguj się",
     loggingOut: "Wylogowywanie…",
     deleteAccount: "Usuń konto",
@@ -490,6 +492,16 @@ export const pl = {
     submit: "Usuń konto na zawsze",
     submitting: "Usuwanie…",
     cancel: "Anuluj",
+  },
+  privacy: {
+    hide: "Ukryj kwoty",
+    show: "Pokaż kwoty",
+    // Read out instead of "•••": a screen reader would say "bullet bullet bullet".
+    hiddenSpoken: "ukryta kwota",
+    hiddenMain: "Ukryta kwota",
+  },
+  network: {
+    offline: "Brak połączenia",
   },
   validation: {
     emailRequired: "Podaj adres e-mail.",

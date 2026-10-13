@@ -26,3 +26,8 @@ jest.mock("expo-local-authentication", () =>
   require("./__tests__/helpers/fake-local-authentication"),
 );
 jest.mock("expo-screen-capture", () => require("./__tests__/helpers/fake-screen-capture"));
+
+// No vibration motor and no network monitor under Jest; tests read what the
+// phone would have felt and switch the network themselves.
+jest.mock("expo-haptics", () => require("./__tests__/helpers/fake-haptics"));
+jest.mock("@react-native-community/netinfo", () => require("./__tests__/helpers/fake-netinfo"));

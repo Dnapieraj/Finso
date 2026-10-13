@@ -4,6 +4,7 @@ import { useRef } from "react";
 
 import type { Grosze, IdempotentDraft } from "@vireo/shared";
 
+import { haptics } from "../feedback/haptics";
 import { pl } from "../messages/pl";
 import { queryClient } from "../query-client";
 import { refreshBudget } from "./queries";
@@ -41,10 +42,12 @@ export function useSettingsMutation<Input, Result>(
   return useMutation({
     mutationFn,
     onSuccess: () => {
+      haptics.saved();
       void queryClient.invalidateQueries({ queryKey: listKey });
       void refreshBudget();
       router.back();
     },
+    onError: haptics.failed,
   });
 }
 

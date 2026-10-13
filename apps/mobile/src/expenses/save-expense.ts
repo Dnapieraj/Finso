@@ -10,6 +10,7 @@ import {
 
 import { api } from "../api";
 import { BUDGET_KEY, RECENT_EXPENSES_KEY } from "../dashboard/queries";
+import { haptics } from "../feedback/haptics";
 import { queryClient } from "../query-client";
 import { dismissNotice, showNotice, type ExpenseNotice } from "./notices";
 import { prependExpense, removeExpense } from "./optimistic";
@@ -56,6 +57,8 @@ async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<v
   optimisticIds += 1;
   const localId = `optimistic-${String(optimisticIds)}`;
   const { amount, date, category } = expense;
+  // At the tap, like the numbers on screen; a failure later feels different.
+  haptics.saved();
 
   // A refetch in flight would overwrite the optimistic numbers.
   await Promise.all([
@@ -103,6 +106,7 @@ async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<v
     }
     refreshFromServer();
   } catch {
+    haptics.failed();
     dismissNotice(notice);
     if (!state.undone) {
       updateBudget((summary) => removeExpenseFromSummary(summary, amount));

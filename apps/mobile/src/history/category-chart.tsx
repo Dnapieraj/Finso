@@ -1,8 +1,9 @@
-import { formatMoney, grosze, type Category, type TransactionSummary } from "@vireo/shared";
+import { grosze, type Category, type TransactionSummary } from "@vireo/shared";
 import { Pressable, Text, View } from "react-native";
 
 import { plural } from "../format/plural";
 import { pl } from "../messages/pl";
+import { useMoney } from "../privacy/money";
 
 const t = pl.history;
 
@@ -29,6 +30,7 @@ export function CategoryChart({
   categories: Category[];
   onSelect: (categoryId: string | null) => void;
 }) {
+  const money = useMoney();
   const byId = new Map(categories.map((category) => [category.id, category]));
   const largest = summary.byCategory[0]?.amount ?? 0;
 
@@ -37,7 +39,7 @@ export function CategoryChart({
       <Text className="font-sans text-sm text-muted-foreground">
         {t.chart.total(
           // A cost rounds up: the summary never shows less than was spent.
-          formatMoney(grosze(summary.total), { whole: "up" }),
+          money.format(grosze(summary.total), { whole: "up" }),
           summary.count,
           plural(summary.count, t.chart.expenses),
         )}
@@ -45,14 +47,14 @@ export function CategoryChart({
       {summary.byCategory.map((line) => {
         const category = line.categoryId ? byId.get(line.categoryId) : undefined;
         const name = category?.name ?? t.noCategory;
-        const amount = formatMoney(grosze(line.amount), { whole: "up" });
+        const amount = money.format(grosze(line.amount), { whole: "up" });
         const percent = percentOf(line.amount, summary.total);
         const ratio = largest > 0 ? line.amount / largest : 0;
         return (
           <Pressable
             key={line.categoryId ?? "none"}
             accessibilityRole="button"
-            accessibilityLabel={t.chart.bar(name, amount, percent)}
+            accessibilityLabel={money.spoken(t.chart.bar(name, amount, percent))}
             // A bar with no category cannot filter the list: the API filters by an id.
             disabled={line.categoryId === null}
             onPress={() => {

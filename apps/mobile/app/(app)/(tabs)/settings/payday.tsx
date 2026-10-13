@@ -11,6 +11,7 @@ import { Button } from "../../../../src/components/button";
 import { FormAlert } from "../../../../src/components/form-alert";
 import { PaydayPicker } from "../../../../src/components/payday-picker";
 import { Screen } from "../../../../src/components/screen";
+import { haptics } from "../../../../src/feedback/haptics";
 import { pl } from "../../../../src/messages/pl";
 import { queryClient } from "../../../../src/query-client";
 import { refreshBudget } from "../../../../src/settings/queries";
@@ -26,9 +27,11 @@ export default function PaydaySettings() {
     mutationFn: (periodStartDay: number) => api.users.updateMe({ periodStartDay }),
     onSuccess: (user) => {
       queryClient.setQueryData(ME_KEY, user);
+      haptics.saved();
       void refreshBudget();
       router.back();
     },
+    onError: haptics.failed,
   });
 
   return (

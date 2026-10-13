@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import {
-  formatMoney,
   grosze,
   parseMoneyInput,
   todayInTimeZone,
@@ -23,6 +22,7 @@ import { saveExpense } from "../../../src/expenses/save-expense";
 import { plural } from "../../../src/format/plural";
 import { useDebouncedValue } from "../../../src/hooks/use-debounced-value";
 import { pl } from "../../../src/messages/pl";
+import { useMoney } from "../../../src/privacy/money";
 
 const t = pl.simulator;
 
@@ -36,16 +36,17 @@ const VERDICT_STYLE = {
 } as const;
 
 function Verdict({ result }: { result: SimulationResult }) {
+  const money = useMoney();
   const style = VERDICT_STYLE[result.riskLevel];
   const lines =
     result.remainingAfter < 0
       ? // A shortfall rounds up: showing less than is missing would mislead.
-        [t.shortfall(formatMoney(grosze(-result.remainingAfter), { whole: "up" }))]
+        [t.shortfall(money.format(grosze(-result.remainingAfter), { whole: "up" }))]
       : [
-          t.remaining(formatMoney(grosze(result.remainingAfter), { whole: "down" })),
+          t.remaining(money.format(grosze(result.remainingAfter), { whole: "down" })),
           t.perDay(
-            formatMoney(grosze(result.dailyAllowanceAfter), { whole: "down" }),
-            formatMoney(grosze(result.before.dailyAllowance), { whole: "down" }),
+            money.format(grosze(result.dailyAllowanceAfter), { whole: "down" }),
+            money.format(grosze(result.before.dailyAllowance), { whole: "down" }),
           ),
         ];
 
@@ -60,7 +61,11 @@ function Verdict({ result }: { result: SimulationResult }) {
         {t.verdict[result.riskLevel]}
       </Text>
       {lines.map((line) => (
-        <Text key={line} className="font-sans text-base text-foreground">
+        <Text
+          key={line}
+          accessibilityLabel={money.spoken(line)}
+          className="font-sans text-base text-foreground"
+        >
           {line}
         </Text>
       ))}

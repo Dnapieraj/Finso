@@ -2,6 +2,7 @@ import type { AnswerConfirmationRequest } from "@vireo/shared";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { api } from "../api";
+import { haptics } from "../feedback/haptics";
 import { queryClient } from "../query-client";
 import { refreshBudget } from "../settings/queries";
 
@@ -20,10 +21,13 @@ export function useConfirmations() {
 export function useAnswerConfirmation() {
   return useMutation({
     mutationFn: (input: AnswerConfirmationRequest) => api.confirmations.answer(input),
-    onSuccess: () =>
-      Promise.all([
+    onSuccess: () => {
+      haptics.saved();
+      return Promise.all([
         queryClient.invalidateQueries({ queryKey: CONFIRMATIONS_KEY }),
         refreshBudget(),
-      ]),
+      ]);
+    },
+    onError: haptics.failed,
   });
 }

@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import {
   budgetPeriodAt,
-  formatMoney,
   grosze,
   type BudgetPeriod,
   type Category,
@@ -27,6 +26,7 @@ import {
   useSpendingByCategory,
 } from "../../src/history/queries";
 import { pl } from "../../src/messages/pl";
+import { useMoney } from "../../src/privacy/money";
 import { useBudgetClock } from "../../src/settings/queries";
 import { Pill } from "../../src/settings/schedule-fields";
 import { BackButton } from "../../src/settings/settings-screen-parts";
@@ -72,14 +72,17 @@ function PeriodSwitcher({
 }
 
 function ExpenseRow({ expense, category }: { expense: Transaction; category?: Category }) {
+  const money = useMoney();
   const title = category?.name ?? t.noCategory;
   const date = formatDayMonth(expense.date);
   // Exact grosze: this is a record of what was paid, not an estimate.
-  const amount = formatMoney(grosze(expense.amount));
+  const amount = money.format(grosze(expense.amount));
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={[title, date, amount, expense.note].filter(Boolean).join(", ")}
+      accessibilityLabel={money.spoken(
+        [title, date, amount, expense.note].filter(Boolean).join(", "),
+      )}
       onPress={() => {
         router.push(`/expense/${expense.id}`);
       }}
@@ -114,8 +117,9 @@ function TrashNotice({ notice }: { notice: ExpenseTrashNotice }) {
       setNotice({ ...notice, kind: "restore-failed" });
     },
   });
+  const money = useMoney();
   const failed = notice.kind === "restore-failed";
-  const amount = formatMoney(grosze(notice.expense.amount));
+  const amount = money.format(grosze(notice.expense.amount));
 
   return (
     <View

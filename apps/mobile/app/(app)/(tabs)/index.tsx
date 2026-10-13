@@ -1,8 +1,10 @@
-import { formatMoney, grosze, type BudgetSummary, type Category, type Goal } from "@vireo/shared";
+import { grosze, type BudgetSummary, type Category, type Goal } from "@vireo/shared";
 import { theme } from "@vireo/tokens";
 import { useState, type ReactNode } from "react";
 import { router } from "expo-router";
 // Per-icon import: the package entry pulls in all ~1500 icons.
+import Eye from "lucide-react-native/icons/eye";
+import EyeOff from "lucide-react-native/icons/eye-off";
 import Plus from "lucide-react-native/icons/plus";
 import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
@@ -25,38 +27,76 @@ import { ExpenseNoticeBar } from "../../../src/expenses/expense-notice";
 import { formatDayMonth } from "../../../src/format/date";
 import { plural } from "../../../src/format/plural";
 import { pl } from "../../../src/messages/pl";
+import { devicePreferences } from "../../../src/preferences/device-preferences";
+import { useMoney, type Money } from "../../../src/privacy/money";
+import { useAnimatedAmount } from "../../../src/dashboard/use-animated-amount";
 
 const t = pl.dashboard;
 const GOALS_SHOWN = 3;
 
+/** Rounded towards the user's safety: money left goes down, a debt goes up. */
+function balanceText(money: Money, balance: number): string {
+  return balance < 0
+    ? money.format(grosze(-balance), { whole: "up" })
+    : money.format(grosze(balance), { whole: "down" });
+}
+
+/** The eye next to "Możesz wydać": privacy mode for every screen, in one tap. */
+function HideAmountsButton({ hidden, color }: { hidden: boolean; color: string }) {
+  const Icon = hidden ? EyeOff : Eye;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={hidden ? pl.privacy.show : pl.privacy.hide}
+      hitSlop={12}
+      onPress={() => {
+        void devicePreferences.set({ hideAmounts: !hidden });
+      }}
+      className="h-12 w-12 items-center justify-center rounded-full active:opacity-70"
+    >
+      <Icon color={color} size={22} />
+    </Pressable>
+  );
+}
+
 function BudgetOverview({ budget }: { budget: BudgetSummary }) {
+  const money = useMoney();
+  const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
   const progress = periodProgress(budget);
   const below = budget.availableBalance < 0;
   const dayCount = t.periodDay(progress.day, progress.totalDays);
+  const shownBalance = useAnimatedAmount(budget.availableBalance);
+  const perDay = t.perDay(money.format(grosze(budget.dailyAllowance), { whole: "down" }));
 
   return (
     <Card>
       <View className="gap-1">
-        <Text className="font-sans text-base text-muted-foreground">
-          {below ? t.underTheLine : t.canSpend}
-        </Text>
-        {/* Rounded towards the user's safety: money left goes down, a debt goes up. */}
+        <View className="flex-row items-center justify-between gap-3">
+          <Text className="shrink font-sans text-base text-muted-foreground">
+            {below ? t.underTheLine : t.canSpend}
+          </Text>
+          <HideAmountsButton hidden={money.hidden} color={colors.mutedForeground} />
+        </View>
         {/* One line whatever the text size: it shrinks to the card's width
-            rather than breaking a number in two or running off the screen. */}
+            rather than breaking a number in two or running off the screen.
+            Screen readers get the new amount at once, not the frames of
+            the animation. */}
         <Text
+          testID="available-balance"
+          accessibilityLabel={
+            money.hidden ? pl.privacy.hiddenMain : balanceText(money, budget.availableBalance)
+          }
           numberOfLines={1}
           adjustsFontSizeToFit
           minimumFontScale={0.4}
           className={`font-heading text-5xl ${below ? "text-risk" : "text-card-foreground"}`}
         >
-          {below
-            ? formatMoney(grosze(-budget.availableBalance), { whole: "up" })
-            : formatMoney(grosze(budget.availableBalance), { whole: "down" })}
+          {balanceText(money, shownBalance)}
         </Text>
         {/* Right under the amount it qualifies; rounded up, better to overstate what is missing. */}
         {!below && budget.awaitingIncome > 0 && (
           <Text className="font-sans text-sm text-muted-foreground">
-            {t.awaitingIncome(formatMoney(grosze(budget.awaitingIncome), { whole: "up" }))}
+            {t.awaitingIncome(money.format(grosze(budget.awaitingIncome), { whole: "up" }))}
           </Text>
         )}
       </View>
@@ -64,8 +104,11 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
         <Text className="font-sans text-base text-card-foreground">{t.noFreeMoney}</Text>
       ) : (
         <View className="gap-1">
-          <Text className="font-sans-semibold text-lg text-card-foreground">
-            {t.perDay(formatMoney(grosze(budget.dailyAllowance), { whole: "down" }))}
+          <Text
+            accessibilityLabel={money.spoken(perDay)}
+            className="font-sans-semibold text-lg text-card-foreground"
+          >
+            {perDay}
           </Text>
           {budget.daysRemaining > 0 && (
             <Text className="font-sans text-sm text-muted-foreground">
@@ -97,8 +140,13 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
 }
 
 function GoalRow({ goal, asOf }: { goal: Goal; asOf: string | null }) {
+  const money = useMoney();
   const { percent, state } = goalProgress(goal, asOf);
   const percentText = `${String(percent)}%`;
+  const saved = t.goalSaved(
+    money.format(grosze(goal.currentAmount), { whole: "down" }),
+    money.format(grosze(goal.targetAmount), { whole: "up" }),
+  );
 
   return (
     <View className="gap-2">
@@ -110,11 +158,11 @@ function GoalRow({ goal, asOf }: { goal: Goal; asOf: string | null }) {
       </View>
       <ProgressBar label={goal.name} now={percent} max={100} valueText={percentText} />
       <View className="flex-row flex-wrap justify-between gap-x-3">
-        <Text className="font-sans text-sm text-muted-foreground">
-          {t.goalSaved(
-            formatMoney(grosze(goal.currentAmount), { whole: "down" }),
-            formatMoney(grosze(goal.targetAmount), { whole: "up" }),
-          )}
+        <Text
+          accessibilityLabel={money.spoken(saved)}
+          className="font-sans text-sm text-muted-foreground"
+        >
+          {saved}
         </Text>
         {state === "reached" && (
           <Text className="font-sans-semibold text-sm text-safe">{t.goalReached}</Text>
@@ -168,6 +216,7 @@ function Goals({ asOf }: { asOf: string | null }) {
 }
 
 function RecentExpenses() {
+  const money = useMoney();
   const expenses = useRecentExpenses();
   const categories = useCategories();
   const byId = new Map<string, Category>((categories.data ?? []).map((c) => [c.id, c]));
@@ -185,12 +234,14 @@ function RecentExpenses() {
       const title = category?.name ?? t.noCategory;
       const date = formatDayMonth(expense.date);
       // Exact grosze: this is a record of what was paid, not an estimate.
-      const amount = formatMoney(grosze(expense.amount));
+      const amount = money.format(grosze(expense.amount));
       return (
         <View
           key={expense.id}
           accessible
-          accessibilityLabel={[title, date, amount, expense.note].filter(Boolean).join(", ")}
+          accessibilityLabel={money.spoken(
+            [title, date, amount, expense.note].filter(Boolean).join(", "),
+          )}
           className="flex-row items-center gap-3"
         >
           <View

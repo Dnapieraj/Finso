@@ -1,3 +1,4 @@
+import { onlineManager } from "@tanstack/react-query";
 import { act } from "expo-router/testing-library";
 
 /**
@@ -50,10 +51,12 @@ export const goOffline = () => setNetwork({ isConnected: false, isInternetReacha
 export const goOnline = () => setNetwork(ONLINE);
 
 /**
- * Online for the next test. Listeners stay: the app subscribes once per
- * process, and they must hear that the network is back.
+ * Online for the next test. Unmounting the previous test's app also
+ * unsubscribed TanStack Query from the network, so its last answer
+ * (possibly "offline") would stay; on a device the app never unmounts.
  */
 export function resetNetInfo(): void {
   state = ONLINE;
   notify();
+  onlineManager.setOnline(true);
 }

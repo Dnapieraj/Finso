@@ -26,6 +26,7 @@ import { CategoryChip } from "../../../src/expenses/category-chip";
 import { formatDayMonth } from "../../../src/format/date";
 import { useExpenseTrashNotice } from "../../../src/history/notice";
 import { refreshAfterExpenseChange, useExpense } from "../../../src/history/queries";
+import { haptics } from "../../../src/feedback/haptics";
 import { pl } from "../../../src/messages/pl";
 import { amountError } from "../../../src/onboarding/draft";
 import { toMoneyInput } from "../../../src/settings/forms";
@@ -140,9 +141,11 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
   const save = useMutation({
     mutationFn: (change: UpdateTransactionInput) => api.transactions.update(expense.id, change),
     onSuccess: () => {
+      haptics.saved();
       refreshAfterExpenseChange();
       router.back();
     },
+    onError: haptics.failed,
   });
   const remove = useMutation({
     mutationFn: () => api.transactions.remove(expense.id),
@@ -158,6 +161,7 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
     const parsed = parseMoneyInput(amount);
     if (!parsed.ok) {
       setAmountErrorText(amountError(parsed.reason));
+      haptics.failed();
       return;
     }
     const change: UpdateTransactionInput = {};

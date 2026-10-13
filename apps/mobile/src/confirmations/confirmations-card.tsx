@@ -10,8 +10,10 @@ import { Button } from "../components/button";
 import { Card } from "../components/card";
 import { LoadError } from "../components/query-states";
 import { TextField } from "../components/text-field";
+import { haptics } from "../feedback/haptics";
 import { formatDayMonth } from "../format/date";
 import { pl } from "../messages/pl";
+import { HIDDEN_AMOUNT, useMoney } from "../privacy/money";
 import {
   markRemindersPrompted,
   requestNotificationPermission,
@@ -32,8 +34,12 @@ function DueItem({ item, onAnswered }: { item: DueConfirmation; onAnswered: () =
   const [amountText, setAmountText] = useState(() => toMoneyInput(item.expectedAmount));
   const [amountProblem, setAmountProblem] = useState<string>();
 
-  const amount = formatExpected(item.expectedAmount);
+  const money = useMoney();
+  const amount = money.hidden ? HIDDEN_AMOUNT : formatExpected(item.expectedAmount);
   const date = formatDayMonth(item.occurrenceDate);
+  const question = item.askToday
+    ? t.ask(item.label, amount, item.kind)
+    : t.notYetState(item.label, amount, item.kind);
   const named = (action: string) => t.forItem(action, item.label);
 
   function send(reply: Answer, confirmedAmount?: number) {
@@ -53,6 +59,7 @@ function DueItem({ item, onAnswered }: { item: DueConfirmation; onAnswered: () =
     const parsed = parseMoneyInput(amountText);
     if (!parsed.ok) {
       setAmountProblem(amountError(parsed.reason));
+      haptics.failed();
       return;
     }
     setAmountProblem(undefined);
@@ -126,10 +133,11 @@ function DueItem({ item, onAnswered }: { item: DueConfirmation; onAnswered: () =
   return (
     <View className="gap-3">
       <View className="gap-1">
-        <Text className="font-sans-semibold text-base text-card-foreground">
-          {item.askToday
-            ? t.ask(item.label, amount, item.kind)
-            : t.notYetState(item.label, amount, item.kind)}
+        <Text
+          accessibilityLabel={money.spoken(question)}
+          className="font-sans-semibold text-base text-card-foreground"
+        >
+          {question}
         </Text>
         <Text
           className={`font-sans text-sm ${item.overdue ? "text-caution" : "text-muted-foreground"}`}

@@ -2,6 +2,8 @@ import { QueryClient } from "@tanstack/react-query";
 
 import { ApiError } from "@vireo/shared/api";
 
+import { connectNetworkToQueries } from "./network/online";
+
 const MAX_RETRIES = 2;
 
 /**
@@ -14,6 +16,8 @@ export function shouldRetry(failureCount: number, error: unknown): boolean {
   if (error.kind === "network") return true;
   return error.kind === "http" && error.status !== null && error.status >= 500;
 }
+
+connectNetworkToQueries();
 
 /** The app's single query cache; cleared when the session ends. */
 export const queryClient = new QueryClient({

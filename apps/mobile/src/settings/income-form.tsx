@@ -21,6 +21,7 @@ import { TextField } from "../components/text-field";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
 import { ChoiceCard } from "../onboarding/step";
+import { haptics } from "../feedback/haptics";
 import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "./forms";
 import { INCOME_SOURCES_KEY, useBudgetClock } from "./queries";
 import {
@@ -108,7 +109,10 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
     }
 
     setErrors(found);
-    if (!parsedName.ok || Object.keys(found).length > 0) return;
+    if (!parsedName.ok || Object.keys(found).length > 0) {
+      haptics.failed();
+      return;
+    }
 
     if (!source) {
       save.mutate({

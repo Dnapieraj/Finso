@@ -25,6 +25,11 @@ import {
 } from "../src/appearance/store";
 import { LockGate } from "../src/lock/lock-gate";
 import { appLock, useAppLock } from "../src/lock/store";
+import { OfflineBar } from "../src/network/offline-bar";
+import {
+  devicePreferences,
+  useDevicePreferencesLoaded,
+} from "../src/preferences/device-preferences";
 import { queryClient } from "../src/query-client";
 import { session, useSession } from "../src/session";
 import { textScaleVars, themeVars } from "../src/theme";
@@ -44,11 +49,17 @@ export default function RootLayout() {
   });
   const { status } = useSession();
   const lockLoaded = useAppLock().loaded;
+  const preferencesLoaded = useDevicePreferencesLoaded();
   // A font that fails to load must not block the app; system fonts take over.
   // Waiting for the session keeps login from flashing before the app opens,
-  // and waiting for the lock keeps amounts from flashing before it covers them.
+  // and waiting for the lock and the privacy mode keeps amounts from flashing
+  // before they are covered or hidden.
   const ready =
-    (fontsLoaded || fontError !== null) && status !== "restoring" && appearanceLoaded && lockLoaded;
+    (fontsLoaded || fontError !== null) &&
+    status !== "restoring" &&
+    appearanceLoaded &&
+    lockLoaded &&
+    preferencesLoaded;
 
   useEffect(() => {
     // Only at app start: restoring again would blank the whole tree and
@@ -56,6 +67,7 @@ export default function RootLayout() {
     if (session.getState().status === "restoring") void session.restore();
     void appearance.load();
     void appLock.load();
+    void devicePreferences.load();
   }, []);
 
   useEffect(() => {
@@ -97,6 +109,7 @@ export default function RootLayout() {
             </Stack.Protected>
           </Stack>
         </LockGate>
+        <OfflineBar />
         <StatusBar style="auto" />
       </View>
     </QueryClientProvider>

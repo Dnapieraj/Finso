@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { formatMoney, grosze, type Goal } from "@vireo/shared";
+import { grosze, type Goal } from "@vireo/shared";
 import { router } from "expo-router";
 import type { ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -15,6 +15,7 @@ import { monthOf } from "../../../../src/goals/deadline";
 import { GOALS_KEY } from "../../../../src/goals/goal-form";
 import { useGoalNotice, type GoalNotice } from "../../../../src/goals/notice";
 import { pl } from "../../../../src/messages/pl";
+import { useMoney } from "../../../../src/privacy/money";
 import { queryClient } from "../../../../src/query-client";
 import { refreshBudget } from "../../../../src/settings/queries";
 
@@ -30,8 +31,15 @@ function GoalRow({
   /** What the budget sets aside for this goal this period; `null` until it loads. */
   instalment: number | null;
 }) {
+  const money = useMoney();
   const { percent, state } = goalProgress(goal, asOf);
   const deadline = monthOf(goal.targetDate);
+  const saved = t.savedOf(
+    money.format(grosze(goal.currentAmount), { whole: "down" }),
+    money.format(grosze(goal.targetAmount), { whole: "up" }),
+  );
+  const instalmentText =
+    instalment === null ? "" : t.instalment(money.format(grosze(instalment), { whole: "up" }));
 
   let status: ReactNode = null;
   if (state === "reached") {
@@ -40,9 +48,12 @@ function GoalRow({
     status = <Text className="font-sans-semibold text-sm text-caution">{t.overdue}</Text>;
   } else if (instalment !== null && instalment > 0) {
     status = (
-      <Text className="font-sans-semibold text-sm text-foreground">
-        {/* Saving rounds up: a rounded-down instalment would never close the goal. */}
-        {t.instalment(formatMoney(grosze(instalment), { whole: "up" }))}
+      // Saving rounds up: a rounded-down instalment would never close the goal.
+      <Text
+        accessibilityLabel={money.spoken(instalmentText)}
+        className="font-sans-semibold text-sm text-foreground"
+      >
+        {instalmentText}
       </Text>
     );
   }
@@ -58,11 +69,11 @@ function GoalRow({
     >
       <Text className="font-sans-semibold text-base text-card-foreground">{goal.name}</Text>
       <ProgressBar label={goal.name} now={percent} max={100} valueText={`${String(percent)}%`} />
-      <Text className="font-sans text-sm text-muted-foreground">
-        {t.savedOf(
-          formatMoney(grosze(goal.currentAmount), { whole: "down" }),
-          formatMoney(grosze(goal.targetAmount), { whole: "up" }),
-        )}
+      <Text
+        accessibilityLabel={money.spoken(saved)}
+        className="font-sans text-sm text-muted-foreground"
+      >
+        {saved}
       </Text>
       <Text className="font-sans text-sm text-muted-foreground">
         {t.until(deadline.month, deadline.year)}

@@ -23,6 +23,7 @@ import { CategoryChip } from "../expenses/category-chip";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
 import { FieldError } from "../onboarding/step";
+import { haptics } from "../feedback/haptics";
 import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "./forms";
 import { RECURRING_RULES_KEY, useBudgetClock } from "./queries";
 import {
@@ -145,8 +146,15 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
     }
 
     setErrors(found);
-    if (!parsedName.ok || !parsedAmount.ok || categoryId === null) return;
-    if (Object.keys(found).length > 0) return;
+    if (
+      !parsedName.ok ||
+      !parsedAmount.ok ||
+      categoryId === null ||
+      Object.keys(found).length > 0
+    ) {
+      haptics.failed();
+      return;
+    }
 
     if (!rule) {
       if (!nextSchedule) return;

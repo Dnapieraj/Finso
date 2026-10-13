@@ -20,6 +20,7 @@ import { TextField } from "../components/text-field";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
 import { FieldError } from "../onboarding/step";
+import { haptics } from "../feedback/haptics";
 import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "../settings/forms";
 import { refreshBudget, useBudgetClock } from "../settings/queries";
 import { Pill } from "../settings/schedule-fields";
@@ -141,8 +142,16 @@ export function GoalForm({ goal }: { goal?: Goal }) {
     else if (deadlineChanged && isBeforeMonth(chosen, today)) found.month = t.pastDeadline;
 
     setErrors(found);
-    if (!parsedName.ok || !parsedTarget.ok || !parsedSaved.ok || chosen === null) return;
-    if (Object.keys(found).length > 0) return;
+    if (
+      !parsedName.ok ||
+      !parsedTarget.ok ||
+      !parsedSaved.ok ||
+      chosen === null ||
+      Object.keys(found).length > 0
+    ) {
+      haptics.failed();
+      return;
+    }
 
     if (!goal) {
       save.mutate({

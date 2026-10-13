@@ -10,9 +10,12 @@ jest.mock("../src/api", () => ({
 
 beforeEach(resetSecureStore);
 
+// React Native's Jest setup makes this a mock already, so spyOn returns that
+// same mock; restoring it would leave it returning undefined. Put back what
+// the setup answers instead.
 let reduceMotion: jest.SpyInstance | undefined;
 afterEach(() => {
-  reduceMotion?.mockRestore();
+  reduceMotion?.mockResolvedValue(false);
   reduceMotion = undefined;
 });
 
