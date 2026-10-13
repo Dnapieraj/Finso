@@ -383,6 +383,7 @@ Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
 - Domena `https://finso.app`, e-mail `kontakt@finso.app` i administrator danych (`[Administrator — do uzupełnienia]`) to placeholdery — podmienić w `apps/web/src/content/site.ts`
 - **Przegląd prawny** polityki prywatności i regulaminu (`apps/web/src/messages/legal/`) — obecne teksty to szkice
 - Założenia do potwierdzenia przy wyborze hostingu: serwery w UE, kopie zapasowe nadpisywane w ciągu 30 dni
+- **Kopie zapasowe produkcyjnej bazy** (etap hostingu): automatyczne, codzienne, z odtwarzaniem do punktu w czasie, jeśli hosting to daje; przed publikacją raz sprawdzone odtworzenie kopii na osobnej bazie
 - Każda nowa usługa przetwarzająca dane (np. Sentry, PostHog) → dopisać do polityki prywatności (test `legal.spec.ts` to wymusza)
 - **TODO — polityka prywatności do aktualizacji, gdy powstanie:** zdjęcia paragonów (`Transaction.receiptUrl` + dostawca przechowywania plików, np. Cloudflare R2) albo logowanie przez Google/Apple (nowi odbiorcy danych i nowe dane konta)
 
@@ -444,18 +445,25 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    reset unieważnia wszystkie refresh tokeny, ta sama odpowiedź dla
    istniejącego i nieistniejącego adresu (bez zdradzania, kto ma konto),
    rate limiting, co z kontami założonymi przed potwierdzaniem adresu.
-   Usługa wysyłki: propozycja **Resend** (region UE, proste API HTTP, darmowy
-   próg wystarczy na start), alternatywa **Brevo** (firma z UE) lub Amazon SES
-   (najtańszy przy dużej skali, więcej konfiguracji). Wybrana usługa trafia do
-   polityki prywatności jako odbiorca danych (adres e-mail). Nic nie
-   instalujemy przed akceptacją
+   W tym samym punkcie **zmiana hasła po zalogowaniu** (Ustawienia; podanie
+   obecnego hasła, ten sam mechanizm unieważniania sesji co reset).
+   Usługa wysyłki: **Resend** (zaakceptowane 13.10.2026; region UE, proste
+   API HTTP, darmowy próg wystarczy na start). W tym punkcie Resend trafia do
+   polityki prywatności (`apps/web/src/messages/legal/privacy.ts`) jako
+   podmiot przetwarzający dane (adres e-mail, treść wiadomości z linkiem)
 10. **Eksport danych do CSV** w Ustawieniach (RODO, art. 20 — prawo do kopii
     danych): wydatki, wpływy, cele, stałe zobowiązania; plik przez systemowe
     „Udostępnij”, kwoty i daty w formacie czytelnym dla arkusza. Polityka
     prywatności opisuje, jak z tego skorzystać
 11. **„Zgłoś problem / Kontakt”** w Ustawieniach: adres `kontakt@finso.app`,
-    wersja appki i systemu dołączona do wiadomości (bez danych finansowych)
-12. **Testy e2e mobile**
+    wersja appki i systemu dołączona do wiadomości (bez danych finansowych).
+    Obok **polityka prywatności i regulamin dostępne w appce** (wymóg Apple,
+    wytyczna 5.1.1) — linki do stron `apps/web`
+12. **Komunikat „Zaktualizuj aplikację”**: API podaje minimalną wspieraną
+    wersję appki, starsza wersja pokazuje ekran z przyciskiem do sklepu.
+    Musi być w pierwszej opublikowanej wersji — wersji już zainstalowanych
+    w telefonach nie da się później tego nauczyć
+13. **Testy e2e mobile**
 
 Potem etap 8 (RevenueCat, publikacja). Faza 2 bez zmian.
 
@@ -464,6 +472,9 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
 - Ikona i ekran startowy — dziś domyślne grafiki Expo
+- **„Przywróć zakupy”** (etap RevenueCat) — wymóg Apple przy subskrypcjach
+  (wytyczna 3.1.1): przycisk na ekranie planu, który przywraca Plus po
+  reinstalacji albo na nowym telefonie
 - **Build na iPhone'a wymaga EAS Build w chmurze** — pracujemy na Windowsie,
   a lokalny build iOS (`expo run:ios`) potrzebuje macOS z Xcode. Do zrobienia:
   konto Apple Developer (99 USD/rok), `eas.json` z profilami `development`
