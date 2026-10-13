@@ -71,14 +71,15 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens   RefreshToken[]
-  categories      Category[]
-  recurringRules  RecurringRule[]
-  incomeSources   IncomeSource[]
-  incomeEntries   IncomeEntry[]
-  transactions    Transaction[]
-  goals           Goal[]
-  idempotencyKeys IdempotencyKey[]
+  refreshTokens    RefreshToken[]
+  categories       Category[]
+  recurringRules   RecurringRule[]
+  incomeSources    IncomeSource[]
+  incomeEntries    IncomeEntry[]
+  transactions     Transaction[]
+  goals            Goal[]
+  idempotencyKeys  IdempotencyKey[]
+  expenseTemplates ExpenseTemplate[]
 }
 
 model RefreshToken {
@@ -122,8 +123,9 @@ model Category {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  transactions   Transaction[]
-  recurringRules RecurringRule[]
+  transactions     Transaction[]
+  recurringRules   RecurringRule[]
+  expenseTemplates ExpenseTemplate[]
 
   @@index([userId])
 }
@@ -267,6 +269,11 @@ model Transaction {
   /// znowu; przy DECLINED („Nie w tym okresie”) — dzień odpowiedzi.
   occurrenceDate DateTime? @db.Date
 
+  /// „Wydatki przed Finso” z onboardingu: suma wydatków od wypłaty do dnia
+  /// rejestracji. Liczy się w okresie, ale nie jako wydatek z tego dnia
+  /// (dzienny limit) i nie trafia do „ostatnio używanych”.
+  beforeFinso Boolean @default(false)
+
   /// Transakcja finansowa nie znika bez śladu jednym klikiem — użytkownik
   /// może cofnąć usunięcie. Twarde kasowanie tylko kaskadowo przy
   /// usunięciu całego konta (RODO).
@@ -334,4 +341,26 @@ model IdempotencyKey {
 
   @@unique([userId, scope, key])
   @@index([expiresAt])
+}
+
+// --- Szablony szybkiego dodawania --------------------------------------------
+
+/// „Kawa 14 zł”: z szablonu appka zapisuje wydatek jednym tapnięciem.
+/// To ustawienie, nie dane finansowe — usuwane naprawdę, bez kosza.
+model ExpenseTemplate {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name   String
+  amount Int
+
+  /// SetNull: usunięcie kategorii nie kasuje szablonu — appka poprosi o nową.
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
 }

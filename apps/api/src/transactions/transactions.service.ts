@@ -151,5 +151,6 @@ function toTransaction(row: TransactionRow): Transaction {
     recurringRuleId: row.recurringRuleId,
     note: row.note,
     status: row.status,
+    beforeFinso: row.beforeFinso,
   };
 }

@@ -12,6 +12,7 @@ import { ConfirmationsModule } from "./confirmations/confirmations.module.js";
 import { PrismaNotFoundFilter } from "./common/prisma-not-found.filter.js";
 import { ZodValidationPipe } from "./common/zod-validation.pipe.js";
 import { validateEnv } from "./config/env.js";
+import { ExpenseTemplatesModule } from "./expense-templates/expense-templates.module.js";
 import { GoalsModule } from "./goals/goals.module.js";
 import { IncomeModule } from "./income/income.module.js";
 import { OnboardingModule } from "./onboarding/onboarding.module.js";
@@ -30,6 +31,7 @@ import { UsersModule } from "./users/users.module.js";
     CategoriesModule,
     TransactionsModule,
     GoalsModule,
+    ExpenseTemplatesModule,
     IncomeModule,
     RecurringRulesModule,
     BudgetModule,

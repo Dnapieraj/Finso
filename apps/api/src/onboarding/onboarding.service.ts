@@ -90,6 +90,7 @@ export class OnboardingService {
             categoryId: spentCategoryId,
             note: PRE_FINSO_EXPENSE_NOTE,
             status: "CONFIRMED",
+            beforeFinso: true,
           },
         });
       }

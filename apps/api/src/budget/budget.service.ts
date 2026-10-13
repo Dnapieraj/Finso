@@ -52,6 +52,7 @@ export class BudgetService {
       awaitingIncome: awaitingIncome(snapshot),
       fixedCommitments: input.remainingFixedCommitments,
       goalContributions: input.goalContributions,
+      today: result.today,
     };
   }
 
@@ -80,7 +81,12 @@ export class BudgetService {
   async snapshot(userId: string): Promise<BudgetSnapshot> {
     const user = await this.db.user.findUnique({
       where: { id: userId },
-      select: { timezone: true, periodStartDay: true },
+      select: {
+        timezone: true,
+        periodStartDay: true,
+        onboardingCompletedAt: true,
+        createdAt: true,
+      },
     });
     if (!user) throw new UnauthorizedException();
 
@@ -110,6 +116,9 @@ export class BudgetService {
     return {
       today,
       periodStartDay: user.periodStartDay,
+      // Od tego dnia Finso prowadzi budżet; wcześniej nie ma „wczoraj”, z którego
+      // coś mogłoby zostać. Bez onboardingu — od rejestracji.
+      trackedSince: todayInTimeZone(user.onboardingCompletedAt ?? user.createdAt, user.timezone),
       incomeSources: sources.map((source) => ({
         id: source.id,
         name: source.name,
@@ -155,6 +164,7 @@ export class BudgetService {
         occurrenceDate: tx.occurrenceDate && toIsoDate(tx.occurrenceDate),
         status: tx.status,
         recurringRuleId: tx.recurringRuleId,
+        beforeFinso: tx.beforeFinso,
       })),
       goals: goals.map((goal) => ({
         id: goal.id,
