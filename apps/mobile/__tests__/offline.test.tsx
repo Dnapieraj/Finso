@@ -1,5 +1,7 @@
+import NetInfo from "@react-native-community/netinfo";
 import { screen, waitFor } from "expo-router/testing-library";
 
+import { connectNetworkToQueries } from "../src/network/online";
 import { fakeApi } from "./helpers/fake-api";
 import { goOffline, goOnline, setNetwork } from "./helpers/fake-netinfo";
 import { resetSecureStore } from "./helpers/memory-secure-store";
@@ -83,6 +85,16 @@ it("start bez internetu: pasek zamiast błędu; po powrocie dane wczytują się 
 
   expect(await screen.findByTestId("available-balance")).toBeOnTheScreen();
   expect(screen.queryByText(OFFLINE)).not.toBeOnTheScreen();
+});
+
+// On iOS NetInfo's own check asks Google every minute; the phone's IP has
+// no business going there. Finso's API answers the same question.
+it("dostęp do internetu sprawdza przez API Finso, nie przez serwer Google", () => {
+  connectNetworkToQueries();
+
+  expect(NetInfo.configure).toHaveBeenCalledWith(
+    expect.objectContaining({ reachabilityUrl: "http://api.test/health" }),
+  );
 });
 
 it("na ekranie logowania też", async () => {

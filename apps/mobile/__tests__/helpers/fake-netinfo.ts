@@ -34,6 +34,7 @@ const NetInfo = {
     };
   }),
   fetch: jest.fn(() => Promise.resolve(snapshot())),
+  configure: jest.fn(),
 };
 
 export default NetInfo;
