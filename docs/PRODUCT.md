@@ -452,8 +452,27 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
      domyślnie NetInfo na iOS pyta co minutę serwer Google. Skutek: gdy API
      nie działa, appka też pokazuje „Brak połączenia”;
    - obie biblioteki natywne: emulator potrzebuje nowego development buildu
-6. **Szablony i ostatnio używane wydatki**; dzienny limit z przenoszeniem
-   pokazany wprost (Faza 1, punkty 10–11)
+6. **Szablony i ostatnio używane wydatki; dzienny limit z przenoszeniem**
+   (Faza 1, punkty 10–11) — **ZROBIONE**, ustalone 13.10.2026:
+   - dzienny limit: wczoraj rano saldo dzieliło się na pozostałe dni (przydział);
+     niewydana część przydziału przechodzi w całości na dziś („Wczoraj zostało
+     20 zł, dziś masz 254 zł”), przekroczenie rozkłada się na wszystkie
+     pozostałe dni. Ostatniego dnia limitem jest całe saldo. Nie liczą się
+     opłaty stałych płatności ani „Wydatki przed Finso” (`Transaction.beforeFinso`,
+     backfill: najwyżej jeden wpis na użytkownika, zapisany razem z onboardingiem).
+     Pierwszy dzień okresu i dzień onboardingu nie mają „wczoraj”.
+     Implementacja: `packages/shared/src/budget/today-allowance.ts`;
+   - Dashboard: „Dziś możesz wydać X” (albo „Dziś wydano o X więcej, niż
+     planowano”), „Wczoraj zostało…”, „Potem X dziennie przez N dni · do
+     wypłaty…”. Symulator zostaje przy średniej i mówi „Średnio dziennie do
+     wypłaty”, żeby nie mylić z dzisiejszym limitem;
+   - szablony (`ExpenseTemplate`, Ustawienia → Szablony wydatków): nazwa do 40
+     znaków, kwota, kategoria; twarde usunięcie, bez limitu liczby; szablon
+     bez kategorii nie pojawia się w szybkim dodawaniu. Szablon zapisuje się
+     z nazwą jako notatką;
+   - ostatnio używane: do 4 najnowszych różnych wydatków (bez stałych płatności,
+     „Wydatków przed Finso” i powtórzeń szablonów). Szablony i ostatnie nie
+     blokują szybkiego dodawania, gdy się nie wczytają
 7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12)
 8. **Sprzątanie:** nieużywany kod i paczki (knip), importy fontów (dziś do
    appki trafia 26 plików, używamy 3), `expo-system-ui`, aktualizacje Expo

@@ -10,7 +10,7 @@ export const privacyPolicy = {
   title: "Polityka prywatności",
   description:
     "Jakie dane zbiera aplikacja Finso, w jakim celu, komu je przekazujemy, jak długo je przechowujemy i jakie masz prawa.",
-  updated: { iso: "2026-10-08", label: "8 października 2026" },
+  updated: { iso: "2026-10-13", label: "13 października 2026" },
   intro: [
     "Ta polityka opisuje, jak aplikacja mobilna Finso i ta strona przetwarzają dane osobowe. Staramy się pisać prosto i konkretnie.",
   ],
@@ -42,7 +42,7 @@ export const privacyPolicy = {
               "Dane konta: adres e-mail i hasło. Hasła nie przechowujemy wprost — zapisujemy tylko jego skrót (hash) wyliczony algorytmem argon2.",
             ],
             [
-              "Dane finansowe, które wpisujesz w aplikacji: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania i cele oszczędnościowe.",
+              "Dane finansowe, które wpisujesz w aplikacji: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania, cele oszczędnościowe i szablony szybkiego dodawania (nazwa, kwota, kategoria).",
             ],
             [
               "Ustawienia: waluta, strefa czasowa i dzień miesiąca, od którego liczy się twój okres budżetowy.",

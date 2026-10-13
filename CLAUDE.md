@@ -150,6 +150,8 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - `IncomeSource`: `isActive: false` (archiwizacja) — jeśli ma powiązane
   wpływy, nie da się usunąć, tylko zarchiwizować
 - `RecurringRule`: twarde usunięcie — ale transakcje już z niej powstałe zostają
+- `ExpenseTemplate`: twarde usunięcie — to ustawienie szybkiego dodawania, nie dane
+  finansowe; wydatki zapisane z szablonu zostają
 - Wszystkie zapytania i wyliczenia budżetu MUSZĄ pomijać rekordy usunięte/nieaktywne
 
 ### UI (mobile jako główny cel)

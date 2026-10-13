@@ -139,7 +139,7 @@ test("privacy policy says the app lock is checked by the phone", async ({ page }
   await expect(lock).toContainText("kodem blokady ekranu");
   await expect(lock).toContainText("Nie zbiera danych biometrycznych");
   await expect(lock).toContainText("nie zna kodu");
-  await expect(page.locator("main time")).toHaveAttribute("datetime", "2026-10-08");
+  await expect(page.locator("main time")).toHaveAttribute("datetime", "2026-10-13");
 });
 
 test("terms say payments go through the stores and are not financial advice", async ({ page }) => {
