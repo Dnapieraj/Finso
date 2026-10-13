@@ -21,6 +21,8 @@ export interface QuickExpense {
   /** "Today" in the user's time zone. */
   date: string;
   category: Category;
+  /** From a template or a recent expense: „Kawa”, „Obiad”. */
+  note?: string | null;
 }
 
 let optimisticIds = 0;
@@ -46,17 +48,22 @@ function refreshFromServer() {
  * with Cofnij guards against tapping the wrong category.
  */
 export function saveExpense(expense: QuickExpense): Promise<void> {
-  const { amount, date, category } = expense;
+  const { amount, date, category, note } = expense;
   // One draft — one Idempotency-Key — per expense: "Spróbuj ponownie"
   // resends it, so a save that did reach the server is not stored twice.
-  const draft = api.transactions.draft({ amount, date, categoryId: category.id });
+  const draft = api.transactions.draft({
+    amount,
+    date,
+    categoryId: category.id,
+    ...(note ? { note } : {}),
+  });
   return submit(expense, draft);
 }
 
 async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<void> {
   optimisticIds += 1;
   const localId = `optimistic-${String(optimisticIds)}`;
-  const { amount, date, category } = expense;
+  const { amount, date, category, note } = expense;
   // At the tap, like the numbers on screen; a failure later feels different.
   haptics.saved();
 
@@ -73,8 +80,9 @@ async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<v
       date,
       categoryId: category.id,
       recurringRuleId: null,
-      note: null,
+      note: note ?? null,
       status: "CONFIRMED",
+      beforeFinso: false,
     }),
   );
 
@@ -84,7 +92,8 @@ async function submit(expense: QuickExpense, draft: TransactionDraft): Promise<v
   const notice: ExpenseNotice = {
     kind: "saved",
     amount,
-    categoryName: category.name,
+    // The template or note says what it was better than the category.
+    categoryName: note ?? category.name,
     undo: () => {
       state.undone = true;
       dismissNotice(notice);

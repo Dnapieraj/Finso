@@ -1,6 +1,5 @@
 import { router } from "expo-router";
-import { useState, type ReactNode } from "react";
-import { Text, View } from "react-native";
+import { useState } from "react";
 
 import {
   parseMoneyInput,
@@ -15,14 +14,10 @@ import { api } from "../api";
 import { apiErrorMessage } from "../auth/api-error-message";
 import { Button } from "../components/button";
 import { FormAlert } from "../components/form-alert";
-import { LoadError, Skeleton } from "../components/query-states";
 import { Screen } from "../components/screen";
 import { TextField } from "../components/text-field";
-import { useCategories } from "../dashboard/queries";
-import { CategoryChip } from "../expenses/category-chip";
 import { pl } from "../messages/pl";
 import { amountError } from "../onboarding/draft";
-import { FieldError } from "../onboarding/step";
 import { haptics } from "../feedback/haptics";
 import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "./forms";
 import { RECURRING_RULES_KEY, useBudgetClock } from "./queries";
@@ -36,6 +31,7 @@ import {
   type ScheduleFields as Schedule,
 } from "./schedule";
 import { ScheduleFields } from "./schedule-fields";
+import { CategoryPicker } from "./category-picker";
 import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
 
 const t = pl.budgetSettings;
@@ -48,57 +44,6 @@ interface Errors extends ScheduleErrors {
   name?: string;
   amount?: string;
   category?: string;
-}
-
-function CategoryPicker({
-  value,
-  error,
-  onChange,
-}: {
-  value: string | null;
-  error?: string;
-  onChange: (categoryId: string) => void;
-}) {
-  const categories = useCategories();
-
-  let list: ReactNode;
-  if (categories.isPending) {
-    list = <Skeleton label={t.commitments.loadingCategories} />;
-  } else if (categories.isError) {
-    list = (
-      <LoadError
-        message={t.commitments.categoriesError}
-        onRetry={() => void categories.refetch()}
-      />
-    );
-  } else {
-    list = (
-      <View
-        accessibilityRole="radiogroup"
-        accessibilityLabel={t.commitments.category}
-        className="flex-row flex-wrap gap-2"
-      >
-        {categories.data.map((category) => (
-          <CategoryChip
-            key={category.id}
-            category={category}
-            selected={category.id === value}
-            onPress={() => {
-              onChange(category.id);
-            }}
-          />
-        ))}
-      </View>
-    );
-  }
-
-  return (
-    <View className="gap-2">
-      <Text className="font-sans-semibold text-sm text-foreground">{t.commitments.category}</Text>
-      {list}
-      <FieldError>{error}</FieldError>
-    </View>
-  );
 }
 
 /**

@@ -99,8 +99,9 @@ describe("lista", () => {
 
   it("błąd z ponowieniem", async () => {
     seedFakeServer({ templates: [coffee] });
+    // Not a network error: those are retried, and the retry would succeed.
     fakeApi.expenseTemplates.list.mockRejectedValueOnce(
-      new ApiError("network", null, "Network request failed"),
+      new ApiError("invalid-response", 200, "Response does not match the schema"),
     );
     await openList();
 

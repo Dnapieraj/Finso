@@ -59,6 +59,64 @@ function HideAmountsButton({ hidden, color }: { hidden: boolean; color: string }
   );
 }
 
+/** A line of money text that a screen reader hears with "ukryta kwota" in privacy mode. */
+function MoneyLine({ text, className }: { text: string; className: string }) {
+  const money = useMoney();
+  return (
+    <Text accessibilityLabel={money.spoken(text)} className={className}>
+      {text}
+    </Text>
+  );
+}
+
+/**
+ * Today's limit with yesterday's leftover carried over (PRODUCT.md, Faza 1,
+ * punkt 11), then what each later day gets. Money left rounds down; an
+ * overspend rounds up, so neither looks better than it is.
+ */
+function TodayLines({ budget, payday }: { budget: BudgetSummary; payday: string }) {
+  const money = useMoney();
+  const { today, daysRemaining } = budget;
+  const down = (amount: number) => money.format(grosze(amount), { whole: "down" });
+  const nextDays = daysRemaining - 1;
+
+  return (
+    <View className="gap-1">
+      {today.left >= 0 ? (
+        <MoneyLine
+          text={t.todayLeft(down(today.left))}
+          className="font-sans-semibold text-lg text-card-foreground"
+        />
+      ) : (
+        <MoneyLine
+          text={t.todayOver(money.format(grosze(-today.left), { whole: "up" }))}
+          className="font-sans-semibold text-lg text-caution"
+        />
+      )}
+      {today.carriedFromYesterday > 0 && (
+        <MoneyLine
+          text={t.carried(down(today.carriedFromYesterday), down(today.limit))}
+          className="font-sans text-sm text-muted-foreground"
+        />
+      )}
+      {nextDays > 0 ? (
+        <MoneyLine
+          text={t.thenPerDay(
+            down(today.nextDays),
+            `${String(nextDays)} ${plural(nextDays, t.days)}`,
+            payday,
+          )}
+          className="font-sans text-sm text-muted-foreground"
+        />
+      ) : (
+        daysRemaining === 1 && (
+          <Text className="font-sans text-sm text-muted-foreground">{t.lastDay(payday)}</Text>
+        )
+      )}
+    </View>
+  );
+}
+
 function BudgetOverview({ budget }: { budget: BudgetSummary }) {
   const money = useMoney();
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
@@ -66,7 +124,6 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
   const below = budget.availableBalance < 0;
   const dayCount = t.periodDay(progress.day, progress.totalDays);
   const shownBalance = useAnimatedAmount(budget.availableBalance);
-  const perDay = t.perDay(money.format(grosze(budget.dailyAllowance), { whole: "down" }));
 
   return (
     <Card>
@@ -103,22 +160,7 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
       {below ? (
         <Text className="font-sans text-base text-card-foreground">{t.noFreeMoney}</Text>
       ) : (
-        <View className="gap-1">
-          <Text
-            accessibilityLabel={money.spoken(perDay)}
-            className="font-sans-semibold text-lg text-card-foreground"
-          >
-            {perDay}
-          </Text>
-          {budget.daysRemaining > 0 && (
-            <Text className="font-sans text-sm text-muted-foreground">
-              {t.untilPayday(
-                `${String(budget.daysRemaining)} ${plural(budget.daysRemaining, t.days)}`,
-                formatDayMonth(progress.payday),
-              )}
-            </Text>
-          )}
-        </View>
+        <TodayLines budget={budget} payday={formatDayMonth(progress.payday)} />
       )}
       {budget.breakdown.periodIncome === 0 && (
         <Text className="font-sans text-sm text-muted-foreground">{t.noIncome}</Text>
