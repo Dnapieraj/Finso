@@ -438,7 +438,24 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
 7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12)
 8. **Sprzątanie:** nieużywany kod i paczki (knip), importy fontów (dziś do
    appki trafia 26 plików, używamy 3), `expo-system-ui`, aktualizacje Expo
-9. **Testy e2e mobile**
+9. **Reset hasła („Nie pamiętam hasła”) przez e-mail** i potwierdzenie
+   adresu e-mail przy rejestracji (dopisane 13.10.2026). Do ustalenia przy
+   tym punkcie: jednorazowy, krótko ważny token (w bazie tylko jego hash),
+   reset unieważnia wszystkie refresh tokeny, ta sama odpowiedź dla
+   istniejącego i nieistniejącego adresu (bez zdradzania, kto ma konto),
+   rate limiting, co z kontami założonymi przed potwierdzaniem adresu.
+   Usługa wysyłki: propozycja **Resend** (region UE, proste API HTTP, darmowy
+   próg wystarczy na start), alternatywa **Brevo** (firma z UE) lub Amazon SES
+   (najtańszy przy dużej skali, więcej konfiguracji). Wybrana usługa trafia do
+   polityki prywatności jako odbiorca danych (adres e-mail). Nic nie
+   instalujemy przed akceptacją
+10. **Eksport danych do CSV** w Ustawieniach (RODO, art. 20 — prawo do kopii
+    danych): wydatki, wpływy, cele, stałe zobowiązania; plik przez systemowe
+    „Udostępnij”, kwoty i daty w formacie czytelnym dla arkusza. Polityka
+    prywatności opisuje, jak z tego skorzystać
+11. **„Zgłoś problem / Kontakt”** w Ustawieniach: adres `kontakt@finso.app`,
+    wersja appki i systemu dołączona do wiadomości (bez danych finansowych)
+12. **Testy e2e mobile**
 
 Potem etap 8 (RevenueCat, publikacja). Faza 2 bez zmian.
 
