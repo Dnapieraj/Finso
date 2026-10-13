@@ -77,6 +77,11 @@ export const transactionSchema = z.object({
   recurringRuleId: idSchema.nullable(),
   note: z.string().nullable(),
   status: confirmationStatusSchema,
+  /**
+   * „Wydatki przed Finso” z onboardingu: liczą się w okresie, ale nie są
+   * dzisiejszymi wydatkami ani „ostatnio używanymi”.
+   */
+  beforeFinso: z.boolean(),
 });
 
 /** Strona transakcji. */

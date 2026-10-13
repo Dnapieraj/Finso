@@ -33,6 +33,14 @@ export const budgetSummarySchema = z.object({
   ),
   /** Rata każdego celu w tym okresie — pozycje breakdown.goalContributions. */
   goalContributions: z.array(z.object({ goalId: idSchema, amount: amountOutput })),
+  /** Dzienny limit z przenoszeniem — patrz calculateTodayAllowance. */
+  today: z.object({
+    limit: amountOutput,
+    spent: amountOutput,
+    left: amountOutput,
+    carriedFromYesterday: amountOutput,
+    nextDays: amountOutput,
+  }),
 });
 
 /** Body `POST /budget/simulate`. Kategoria jak w specyfikacji: "kwota i kategoria przed zakupem". */

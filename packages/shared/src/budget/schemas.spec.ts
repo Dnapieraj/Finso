@@ -40,6 +40,7 @@ describe("budgetSummarySchema", () => {
       awaitingIncome: 0,
       fixedCommitments: [],
       goalContributions: [],
+      today: { limit: -6_250, spent: 0, left: -6_250, carriedFromYesterday: 0, nextDays: -7_143 },
     });
     expect(result.success).toBe(true);
   });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isoDate } from "../date.js";
 import { grosze } from "../money.js";
 import { calculateAvailableBalance } from "./calculate-available-balance.js";
 import { calculateTodayAllowance, nextDaysAllowance } from "./today-allowance.js";
@@ -199,16 +200,16 @@ describe("nextDaysAllowance", () => {
 describe("calculateAvailableBalance → today", () => {
   const input = {
     periodIncome: grosze(500_000),
-    period: { start: "2026-09-10", end: "2026-10-09" },
+    period: { start: isoDate("2026-09-10"), end: isoDate("2026-10-09") },
     remainingFixedCommitments: [],
     goalContributions: [],
-  } as const;
+  };
 
   it("liczy dzisiejszy limit z wydatków dziś i wczoraj", () => {
     // 28.09: 12 dni do końca. Wydano 2640 zł, w tym 50 zł wczoraj i 20 zł dziś.
     const result = calculateAvailableBalance({
       ...input,
-      asOf: "2026-09-28",
+      asOf: isoDate("2026-09-28"),
       alreadySpent: grosze(264_000),
       spentToday: grosze(2_000),
       spentYesterday: grosze(5_000),
@@ -227,7 +228,7 @@ describe("calculateAvailableBalance → today", () => {
   it("bez podanych wydatków dziś/wczoraj — dzień bez wydatków i bez „wczoraj”", () => {
     const result = calculateAvailableBalance({
       ...input,
-      asOf: "2026-09-10",
+      asOf: isoDate("2026-09-10"),
       alreadySpent: grosze(0),
     });
 

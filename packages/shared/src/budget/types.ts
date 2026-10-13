@@ -1,5 +1,6 @@
 import type { IsoDate } from "../date.js";
 import type { Grosze } from "../money.js";
+import type { TodayAllowance } from "./today-allowance.js";
 
 /** Poziom ryzyka zaplanowanego zakupu — patrz JSDoc {@link simulatePurchase}. */
 export type RiskLevel = "safe" | "tight" | "over";
@@ -57,6 +58,16 @@ export interface CalculateAvailableBalanceInput {
    * wyklucza już opłacone, żeby nie liczyć ich podwójnie).
    */
   alreadySpent: Grosze;
+  /**
+   * Bieżące wydatki z `asOf` (bez opłat stałych płatności i „Wydatków
+   * przed Finso”) — do dzisiejszego limitu. Brak = 0.
+   */
+  spentToday?: Grosze;
+  /**
+   * To samo z dnia przed `asOf`; `null` albo brak = nie ma „wczoraj”
+   * (pierwszy dzień okresu albo dzień, od którego Finso prowadzi budżet).
+   */
+  spentYesterday?: Grosze | null;
 }
 
 export interface CalculateAvailableBalanceOutput {
@@ -82,6 +93,8 @@ export interface CalculateAvailableBalanceOutput {
     goalContributions: Grosze;
     alreadySpent: Grosze;
   };
+  /** Dzienny limit z przenoszeniem z wczoraj. */
+  today: TodayAllowance;
 }
 
 /** Cel oszczędnościowy w kształcie potrzebnym symulatorowi (patrz też {@link GoalContributionInput}). */

@@ -34,6 +34,12 @@ import {
   type IncomeSource,
   type UpdateIncomeSourceInput,
 } from "../income/schemas.js";
+import {
+  expenseTemplateSchema,
+  type CreateExpenseTemplateInput,
+  type ExpenseTemplate,
+  type UpdateExpenseTemplateInput,
+} from "../expense-templates/schemas.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   transactionPageSchema,
@@ -192,6 +198,15 @@ export interface ApiClient {
   readonly categories: {
     /** Kategorie systemowe i własne użytkownika. */
     list(): Promise<Category[]>;
+  };
+  readonly expenseTemplates: {
+    /** Szablony szybkiego dodawania w kolejności dodania. */
+    list(): Promise<ExpenseTemplate[]>;
+    create(input: CreateExpenseTemplateInput): Promise<ExpenseTemplate>;
+    /** Zmienia tylko podane pola. */
+    update(id: string, input: UpdateExpenseTemplateInput): Promise<ExpenseTemplate>;
+    /** Usuwa naprawdę — to ustawienie, nie dane finansowe. */
+    remove(id: string): Promise<void>;
   };
   readonly transactions: {
     /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
@@ -413,6 +428,20 @@ export function createApiClient({
     },
     categories: {
       list: () => read("/categories", z.array(categorySchema)),
+    },
+    expenseTemplates: {
+      list: () => read("/expense-templates", z.array(expenseTemplateSchema)),
+      create: (input) => write("POST", "/expense-templates", input, expenseTemplateSchema),
+      update: (id, input) =>
+        write(
+          "PATCH",
+          `/expense-templates/${encodeURIComponent(id)}`,
+          input,
+          expenseTemplateSchema,
+        ),
+      async remove(id) {
+        await execute({ method: "DELETE", path: `/expense-templates/${encodeURIComponent(id)}` });
+      },
     },
     recurringRules: {
       list: () => read("/recurring-rules", z.array(recurringRuleSchema)),

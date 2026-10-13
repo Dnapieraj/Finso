@@ -5,6 +5,7 @@ import type {
   CalculateAvailableBalanceInput,
   CalculateAvailableBalanceOutput,
 } from "./types.js";
+import { calculateTodayAllowance } from "./today-allowance.js";
 
 /**
  * Ile użytkownik może swobodnie wydać do końca bieżącego okresu
@@ -41,6 +42,12 @@ export function calculateAvailableBalance(
       goalContributions,
       alreadySpent: input.alreadySpent,
     },
+    today: calculateTodayAllowance({
+      availableBalance,
+      daysRemaining,
+      spentToday: input.spentToday ?? grosze(0),
+      spentYesterday: input.spentYesterday ?? null,
+    }),
   };
 }
 

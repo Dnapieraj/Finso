@@ -1,9 +1,11 @@
 import { grosze, type Grosze } from "../money.js";
 import { calculateDailyAllowance } from "./calculate-available-balance.js";
+import { nextDaysAllowance } from "./today-allowance.js";
 import type { BudgetSummary } from "./schemas.js";
 
 /**
- * Stan budżetu po dodaniu wydatku z bieżącego okresu — bez pytania API.
+ * Stan budżetu po dodaniu wydatku z DZIŚ — bez pytania API (szybkie
+ * dodawanie zawsze zapisuje z dzisiejszą datą).
  * Aplikacja pokazuje go od razu (optimistic update), zanim serwer
  * potwierdzi zapis; wynik jest taki sam, jaki policzyłby silnik, bo
  * wydatek tylko zwiększa `alreadySpent`.
@@ -34,8 +36,15 @@ function assertPositive(amount: Grosze): void {
 
 function shiftSpent(summary: BudgetSummary, delta: Grosze): BudgetSummary {
   const availableBalance = grosze(summary.availableBalance - delta);
+  const left = grosze(summary.today.left - delta);
   return {
     ...summary,
+    today: {
+      ...summary.today,
+      spent: summary.today.spent + delta,
+      left,
+      nextDays: nextDaysAllowance(availableBalance, left, summary.daysRemaining),
+    },
     availableBalance,
     dailyAllowance: calculateDailyAllowance(availableBalance, summary.daysRemaining),
     breakdown: {

@@ -1,4 +1,4 @@
-import type { IsoDate } from "../date.js";
+import { addDays, type IsoDate } from "../date.js";
 import { grosze, type Grosze } from "../money.js";
 import { calculateGoalContribution } from "./calculate-goal-contribution.js";
 import { currentBudgetPeriod, periodsUntil } from "./period.js";
@@ -56,6 +56,8 @@ export interface BudgetTransaction {
   occurrenceDate?: IsoDate | null;
   status: ConfirmationStatus;
   recurringRuleId: string | null;
+  /** „Wydatki przed Finso” z onboardingu — nie są wydatkiem z tego dnia. */
+  beforeFinso?: boolean;
 }
 
 export interface BudgetGoal {
@@ -72,6 +74,11 @@ export interface BudgetGoal {
 export interface BudgetSnapshot {
   /** Dzisiejsza data W STREFIE UŻYTKOWNIKA (todayInTimeZone). */
   today: IsoDate;
+  /**
+   * Dzień, od którego Finso prowadzi budżet (ukończenie onboardingu, w strefie
+   * użytkownika). Wcześniej nie ma „wczoraj” do przeniesienia. Brak = zawsze było.
+   */
+  trackedSince?: IsoDate;
   periodStartDay: number;
   incomeSources: BudgetIncomeSource[];
   incomeEntries: BudgetIncomeEntry[];
@@ -102,6 +109,11 @@ export interface BudgetSnapshot {
  *
  * **alreadySpent** — suma potwierdzonych transakcji z okresu.
  *
+ * **spentToday** / **spentYesterday** — potwierdzone wydatki z dziś i z
+ * wczoraj, bez opłat stałych płatności (mają swoje miejsce w budżecie) i bez
+ * „Wydatków przed Finso”; `spentYesterday` = `null`, gdy wczoraj jest przed
+ * okresem albo przed `trackedSince`.
+ *
  * **goalContributions** / **goals** — każdy cel z ratą z
  * calculateGoalContribution(cel, periodsUntil(...)).
  */
@@ -125,6 +137,7 @@ export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseI
       ).contributionPerPeriod,
     })),
     alreadySpent: sumAmounts(transactions),
+    ...daySpending(snapshot, transactions, period),
     goals: snapshot.goals.map((goal) => ({ ...goal })),
   };
 }
@@ -186,6 +199,23 @@ function remainingCommitments(snapshot: BudgetSnapshot, period: BudgetPeriod): F
       }
       return lines;
     });
+}
+
+function daySpending(
+  snapshot: BudgetSnapshot,
+  confirmedInPeriod: BudgetTransaction[],
+  period: BudgetPeriod,
+): { spentToday: Grosze; spentYesterday: Grosze | null } {
+  const dayToDay = confirmedInPeriod.filter(
+    (tx) => tx.recurringRuleId === null && tx.beforeFinso !== true,
+  );
+  const spentOn = (day: IsoDate) => sumAmounts(dayToDay.filter((tx) => tx.date === day));
+  const yesterday = addDays(snapshot.today, -1);
+  const tracked = snapshot.trackedSince === undefined || yesterday >= snapshot.trackedSince;
+  return {
+    spentToday: spentOn(snapshot.today),
+    spentYesterday: isInPeriod(yesterday, period) && tracked ? spentOn(yesterday) : null,
+  };
 }
 
 function isInPeriod(date: IsoDate, period: BudgetPeriod): boolean {

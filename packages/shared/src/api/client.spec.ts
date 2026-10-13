@@ -385,6 +385,7 @@ describe("createApiClient", () => {
       awaitingIncome: 0,
       fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
       goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+      today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },
     };
     const goal = {
       id: "01923b6e-0000-7000-8000-000000000010",
@@ -408,6 +409,7 @@ describe("createApiClient", () => {
       recurringRuleId: null,
       note: null,
       status: "CONFIRMED",
+      beforeFinso: false,
     };
 
     it.each([
@@ -749,6 +751,52 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("expense templates: list, create, edit, delete", () => {
+    const TEMPLATE_ID = "01923b6e-0000-7000-8000-000000000061";
+    const input = {
+      name: "Kawa",
+      amount: 1_400,
+      categoryId: "01923b6e-0000-7000-8000-000000000020",
+    };
+    const template = { id: TEMPLATE_ID, ...input };
+
+    it("expenseTemplates.list validates the templates", async () => {
+      const { api } = setup({ "GET /expense-templates": [jsonResponse(200, [template])] });
+
+      await expect(api.expenseTemplates.list()).resolves.toEqual([template]);
+    });
+
+    it("expenseTemplates.create posts the template", async () => {
+      const { api, fetch } = setup({ "POST /expense-templates": [jsonResponse(201, template)] });
+
+      await expect(api.expenseTemplates.create(input)).resolves.toEqual(template);
+      expect(sentRequest(fetch, 0).body).toEqual(input);
+    });
+
+    it("expenseTemplates.update patches only the fields given", async () => {
+      const { api, fetch } = setup({
+        [`PATCH /expense-templates/${TEMPLATE_ID}`]: [
+          jsonResponse(200, { ...template, amount: 1_600 }),
+        ],
+      });
+
+      await expect(api.expenseTemplates.update(TEMPLATE_ID, { amount: 1_600 })).resolves.toEqual({
+        ...template,
+        amount: 1_600,
+      });
+      expect(sentRequest(fetch, 0).body).toEqual({ amount: 1_600 });
+    });
+
+    it("expenseTemplates.remove resolves the 204 without a body", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /expense-templates/${TEMPLATE_ID}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.expenseTemplates.remove(TEMPLATE_ID)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+  });
+
   describe("goals: create with a key, edit, move to trash and back", () => {
     const GOAL_ID = "01923b6e-0000-7000-8000-000000000060";
     const goal = {
@@ -811,6 +859,7 @@ describe("createApiClient", () => {
       recurringRuleId: null,
       note: null,
       status: "CONFIRMED",
+      beforeFinso: false,
     };
     const summary = {
       total: 4_590,

@@ -77,6 +77,8 @@ describe('assembleBudgetInput — okres i "dziś"', () => {
       remainingFixedCommitments: [],
       goalContributions: [],
       alreadySpent: 0,
+      spentToday: 0,
+      spentYesterday: 0,
       goals: [],
     });
   });
