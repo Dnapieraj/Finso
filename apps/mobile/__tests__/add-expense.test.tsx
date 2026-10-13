@@ -152,9 +152,9 @@ describe("optimistic update", () => {
 
     await addExpense("45,90");
 
-    // 1234,56 zł − 45,90 zł = 1188,66 zł; per day floor(118 866 / 12) = 99,05 zł.
+    // 1234,56 zł − 45,90 zł = 1188,66 zł; today 102,88 zł − 45,90 zł = 56,98 zł.
     expect(await screen.findByText(zl("1188 zł"))).toBeOnTheScreen();
-    expect(screen.getByText(`${zl("99 zł")} dziennie`)).toBeOnTheScreen();
+    expect(screen.getByText(`Dziś możesz wydać ${zl("56 zł")}`)).toBeOnTheScreen();
     const row = screen.getByLabelText(`Jedzenie, 28 września, ${zl("45,90 zł")}`);
     expect(within(row).getByText(zl("45,90 zł"))).toBeOnTheScreen();
   });

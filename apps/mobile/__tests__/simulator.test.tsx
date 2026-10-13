@@ -97,13 +97,19 @@ describe("risk", () => {
       "safe",
       testSimulation(),
       "Stać cię",
-      [`Zostanie ${zl("1114 zł")}`, `${zl("92 zł")} dziennie zamiast ${zl("102 zł")}`],
+      [
+        `Zostanie ${zl("1114 zł")}`,
+        `Średnio dziennie do wypłaty: ${zl("92 zł")} zamiast ${zl("102 zł")}`,
+      ],
     ],
     [
       "tight",
       testSimulation({ riskLevel: "tight", remainingAfter: 3_456, dailyAllowanceAfter: 288 }),
       "Stać cię, ale będzie ciasno",
-      [`Zostanie ${zl("34 zł")}`, `${zl("2 zł")} dziennie zamiast ${zl("102 zł")}`],
+      [
+        `Zostanie ${zl("34 zł")}`,
+        `Średnio dziennie do wypłaty: ${zl("2 zł")} zamiast ${zl("102 zł")}`,
+      ],
     ],
     [
       "over",

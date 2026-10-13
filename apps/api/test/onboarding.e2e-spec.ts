@@ -260,6 +260,8 @@ describe("Onboarding (e2e)", () => {
             recurringRuleId: null,
             note: "Wydatki przed Finso",
             status: "CONFIRMED",
+            // Nie liczy się do „wydano dziś” — to wydatki z dni przed Finso.
+            beforeFinso: true,
           },
         ]);
       });
@@ -272,6 +274,8 @@ describe("Onboarding (e2e)", () => {
           availableBalance: 499_000,
           dailyAllowance: 29_352,
           breakdown: { alreadySpent: 45_000 },
+          // Ani „Dziś wydano 450 zł”, ani „Wczoraj zostało…” sprzed Finso.
+          today: { limit: 29_352, spent: 0, left: 29_352, carriedFromYesterday: 0 },
         });
       });
 

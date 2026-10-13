@@ -46,18 +46,75 @@ describe("budget", () => {
     expect(screen.getByText(zl("1234 zł"))).toBeOnTheScreen();
   });
 
-  it("shows the daily amount until payday", async () => {
+  it("shows what is left for today, then the daily amount until payday", async () => {
     await openDashboard();
 
-    expect(await screen.findByText(`${zl("102 zł")} dziennie`)).toBeOnTheScreen();
-    expect(screen.getByText("przez 12 dni · do wypłaty 10 października")).toBeOnTheScreen();
+    expect(await screen.findByText(`Dziś możesz wydać ${zl("102 zł")}`)).toBeOnTheScreen();
+    expect(
+      screen.getByText(`Potem ${zl("102 zł")} dziennie przez 11 dni · do wypłaty 10 października`),
+    ).toBeOnTheScreen();
   });
 
-  it("says '1 dzień' on the last day of the period", async () => {
-    fakeApi.budget.current.mockResolvedValueOnce({ ...testBudget, daysRemaining: 1 });
+  it("the leftover from yesterday is added to today, said in so many words", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      today: {
+        limit: 25_400,
+        spent: 0,
+        left: 25_400,
+        carriedFromYesterday: 2_000,
+        nextDays: 9_900,
+      },
+    });
     await openDashboard();
 
-    expect(await screen.findByText("przez 1 dzień · do wypłaty 10 października")).toBeOnTheScreen();
+    expect(
+      await screen.findByText(`Wczoraj zostało ${zl("20 zł")}, dziś masz ${zl("254 zł")}`),
+    ).toBeOnTheScreen();
+    expect(screen.getByText(`Dziś możesz wydać ${zl("254 zł")}`)).toBeOnTheScreen();
+  });
+
+  it("nothing left from yesterday: no carry-over line", async () => {
+    await openDashboard();
+    await screen.findByText(`Dziś możesz wydać ${zl("102 zł")}`);
+
+    expect(screen.queryByText(/Wczoraj zostało/)).not.toBeOnTheScreen();
+  });
+
+  it("over the limit today: says by how much, rounded up", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      today: {
+        limit: 10_288,
+        spent: 15_000,
+        left: -4_712,
+        carriedFromYesterday: 0,
+        nextDays: 9_859,
+      },
+    });
+    await openDashboard();
+
+    expect(
+      await screen.findByText(`Dziś wydano o ${zl("48 zł")} więcej, niż planowano`),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/Dziś możesz wydać/)).not.toBeOnTheScreen();
+    expect(
+      screen.getByText(`Potem ${zl("98 zł")} dziennie przez 11 dni · do wypłaty 10 października`),
+    ).toBeOnTheScreen();
+  });
+
+  it("the last day of the period: no days after it", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      daysRemaining: 1,
+      today: { limit: 123_456, spent: 0, left: 123_456, carriedFromYesterday: 0, nextDays: 0 },
+    });
+    await openDashboard();
+
+    expect(
+      await screen.findByText("Ostatni dzień okresu · wypłata 10 października"),
+    ).toBeOnTheScreen();
+    expect(screen.queryByText(/^Potem/)).not.toBeOnTheScreen();
   });
 
   it("shows the budget period as a progress bar with its day count", async () => {
@@ -104,6 +161,7 @@ describe("budget", () => {
     expect(screen.getByText(zl("87 zł"))).toBeOnTheScreen();
     expect(screen.getByText("Do wypłaty nie masz wolnych środków.")).toBeOnTheScreen();
     expect(screen.queryByText(/dziennie/)).not.toBeOnTheScreen();
+    expect(screen.queryByText(/^Dziś/)).not.toBeOnTheScreen();
   });
 
   it("with no income in the period, explains why there is nothing to spend", async () => {

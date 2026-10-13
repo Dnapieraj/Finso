@@ -79,6 +79,64 @@ describe("Budget (e2e)", () => {
     me = await registerUser(app);
   });
 
+  describe("GET /budget/current — dziś i wczoraj (dzienny limit z przenoszeniem)", () => {
+    /** Finso prowadzi budżet od początku okresu — „wczoraj” (22.09) się liczy. */
+    async function trackedFromSeptember(session: TestSession) {
+      await db.user.update({
+        where: { id: session.user.id },
+        data: { onboardingCompletedAt: new Date("2026-09-01T08:00:00Z") },
+      });
+    }
+
+    it("niewydane wczoraj przechodzi na dziś", async () => {
+      await trackedFromSeptember(me);
+      await seedTypicalUser(me);
+      await post(me, "/transactions", { amount: 10_000, date: "2026-09-22" });
+      await post(me, "/transactions", { amount: 2_000, date: "2026-09-23" });
+
+      // Saldo 503 367 na 8 dni. Wczoraj rano 515 367 / 9 = 57 263; wydano
+      // 10 000, zostało 47 263 → dziś 104 526, po kawie za 20 zł 102 526.
+      expect((await current()).today).toEqual({
+        limit: 104_526,
+        spent: 2_000,
+        left: 102_526,
+        carriedFromYesterday: 47_263,
+        nextDays: 57_263,
+      });
+    });
+
+    it("opłacony dziś czynsz nie jest „wydanym dziś”", async () => {
+      await trackedFromSeptember(me);
+      const { rentRuleId } = await seedTypicalUser(me);
+      await post(me, "/transactions", {
+        amount: 250_000,
+        date: "2026-09-23",
+        recurringRuleId: rentRuleId,
+      });
+
+      expect((await current()).today.spent).toBe(0);
+    });
+
+    it("dzień liczony w strefie użytkownika: 23:30 w Warszawie to jeszcze 23.09", async () => {
+      await trackedFromSeptember(me);
+      await post(me, "/transactions", { amount: 2_000, date: "2026-09-23" });
+      clock.set("2026-09-23T21:30:00Z");
+
+      expect((await current()).today.spent).toBe(2_000);
+    });
+
+    it("w dniu rejestracji bez onboardingu nie ma „wczoraj”", async () => {
+      // Bez tej reguły zerowe wydatki z 22.09 dałyby „Wczoraj zostało 572 zł”.
+      await seedTypicalUser(me);
+      await db.user.update({
+        where: { id: me.user.id },
+        data: { createdAt: new Date("2026-09-23T08:00:00Z") },
+      });
+
+      expect((await current()).today.carriedFromYesterday).toBe(0);
+    });
+  });
+
   describe("GET /budget/current", () => {
     it("nowy użytkownik: zerowy dochód, zero do wydania", async () => {
       const summary = await current();
@@ -92,6 +150,7 @@ describe("Budget (e2e)", () => {
         awaitingIncome: 0,
         fixedCommitments: [],
         goalContributions: [],
+        today: { limit: 0, spent: 0, left: 0, carriedFromYesterday: 0, nextDays: 0 },
       });
     });
 

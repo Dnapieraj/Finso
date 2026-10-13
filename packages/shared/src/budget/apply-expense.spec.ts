@@ -20,6 +20,8 @@ const summary: BudgetSummary = {
   awaitingIncome: 0,
   fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
   goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+  // Nic dziś nie wydano, wczoraj zgodnie z planem: 102,88 zł dziś i potem.
+  today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },
 };
 
 describe("addExpenseToSummary", () => {
@@ -106,5 +108,34 @@ describe("removeExpenseFromSummary", () => {
 
   it.each([0, -100])("odrzuca kwotę %i", (amount) => {
     expect(() => removeExpenseFromSummary(summary, grosze(amount))).toThrow(RangeError);
+  });
+});
+
+describe("dzisiejszy limit po szybkim dodaniu (wydatek z dziś)", () => {
+  it("wydatek w ramach limitu: rośnie „wydane dziś”, maleje „zostało”, kolejne dni bez zmian", () => {
+    const after = addExpenseToSummary(summary, grosze(4_590));
+
+    expect(after.today).toEqual({
+      limit: 10_288,
+      spent: 4_590,
+      left: 5_698,
+      carriedFromYesterday: 0,
+      // (1188,66 − 56,98) / 11 = 102,88 zł — to, co zostało z dziś, jest na dziś.
+      nextDays: 10_288,
+    });
+  });
+
+  it("wydatek ponad dzisiejszy limit: ujemne „zostało”, kolejne dni dostają mniej", () => {
+    const after = addExpenseToSummary(summary, grosze(15_000));
+
+    expect(after.today.left).toBe(-4_712);
+    // 1084,56 zł / 11 dni = 98,59 zł
+    expect(after.today.nextDays).toBe(9_859);
+  });
+
+  it("cofnięcie przywraca dzisiejszy limit co do grosza", () => {
+    const added = addExpenseToSummary(summary, grosze(15_000));
+
+    expect(removeExpenseFromSummary(added, grosze(15_000)).today).toEqual(summary.today);
   });
 });

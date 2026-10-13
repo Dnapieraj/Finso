@@ -12,6 +12,9 @@ import type {
   RecurringRule,
   TransactionDraft,
   DeleteAccountInput,
+  CreateExpenseTemplateInput,
+  ExpenseTemplate,
+  UpdateExpenseTemplateInput,
   DueConfirmation,
   Goal,
   ListTransactionsQuery,
@@ -43,7 +46,10 @@ export const testUser: PublicUser = {
   onboardingCompleted: true,
 };
 
-/** Day 19 of 30; 1234,56 zł left for 12 days → 102,88 zł a day. */
+/**
+ * Day 19 of 30; 1234,56 zł left for 12 days → 102,88 zł a day. Nothing
+ * spent today and yesterday went to plan, so today is 102,88 zł as well.
+ */
 export const testBudget: BudgetSummary = {
   period: { start: "2026-09-10", end: "2026-10-09" },
   asOf: "2026-09-28",
@@ -59,6 +65,7 @@ export const testBudget: BudgetSummary = {
   awaitingIncome: 0,
   fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
   goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+  today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },
 };
 
 /** A 120 zł purchase that is easily affordable and touches no goal. */
@@ -104,6 +111,18 @@ export function testTransaction(overrides: Partial<Transaction> = {}): Transacti
     recurringRuleId: null,
     note: null,
     status: "CONFIRMED",
+    beforeFinso: false,
+    ...overrides,
+  };
+}
+
+/** „Kawa” for 14 zł on food — a quick add template. */
+export function testTemplate(overrides: Partial<ExpenseTemplate> = {}): ExpenseTemplate {
+  return {
+    id: "01923b6e-0000-7000-8000-000000000060",
+    name: "Kawa",
+    amount: 1_400,
+    categoryId: testCategory.id,
     ...overrides,
   };
 }
@@ -209,6 +228,8 @@ let trashedGoals: Goal[] = [];
 let created = 0;
 /** Income and payments waiting for an answer — none unless a test seeds them. */
 let due: DueConfirmation[] = [];
+/** Quick add templates — none unless a test seeds them. */
+let templates: ExpenseTemplate[] = [];
 
 /** Rent of 1500 zł due on 28.09 (testBudget.asOf), still unanswered. */
 export function testDue(overrides: Partial<DueConfirmation> = {}): DueConfirmation {
@@ -243,6 +264,7 @@ export function resetFakeServer(): void {
   goals = [testGoal()];
   trashedGoals = [];
   due = [];
+  templates = [];
 }
 
 /** A draft with the next key: "idempotency-key-1", "-2"… */
@@ -258,7 +280,9 @@ export function seedFakeServer(data: {
   goals?: Goal[];
   transactions?: Transaction[];
   due?: DueConfirmation[];
+  templates?: ExpenseTemplate[];
 }) {
+  if (data.templates) templates = data.templates;
   if (data.transactions) earlier = data.transactions;
   if (data.due) due = data.due;
   if (data.rules) rules = data.rules;
@@ -441,6 +465,25 @@ export const fakeApi = {
   categories: {
     list: jest.fn(() => Promise.resolve([testCategory])),
   },
+  expenseTemplates: {
+    list: jest.fn(() => Promise.resolve(templates.map((template) => ({ ...template })))),
+    create: jest.fn((input: CreateExpenseTemplateInput) => {
+      const template: ExpenseTemplate = { id: nextId(), ...input };
+      templates = [...templates, template];
+      return Promise.resolve(template);
+    }),
+    update: jest.fn((id: string, input: UpdateExpenseTemplateInput) => {
+      const current = templates.find((template) => template.id === id);
+      if (!current) return Promise.reject(new Error(`No template ${id}`));
+      const template = { ...current, ...input };
+      templates = templates.map((other) => (other.id === id ? template : other));
+      return Promise.resolve(template);
+    }),
+    remove: jest.fn((id: string) => {
+      templates = templates.filter((template) => template.id !== id);
+      return Promise.resolve();
+    }),
+  },
   transactions: {
     list: jest.fn((query: Partial<ListTransactionsQuery> = {}) => {
       const matching = byDateDesc(allExpenses()).filter(
@@ -516,6 +559,7 @@ export const fakeApi = {
         amount: input.amount,
         date: input.date,
         categoryId: input.categoryId ?? null,
+        note: input.note ?? null,
       });
       saved.push(expense);
       return Promise.resolve(expense);

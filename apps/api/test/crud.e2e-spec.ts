@@ -118,6 +118,7 @@ describe("Moduły CRUD (e2e)", () => {
         recurringRuleId: null,
         note: null,
         status: "CONFIRMED",
+        beforeFinso: false,
       });
     });
 

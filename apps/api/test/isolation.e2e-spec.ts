@@ -109,6 +109,22 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
       patch: { isActive: false },
       snapshot: (d, id) => d.recurringRule.findUnique({ where: { id } }),
     },
+    {
+      name: "expense templates",
+      path: "/expense-templates",
+      create: async (o) =>
+        post(o, "/expense-templates", {
+          name: "Kawa",
+          amount: 1_400,
+          categoryId: await post(o, "/categories", {
+            name: "Kawiarnie",
+            icon: "star",
+            color: "#123456",
+          }),
+        }),
+      patch: { amount: 1 },
+      snapshot: (d, id) => d.expenseTemplate.findUnique({ where: { id } }),
+    },
   ];
 
   beforeAll(async () => {
@@ -264,6 +280,35 @@ describe("Izolacja danych między użytkownikami (e2e)", () => {
         categoryId: bobsCategory,
       });
       expectUnknownReference(res, "categoryId");
+    });
+
+    it("szablon z kategorią Boba — przy tworzeniu i przy zmianie", async () => {
+      const bobsCategory = await post(bob, "/categories", {
+        name: "X",
+        icon: "x",
+        color: "#000000",
+      });
+      const mineCategory = await post(alice, "/categories", {
+        name: "Y",
+        icon: "y",
+        color: "#000000",
+      });
+      const created = await http()
+        .post("/expense-templates")
+        .set(as(alice))
+        .send({ name: "Kawa", amount: 1_400, categoryId: bobsCategory });
+      expectUnknownReference(created, "categoryId");
+
+      const mine = await post(alice, "/expense-templates", {
+        name: "Kawa",
+        amount: 1_400,
+        categoryId: mineCategory,
+      });
+      const changed = await http()
+        .patch(`/expense-templates/${mine}`)
+        .set(as(alice))
+        .send({ categoryId: bobsCategory });
+      expectUnknownReference(changed, "categoryId");
     });
   });
 

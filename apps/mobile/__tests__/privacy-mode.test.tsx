@@ -62,7 +62,7 @@ describe("oko przy „Możesz wydać”", () => {
     });
     // The main amount, the daily allowance, goals and recent expenses.
     expect(screen.getAllByText(new RegExp(HIDDEN)).length).toBeGreaterThanOrEqual(4);
-    expect(screen.getByText(`${HIDDEN} dziennie`)).toBeOnTheScreen();
+    expect(screen.getByText(`Dziś możesz wydać ${HIDDEN}`)).toBeOnTheScreen();
 
     await press(SHOW);
 

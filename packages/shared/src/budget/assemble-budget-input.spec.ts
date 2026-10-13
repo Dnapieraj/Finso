@@ -469,6 +469,116 @@ describe("assembleBudgetInput — alreadySpent", () => {
   });
 });
 
+describe("assembleBudgetInput — wydane dziś i wczoraj (dzienny limit z przenoszeniem)", () => {
+  const spent = (amount: number, date: string, extra: object = {}) => ({
+    amount: g(amount),
+    date: d(date),
+    status: "CONFIRMED" as const,
+    recurringRuleId: null,
+    ...extra,
+  });
+
+  it("zwykłe potwierdzone wydatki z dziś (23.09) i z wczoraj (22.09)", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        transactions: [
+          spent(1_000, "2026-09-23"),
+          spent(2_000, "2026-09-23"),
+          spent(4_000, "2026-09-22"),
+          spent(8_000, "2026-09-21"),
+        ],
+      }),
+    );
+
+    expect(input.spentToday).toBe(3_000);
+    expect(input.spentYesterday).toBe(4_000);
+  });
+
+  it("opłata stałej płatności się nie liczy — ma swoje miejsce w budżecie, nie w dniu", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        expenseRules: [rent()],
+        transactions: [spent(250_000, "2026-09-23", { recurringRuleId: "rent" })],
+      }),
+    );
+
+    expect(input.spentToday).toBe(0);
+  });
+
+  it("„Wydatki przed Finso” z onboardingu się nie liczą — to nie dzisiejsze wydatki", () => {
+    const input = assembleBudgetInput(
+      snapshot({ transactions: [spent(300_000, "2026-09-23", { beforeFinso: true })] }),
+    );
+
+    expect(input.spentToday).toBe(0);
+    // W okresie nadal się liczy: te pieniądze naprawdę wydano.
+    expect(input.alreadySpent).toBe(300_000);
+  });
+
+  it("PENDING i DECLINED się nie liczą", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        transactions: [
+          { ...spent(7_000, "2026-09-23"), status: "PENDING" },
+          { ...spent(8_000, "2026-09-22"), status: "DECLINED" },
+        ],
+      }),
+    );
+
+    expect(input.spentToday).toBe(0);
+    expect(input.spentYesterday).toBe(0);
+  });
+
+  it("pierwszy dzień okresu: wczoraj należy do poprzedniego okresu — brak „wczoraj” (null)", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        today: d("2026-09-01"),
+        transactions: [spent(4_000, "2026-08-31")],
+      }),
+    );
+
+    expect(input.spentYesterday).toBeNull();
+  });
+
+  it("dzień onboardingu: wczoraj Finso nie prowadził budżetu — brak „wczoraj” (null)", () => {
+    const input = assembleBudgetInput(snapshot({ trackedSince: d("2026-09-23") }));
+
+    expect(input.spentYesterday).toBeNull();
+  });
+
+  it("dzień po onboardingu: wczoraj już się liczy", () => {
+    const input = assembleBudgetInput(
+      snapshot({ trackedSince: d("2026-09-22"), transactions: [spent(4_000, "2026-09-22")] }),
+    );
+
+    expect(input.spentYesterday).toBe(4_000);
+  });
+
+  it("rok przestępny: 1.03.2028 → wczoraj to 29.02", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        today: d("2028-03-01"),
+        periodStartDay: 10,
+        transactions: [spent(4_000, "2028-02-29"), spent(1_000, "2028-02-28")],
+      }),
+    );
+
+    expect(input.spentYesterday).toBe(4_000);
+  });
+
+  it("dzień po zmianie czasu (30.03.2026): wczoraj to niedziela 29.03, cały dzień", () => {
+    const input = assembleBudgetInput(
+      snapshot({
+        today: d("2026-03-30"),
+        transactions: [spent(4_000, "2026-03-29"), spent(1_000, "2026-03-30")],
+      }),
+    );
+
+    expect(input.spentYesterday).toBe(4_000);
+    expect(input.spentToday).toBe(1_000);
+  });
+});
+
 describe("assembleBudgetInput — cele", () => {
   it("rata celu rozłożona na pozostałe okresy (zaokrąglona w górę)", () => {
     const input = assembleBudgetInput(
