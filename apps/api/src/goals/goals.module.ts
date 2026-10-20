@@ -8,5 +8,6 @@ import { GoalsService } from "./goals.service.js";
   imports: [IdempotencyModule],
   controllers: [GoalsController],
   providers: [GoalsService],
+  exports: [GoalsService],
 })
 export class GoalsModule {}

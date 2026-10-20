@@ -9,5 +9,6 @@ import { IncomeSourcesService } from "./income-sources.service.js";
   imports: [IdempotencyModule],
   controllers: [IncomeSourcesController, IncomeEntriesController],
   providers: [IncomeSourcesService, IncomeEntriesService],
+  exports: [IncomeSourcesService],
 })
 export class IncomeModule {}
