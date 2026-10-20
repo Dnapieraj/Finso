@@ -71,15 +71,16 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  refreshTokens    RefreshToken[]
-  categories       Category[]
-  recurringRules   RecurringRule[]
-  incomeSources    IncomeSource[]
-  incomeEntries    IncomeEntry[]
-  transactions     Transaction[]
-  goals            Goal[]
-  idempotencyKeys  IdempotencyKey[]
-  expenseTemplates ExpenseTemplate[]
+  refreshTokens          RefreshToken[]
+  categories             Category[]
+  recurringRules         RecurringRule[]
+  incomeSources          IncomeSource[]
+  incomeEntries          IncomeEntry[]
+  transactions           Transaction[]
+  goals                  Goal[]
+  idempotencyKeys        IdempotencyKey[]
+  expenseTemplates       ExpenseTemplate[]
+  subscriptionDismissals SubscriptionDismissal[]
 }
 
 model RefreshToken {
@@ -161,6 +162,11 @@ model RecurringRule {
   /// Wyłączona reguła (np. anulowana subskrypcja) to nie to samo co
   /// usunięta — historyczne transakcje mają zachować do niej odniesienie.
   isActive Boolean @default(true)
+
+  /// Subskrypcja (Netflix, Spotify) — potwierdzona z detektora albo
+  /// oznaczona przy stałej płatności. Tylko EXPENSE. Wchodzi do sumy
+  /// „Twoje subskrypcje”, czynsz czy rata — nie.
+  isSubscription Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -363,4 +369,22 @@ model ExpenseTemplate {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// --- Detektor subskrypcji --------------------------------------------------
+
+/// „To nie subskrypcja”: klucz wykrytej grupy wydatków, której detektor
+/// więcej nie podpowiada. Wykryte subskrypcje nie mają tabeli — liczą się
+/// na bieżąco z historii wydatków; zapisujemy tylko decyzję użytkownika.
+model SubscriptionDismissal {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Klucz z @vireo/shared ("n|kategoria|spotify", "a|kategoria|3999").
+  key String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, key])
 }

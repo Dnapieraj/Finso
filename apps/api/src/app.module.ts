@@ -18,6 +18,7 @@ import { IncomeModule } from "./income/income.module.js";
 import { OnboardingModule } from "./onboarding/onboarding.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { RecurringRulesModule } from "./recurring-rules/recurring-rules.module.js";
+import { SubscriptionsModule } from "./subscriptions/subscriptions.module.js";
 import { TransactionsModule } from "./transactions/transactions.module.js";
 import { UsersModule } from "./users/users.module.js";
 
@@ -34,6 +35,7 @@ import { UsersModule } from "./users/users.module.js";
     ExpenseTemplatesModule,
     IncomeModule,
     RecurringRulesModule,
+    SubscriptionsModule,
     BudgetModule,
     OnboardingModule,
     ConfirmationsModule,

@@ -8,5 +8,6 @@ import { RecurringRulesService } from "./recurring-rules.service.js";
   imports: [IdempotencyModule],
   controllers: [RecurringRulesController],
   providers: [RecurringRulesService],
+  exports: [RecurringRulesService],
 })
 export class RecurringRulesModule {}

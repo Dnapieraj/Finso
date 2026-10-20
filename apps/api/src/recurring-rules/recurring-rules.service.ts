@@ -70,6 +70,7 @@ export class RecurringRulesService {
       expectedAmount:
         input.expectedAmount !== undefined ? input.expectedAmount : existing.expectedAmount,
       categoryId: input.categoryId !== undefined ? input.categoryId : existing.categoryId,
+      isSubscription: input.isSubscription ?? existing.isSubscription,
     });
     if (!shape.success) throw new ZodValidationException(shape.error);
     await this.refs.assertCategory(userId, input.categoryId);
@@ -104,5 +105,6 @@ function toRecurringRule(row: RecurringRuleRow): RecurringRule {
     expectedAmount: row.expectedAmount,
     categoryId: row.categoryId,
     isActive: row.isActive,
+    isSubscription: row.isSubscription,
   };
 }
