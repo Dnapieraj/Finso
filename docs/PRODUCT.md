@@ -533,7 +533,7 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    API HTTP, darmowy próg wystarczy na start). W tym punkcie Resend trafia do
    polityki prywatności (`apps/web/src/messages/legal/privacy.ts`) jako
    podmiot przetwarzający dane (adres e-mail, treść wiadomości z linkiem)
-10. **Eksport danych do CSV** w Ustawieniach (RODO, art. 20 — prawo do kopii
+10. **ZROBIONE** (`e7aef9c..fbaae39`, 20.10.2026) — **Eksport danych do CSV** w Ustawieniach (RODO, art. 20 — prawo do kopii
     danych): wydatki, wpływy, cele, stałe zobowiązania; plik przez systemowe
     „Udostępnij”, kwoty i daty w formacie czytelnym dla arkusza. Polityka
     prywatności opisuje, jak z tego skorzystać
@@ -842,3 +842,27 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   wpisałem nazwy, której nie mogłem potwierdzić.
 - Nie zrobione (poza zakresem punktu): **zmiana adresu e-mail** — przy literówce
   w adresie dziś pomaga tylko kontakt mailowy; kandydat na Fazę 2.
+
+### 20.10.2026 — punkt 10, eksport danych do CSV
+
+- **Cztery osobne pliki** (wydatki, wpływy, cele, stałe zobowiązania), każdy
+  przez systemowe „Udostępnij”. Jeden plik z mieszanymi kolumnami źle czyta
+  się w arkuszu, a ZIP wymagałby nowej biblioteki i rozpakowywania na telefonie.
+- **Format dla polskiego Excela i Arkuszy Google**: separator `;`, kwoty
+  „1234,56” (nowy styl `formatMoney(…, { style: "spreadsheet" })` — kwoty
+  dalej formatuje tylko `formatMoney`), daty RRRR-MM-DD, CRLF i BOM UTF-8
+  (bez BOM Excel psuje polskie znaki). Kwoty dokładne, bez zaokrągleń.
+- **Ochrona przed formułami**: tekst zaczynający się od `=`, `+`, `@`,
+  tabulatora albo minusa bez cyfry dostaje apostrof — notatka nie wykona się
+  w arkuszu jako formuła. Kwoty ujemne zostają liczbami.
+- **Bez kosza.** Architektura celowo nie daje odczytu wpisów z kosza poza
+  przywracaniem (surowy klient Prismy nie jest eksportowany), więc eksport to
+  dokładnie to, co widać w appce. Ekran i polityka prywatności mówią, że pełną
+  kopię, także z koszem, wyślemy na prośbę mailową.
+- **`GET /export`** zwraca wszystko naraz (bez stronicowania); appka buduje
+  CSV (`apps/mobile/src/export/csv-files.ts`, nazwy kolumn po polsku
+  w `pl.ts`). Każde tapnięcie pobiera dane od nowa.
+- **Nowe biblioteki: `expo-file-system` i `expo-sharing`** (wersje z
+  `expo install` dla SDK 57, moduły natywne — potrzebny nowy development
+  build). Plugin `expo-sharing` dopisany przez instalację usunięty z
+  `app.json` — służy tylko do odbierania udostępnień, których appka nie robi.
