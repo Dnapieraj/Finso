@@ -7,6 +7,7 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import type { Env } from "../config/env.js";
 import { AuthController } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
+import { EmailCodeService } from "./email-code.service.js";
 import { JwtAuthGuard } from "./jwt-auth.guard.js";
 import { PasswordService } from "./password.service.js";
 import { RefreshTokenService } from "./refresh-token.service.js";
@@ -45,8 +46,9 @@ import { RefreshTokenService } from "./refresh-token.service.js";
     AuthService,
     PasswordService,
     RefreshTokenService,
+    EmailCodeService,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
-  exports: [PasswordService],
+  exports: [PasswordService, AuthService, EmailCodeService],
 })
 export class AuthModule {}

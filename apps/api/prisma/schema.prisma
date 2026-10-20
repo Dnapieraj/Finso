@@ -68,6 +68,10 @@ model User {
   /// (ile trwa od rejestracji), a flagę da się z niej wyliczyć.
   onboardingCompletedAt DateTime?
 
+  /// Kiedy użytkownik wpisał kod z e-maila (albo zresetował nim hasło).
+  /// null = appka prosi o potwierdzenie; niczego to nie blokuje.
+  emailVerifiedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -81,6 +85,7 @@ model User {
   idempotencyKeys        IdempotencyKey[]
   expenseTemplates       ExpenseTemplate[]
   subscriptionDismissals SubscriptionDismissal[]
+  emailCodes             EmailCode[]
 }
 
 model RefreshToken {
@@ -387,4 +392,32 @@ model SubscriptionDismissal {
   createdAt DateTime @default(now())
 
   @@unique([userId, key])
+}
+
+// --- Kody z e-maili ---------------------------------------------------------
+
+enum EmailCodePurpose {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+}
+
+/// Jednorazowy 6-cyfrowy kod wysłany e-mailem. Tylko HMAC kodu (z sekretem
+/// serwera), nigdy sam kod. Nowy kod unieważnia poprzednie tego samego celu.
+model EmailCode {
+  id      String           @id @default(uuid(7))
+  userId  String
+  user    User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose EmailCodePurpose
+
+  codeHash  String
+  /// Nieudane próby; po 5 kod przestaje działać (6 cyfr = milion kombinacji).
+  attempts  Int       @default(0)
+  expiresAt DateTime
+  /// Użyty albo zastąpiony nowszym kodem.
+  usedAt    DateTime?
+
+  /// Z zegara API (nie z bazy), żeby limit „raz na minutę” dało się testować.
+  createdAt DateTime
+
+  @@index([userId, purpose])
 }

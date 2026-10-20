@@ -11,6 +11,7 @@ export const publicUserSelect = {
   timezone: true,
   periodStartDay: true,
   onboardingCompletedAt: true,
+  emailVerifiedAt: true,
 } as const;
 
 /**
@@ -26,5 +27,6 @@ export function toPublicUser(user: Pick<User, keyof typeof publicUserSelect>): P
     timezone: user.timezone,
     periodStartDay: user.periodStartDay,
     onboardingCompleted: user.onboardingCompletedAt !== null,
+    emailVerified: user.emailVerifiedAt !== null,
   };
 }

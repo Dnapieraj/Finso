@@ -1,7 +1,15 @@
-import { ForbiddenException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  ServiceUnavailableException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import type { PublicUser, UpdateMeInput } from "@vireo/shared";
 import { rebaseRuleStarts, todayInTimeZone } from "@vireo/shared";
 
+import { EmailCodeService } from "../auth/email-code.service.js";
 import { PasswordService } from "../auth/password.service.js";
 import type { Clock } from "../common/clock.js";
 import { CLOCK } from "../common/clock.js";
@@ -16,6 +24,7 @@ export class UsersService {
     @Inject(PRISMA) private readonly db: Db,
     @Inject(CLOCK) private readonly clock: Clock,
     private readonly passwords: PasswordService,
+    private readonly emailCodes: EmailCodeService,
   ) {}
 
   /**
@@ -109,5 +118,33 @@ export class UsersService {
       throw new ForbiddenException("Invalid password");
     }
     await this.db.user.delete({ where: { id: userId } });
+  }
+
+  /** Nowy kod potwierdzający adres; przy potwierdzonym adresie nic nie robi. */
+  async sendEmailVerification(userId: string): Promise<void> {
+    const user = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, emailVerifiedAt: true },
+    });
+    if (!user) throw new UnauthorizedException();
+    if (user.emailVerifiedAt) return;
+    try {
+      await this.emailCodes.send(user, "EMAIL_VERIFICATION");
+    } catch {
+      throw new ServiceUnavailableException("Verification e-mail not sent");
+    }
+  }
+
+  /** Potwierdza adres kodem z e-maila. */
+  async verifyEmail(userId: string, code: string): Promise<PublicUser> {
+    if (!(await this.emailCodes.consume(userId, "EMAIL_VERIFICATION", code))) {
+      throw new BadRequestException("Invalid or expired code");
+    }
+    const user = await this.db.user.update({
+      where: { id: userId },
+      data: { emailVerifiedAt: this.clock.now() },
+      select: publicUserSelect,
+    });
+    return toPublicUser(user);
   }
 }

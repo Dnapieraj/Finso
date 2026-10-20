@@ -7,9 +7,11 @@ import { ZodResponse } from "nestjs-zod";
 import {
   AuthSessionDto,
   AuthTokensDto,
+  ForgotPasswordDto,
   LoginDto,
   RefreshTokenDto,
   RegisterDto,
+  ResetPasswordDto,
 } from "./auth.dto.js";
 import { AuthService } from "./auth.service.js";
 import { Public } from "./decorators.js";
@@ -52,5 +54,19 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   logout(@Body() body: RefreshTokenDto): Promise<void> {
     return this.auth.logout(body.refreshToken);
+  }
+
+  /** Zawsze 204 — odpowiedź nie mówi, czy konto istnieje. */
+  @Post("password/forgot")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  forgotPassword(@Body() body: ForgotPasswordDto): Promise<void> {
+    return this.auth.forgotPassword(body.email);
+  }
+
+  /** 400 dla złego, wygasłego, zużytego kodu i nieznanego adresu — bez rozróżnienia. */
+  @Post("password/reset")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  resetPassword(@Body() body: ResetPasswordDto): Promise<void> {
+    return this.auth.resetPassword(body);
   }
 }

@@ -95,6 +95,14 @@ export class RefreshTokenService {
     }
   }
 
+  /** Kończy wszystkie sesje użytkownika (zmiana i reset hasła). */
+  async revokeAllForUser(userId: string, db: Db | DbTx = this.db): Promise<void> {
+    await db.refreshToken.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+  }
+
   private async revokeFamily(familyId: string): Promise<void> {
     await this.db.refreshToken.updateMany({
       where: { familyId, revokedAt: null },

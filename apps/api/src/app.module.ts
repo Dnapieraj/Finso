@@ -17,6 +17,7 @@ import { GoalsModule } from "./goals/goals.module.js";
 import { IncomeModule } from "./income/income.module.js";
 import { OnboardingModule } from "./onboarding/onboarding.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
+import { MailModule } from "./mail/mail.module.js";
 import { RecurringRulesModule } from "./recurring-rules/recurring-rules.module.js";
 import { SubscriptionsModule } from "./subscriptions/subscriptions.module.js";
 import { TransactionsModule } from "./transactions/transactions.module.js";
@@ -26,6 +27,7 @@ import { UsersModule } from "./users/users.module.js";
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     PrismaModule,
+    MailModule,
     CommonModule,
     AuthModule,
     UsersModule,
