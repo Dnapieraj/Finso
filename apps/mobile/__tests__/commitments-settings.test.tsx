@@ -165,6 +165,7 @@ describe("adding", () => {
         dayOfWeek: null,
         expectedAmount: 12_000,
         categoryId: billsCategory.id,
+        isSubscription: false,
       }),
     );
     expect(await screen.findByRole("button", { name: "Siłownia" })).toBeOnTheScreen();
@@ -271,6 +272,86 @@ describe("adding", () => {
     });
     const [first, retry] = fakeApi.recurringRules.create.mock.calls;
     expect(retry?.[0].idempotencyKey).toBe(first?.[0].idempotencyKey);
+  });
+});
+
+describe("subscriptions", () => {
+  const subscriptionSwitch = () => screen.findByRole("switch", { name: "To subskrypcja" });
+
+  it("a new commitment can be marked as a subscription", async () => {
+    await openNew();
+
+    await fillIn("Netflix", "49");
+    await type("Dzień miesiąca", "12");
+    await fireEvent(await subscriptionSwitch(), "valueChange", true);
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.recurringRules.create).toHaveBeenCalledWith(
+        withKey(expect.objectContaining({ name: "Netflix", isSubscription: true })),
+      );
+    });
+  });
+
+  it("marking an existing commitment sends only that", async () => {
+    await openEdit();
+    expect(await subscriptionSwitch()).not.toBeChecked();
+
+    await fireEvent(await subscriptionSwitch(), "valueChange", true);
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.recurringRules.update).toHaveBeenCalledWith(rent.id, {
+        isSubscription: true,
+      });
+    });
+  });
+
+  it("a confirmed subscription opens with the switch on", async () => {
+    seedFakeServer({ rules: [testRule({ isSubscription: true })] });
+
+    await openEdit();
+
+    expect(await subscriptionSwitch()).toBeChecked();
+  });
+});
+
+describe("yearly (from the subscription detector)", () => {
+  const domain = testRule({
+    name: "Domena",
+    frequency: "YEARLY",
+    startDate: "2027-03-07",
+    dayOfMonth: 7,
+    expectedAmount: 9_900,
+    isSubscription: true,
+  });
+
+  it("the list says the day and the month", async () => {
+    seedFakeServer({ rules: [domain] });
+
+    await openList();
+
+    const row = within(await screen.findByRole("button", { name: "Domena" }));
+    expect(row.getByText(`${zl("99 zł")} · co rok, 7 marca`)).toBeOnTheScreen();
+  });
+
+  it("the form shows the yearly rhythm as it is and keeps it when saving other changes", async () => {
+    seedFakeServer({ rules: [domain] });
+    await openList();
+    await fireEvent.press(await screen.findByRole("button", { name: "Domena" }));
+    await header("Edytuj zobowiązanie");
+
+    expect(screen.getByText("Co rok, 7 marca")).toBeOnTheScreen();
+    expect(screen.queryByRole("radio", { name: "Co miesiąc" })).toBeNull();
+
+    await type("Kwota", "109");
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(fakeApi.recurringRules.update).toHaveBeenCalledWith(domain.id, {
+        expectedAmount: 10_900,
+      });
+    });
   });
 });
 

@@ -32,6 +32,10 @@ import type {
   UpdateMeInput,
   UpdateRecurringRuleInput,
   UpdateTransactionInput,
+  ConfirmSubscriptionInput,
+  ConfirmedSubscriptionOutput,
+  DetectedSubscriptionOutput,
+  SubscriptionsOverviewOutput,
 } from "@vireo/shared";
 import { addExpenseToSummary, grosze } from "@vireo/shared";
 import { ApiError, type ApiClient } from "@vireo/shared/api";
@@ -173,6 +177,45 @@ export function testRule(overrides: Partial<RecurringRule> = {}): RecurringRule 
     expectedAmount: 150_000,
     categoryId: billsCategory.id,
     isActive: true,
+    isSubscription: false,
+    ...overrides,
+  };
+}
+
+/** Spotify, 23 zł on the 10th, three payments so far — not yet confirmed. */
+export function testDetected(
+  overrides: Partial<DetectedSubscriptionOutput> = {},
+): DetectedSubscriptionOutput {
+  return {
+    key: `n|${testCategory.id}|spotify`,
+    name: "Spotify",
+    categoryId: testCategory.id,
+    frequency: "MONTHLY",
+    amount: 2_300,
+    monthly: 2_300,
+    yearly: 27_600,
+    paymentsCount: 3,
+    lastDate: "2026-09-10",
+    nextDate: "2026-10-10",
+    priceChange: null,
+    ...overrides,
+  };
+}
+
+/** Netflix, 49 zł a month — a commitment marked as a subscription. */
+export function testConfirmed(
+  overrides: Partial<ConfirmedSubscriptionOutput> = {},
+): ConfirmedSubscriptionOutput {
+  return {
+    ruleId: "01923b6e-0000-7000-8000-000000000045",
+    name: "Netflix",
+    categoryId: testCategory.id,
+    frequency: "MONTHLY",
+    interval: 1,
+    amount: 4_900,
+    monthly: 4_900,
+    yearly: 58_800,
+    priceChange: null,
     ...overrides,
   };
 }
@@ -230,6 +273,24 @@ let created = 0;
 let due: DueConfirmation[] = [];
 /** Quick add templates — none unless a test seeds them. */
 let templates: ExpenseTemplate[] = [];
+/** Subscriptions — none unless a test seeds them. */
+let detected: DetectedSubscriptionOutput[] = [];
+let confirmedSubscriptions: ConfirmedSubscriptionOutput[] = [];
+let dismissed: DetectedSubscriptionOutput[] = [];
+
+/** Totals like the API: monthly from the yearly sum, rounded up. */
+function totalOf(items: { monthly: number; yearly: number }[]) {
+  const yearly = items.reduce((sum, item) => sum + item.yearly, 0);
+  return { count: items.length, monthly: Math.ceil(yearly / 12), yearly };
+}
+
+function subscriptionsOverview(): SubscriptionsOverviewOutput {
+  return {
+    confirmed: confirmedSubscriptions,
+    detected,
+    totals: { confirmed: totalOf(confirmedSubscriptions), detected: totalOf(detected) },
+  };
+}
 
 /** Rent of 1500 zł due on 28.09 (testBudget.asOf), still unanswered. */
 export function testDue(overrides: Partial<DueConfirmation> = {}): DueConfirmation {
@@ -265,6 +326,9 @@ export function resetFakeServer(): void {
   trashedGoals = [];
   due = [];
   templates = [];
+  detected = [];
+  confirmedSubscriptions = [];
+  dismissed = [];
 }
 
 /** A draft with the next key: "idempotency-key-1", "-2"… */
@@ -281,7 +345,11 @@ export function seedFakeServer(data: {
   transactions?: Transaction[];
   due?: DueConfirmation[];
   templates?: ExpenseTemplate[];
+  detected?: DetectedSubscriptionOutput[];
+  confirmedSubscriptions?: ConfirmedSubscriptionOutput[];
 }) {
+  if (data.detected) detected = data.detected;
+  if (data.confirmedSubscriptions) confirmedSubscriptions = data.confirmedSubscriptions;
   if (data.templates) templates = data.templates;
   if (data.transactions) earlier = data.transactions;
   if (data.due) due = data.due;
@@ -404,6 +472,7 @@ export const fakeApi = {
         expectedAmount: input.expectedAmount ?? null,
         categoryId: input.categoryId ?? null,
         isActive: true,
+        isSubscription: input.isSubscription ?? false,
       };
       rules = [...rules, rule];
       return Promise.resolve(rule);
@@ -464,6 +533,47 @@ export const fakeApi = {
   },
   categories: {
     list: jest.fn(() => Promise.resolve([testCategory])),
+  },
+  subscriptions: {
+    overview: jest.fn(() => Promise.resolve(subscriptionsOverview())),
+    draftConfirm: jest.fn((input: ConfirmSubscriptionInput) => keyed(input)),
+    confirm: jest.fn(({ input }: IdempotentDraft<ConfirmSubscriptionInput>) => {
+      const item = detected.find((candidate) => candidate.key === input.key);
+      if (!item) return Promise.reject(new ApiError("http", 404, "Not Found"));
+      const rule: RecurringRule = {
+        ...testRule(),
+        id: nextId(),
+        name: input.name,
+        startDate: item.nextDate,
+        dayOfMonth: Number(item.nextDate.slice(8)),
+        expectedAmount: item.amount,
+        categoryId: item.categoryId,
+        isSubscription: true,
+      };
+      rules = [...rules, rule];
+      detected = detected.filter((candidate) => candidate !== item);
+      confirmedSubscriptions = [
+        ...confirmedSubscriptions,
+        testConfirmed({
+          ruleId: rule.id,
+          name: input.name,
+          amount: item.amount,
+          monthly: item.monthly,
+          yearly: item.yearly,
+        }),
+      ];
+      return Promise.resolve(rule);
+    }),
+    dismiss: jest.fn((key: string) => {
+      dismissed = [...dismissed, ...detected.filter((item) => item.key === key)];
+      detected = detected.filter((item) => item.key !== key);
+      return Promise.resolve();
+    }),
+    undismiss: jest.fn((key: string) => {
+      detected = [...detected, ...dismissed.filter((item) => item.key === key)];
+      dismissed = dismissed.filter((item) => item.key !== key);
+      return Promise.resolve();
+    }),
   },
   expenseTemplates: {
     list: jest.fn(() => Promise.resolve(templates.map((template) => ({ ...template })))),

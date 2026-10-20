@@ -139,7 +139,14 @@ test("privacy policy says the app lock is checked by the phone", async ({ page }
   await expect(lock).toContainText("kodem blokady ekranu");
   await expect(lock).toContainText("Nie zbiera danych biometrycznych");
   await expect(lock).toContainText("nie zna kodu");
-  await expect(page.locator("main time")).toHaveAttribute("datetime", "2026-10-13");
+});
+
+test("privacy policy describes the subscription detector and what it stores", async ({ page }) => {
+  await page.goto("/polityka-prywatnosci");
+  const main = page.locator("main");
+  await expect(main).toContainText("odrzucone przez ciebie podpowiedzi detektora subskrypcji");
+  await expect(main).toContainText("Detektor subskrypcji szuka w twoich wydatkach");
+  await expect(main.locator("time")).toHaveAttribute("datetime", "2026-10-20");
 });
 
 test("terms say payments go through the stores and are not financial advice", async ({ page }) => {

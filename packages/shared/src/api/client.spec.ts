@@ -599,6 +599,7 @@ describe("createApiClient", () => {
       expectedAmount: 250_000,
       categoryId: null,
       isActive: true,
+      isSubscription: false,
     } as const;
     const salary = {
       id: SOURCE_ID,
@@ -794,6 +795,80 @@ describe("createApiClient", () => {
 
       await expect(api.expenseTemplates.remove(TEMPLATE_ID)).resolves.toBeUndefined();
       expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+  });
+
+  describe("subscriptions: overview, confirm with a key, dismiss and undo", () => {
+    const KEY = "n|01a0cf55-89a0-7159-b809-6b5abf846e15|spotify";
+    const overview = {
+      confirmed: [],
+      detected: [
+        {
+          key: KEY,
+          name: "Spotify",
+          categoryId: null,
+          frequency: "MONTHLY",
+          amount: 2_300,
+          monthly: 2_300,
+          yearly: 27_600,
+          paymentsCount: 3,
+          lastDate: "2026-10-10",
+          nextDate: "2026-11-10",
+          priceChange: null,
+        },
+      ],
+      totals: {
+        confirmed: { count: 0, monthly: 0, yearly: 0 },
+        detected: { count: 1, monthly: 2_300, yearly: 27_600 },
+      },
+    };
+    const rule = {
+      id: "01923b6e-0000-7000-8000-000000000070",
+      kind: "EXPENSE",
+      name: "Spotify",
+      frequency: "MONTHLY",
+      interval: 1,
+      startDate: "2026-11-10",
+      dayOfMonth: 10,
+      dayOfWeek: null,
+      expectedAmount: 2_300,
+      categoryId: null,
+      isActive: true,
+      isSubscription: true,
+    };
+
+    it("subscriptions.overview validates the response", async () => {
+      const { api } = setup({ "GET /subscriptions": [jsonResponse(200, overview)] });
+
+      await expect(api.subscriptions.overview()).resolves.toEqual(overview);
+    });
+
+    it("subscriptions.confirm posts the draft with its Idempotency-Key and returns the rule", async () => {
+      const { api, fetch } = setup({ "POST /subscriptions/confirm": [jsonResponse(201, rule)] });
+      const draft = api.subscriptions.draftConfirm({ key: KEY, name: "Spotify" });
+
+      await expect(api.subscriptions.confirm(draft)).resolves.toEqual(rule);
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual({ key: KEY, name: "Spotify" });
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+    });
+
+    it("subscriptions.dismiss posts the key", async () => {
+      const { api, fetch } = setup({
+        "POST /subscriptions/dismissals": [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.subscriptions.dismiss(KEY)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).body).toEqual({ key: KEY });
+    });
+
+    it("subscriptions.undismiss deletes by the encoded key in the query", async () => {
+      const { api, fetch } = setup({
+        "DELETE /subscriptions/dismissals": [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.subscriptions.undismiss(KEY)).resolves.toBeUndefined();
+      expect(new URL(sentRequest(fetch, 0).url).searchParams.get("key")).toBe(KEY);
     });
   });
 

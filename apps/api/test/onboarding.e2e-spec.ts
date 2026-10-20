@@ -122,6 +122,7 @@ describe("Onboarding (e2e)", () => {
         expectedAmount: null,
         categoryId: null,
         isActive: true,
+        isSubscription: false,
       });
       expect(await get<IncomeSource[]>("/income/sources")).toEqual([
         {

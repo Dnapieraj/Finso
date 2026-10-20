@@ -43,6 +43,7 @@ async function seedUserData(db: PrismaClient, userId: string): Promise<void> {
   await db.expenseTemplate.create({
     data: { userId, name: "Kawa", amount: 1_400, categoryId: category.id },
   });
+  await db.subscriptionDismissal.create({ data: { userId, key: "n||spotify" } });
   // Klucz idempotencji zapisanego wydatku — też dane użytkownika.
   await db.idempotencyKey.create({
     data: {
@@ -70,6 +71,7 @@ async function countUserRows(db: PrismaClient, userId: string): Promise<Record<s
     goals: await db.goal.count({ where }),
     idempotencyKeys: await db.idempotencyKey.count({ where }),
     expenseTemplates: await db.expenseTemplate.count({ where }),
+    subscriptionDismissals: await db.subscriptionDismissal.count({ where }),
   };
 }
 
@@ -138,6 +140,7 @@ describe("Users (e2e)", () => {
         goals: 0,
         idempotencyKeys: 0,
         expenseTemplates: 0,
+        subscriptionDismissals: 0,
       });
     });
 

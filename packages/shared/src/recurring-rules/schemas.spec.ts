@@ -27,7 +27,25 @@ describe("createRecurringRuleSchema", () => {
       interval: 1,
       dayOfWeek: null,
       categoryId: null,
+      isSubscription: false,
     });
+  });
+
+  it("wydatek można oznaczyć jako subskrypcję — wchodzi do sumy subskrypcji", () => {
+    expect(
+      createRecurringRuleSchema.parse({ ...monthlyExpense, isSubscription: true }).isSubscription,
+    ).toBe(true);
+  });
+
+  it("dochód nie może być subskrypcją", () => {
+    const result = createRecurringRuleSchema.safeParse({
+      kind: "INCOME",
+      frequency: "MONTHLY",
+      startDate: "2026-01-10",
+      dayOfMonth: 10,
+      isSubscription: true,
+    });
+    expect(issuesOf(result)).toEqual(["isSubscription:not_allowed_for_income"]);
   });
 
   it("przyjmuje tygodniowy dochód co 2 tygodnie", () => {
@@ -99,6 +117,12 @@ describe("createRecurringRuleSchema", () => {
 describe("updateRecurringRuleSchema", () => {
   it("nie uzupełnia wartości domyślnych — PATCH zmienia tylko podane pola", () => {
     expect(updateRecurringRuleSchema.parse({ isActive: false })).toEqual({ isActive: false });
+  });
+
+  it("przyjmuje oznaczenie subskrypcji", () => {
+    expect(updateRecurringRuleSchema.parse({ isSubscription: true })).toEqual({
+      isSubscription: true,
+    });
   });
 
   it("nie pozwala zmienić rodzaju reguły", () => {
