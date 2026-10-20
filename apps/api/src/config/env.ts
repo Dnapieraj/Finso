@@ -1,3 +1,4 @@
+import { APP_VERSION_PATTERN } from "@vireo/shared";
 import { z } from "zod";
 
 /**
@@ -39,6 +40,12 @@ export const envSchema = z
     RESEND_API_KEY: z.string().min(1).optional(),
     /** Nadawca e-maili; domena musi być zweryfikowana w Resend. */
     MAIL_FROM: z.string().min(3).default("Finso <kontakt@finso.app>"),
+
+    /**
+     * Najstarsza wspierana wersja appki („1.4.0”). Starsze dostają 426
+     * i komunikat „Zaktualizuj aplikację”. Domyślnie nic nie blokuje.
+     */
+    MIN_APP_VERSION: z.string().regex(APP_VERSION_PATTERN).default("0.0.0"),
   })
   .superRefine((env, ctx) => {
     // Na produkcji wysyłka do logu oznaczałaby, że kody nigdy nie dochodzą.

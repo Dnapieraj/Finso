@@ -23,6 +23,8 @@ export default defineConfig({
       DATABASE_URL: TEST_DATABASE_URL,
       JWT_ACCESS_SECRET: "test-secret-that-is-at-least-32-characters-long",
       EMAIL_CODE_SECRET: "test-email-code-secret-at-least-32-characters",
+      // Starsze appki dostają 426 (test/app-version); inne testy nie wysyłają wersji.
+      MIN_APP_VERSION: "1.0.0",
       // Wysoki limit, żeby throttler nie psuł testów niezwiązanych z nim.
       // Sam rate limiting ma osobny test z nadpisanym, niskim limitem.
       AUTH_THROTTLE_LIMIT: "10000",

@@ -1,8 +1,9 @@
-import { Module } from "@nestjs/common";
+import { type MiddlewareConsumer, Module, type NestModule, RequestMethod } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ZodSerializerInterceptor } from "nestjs-zod";
 
+import { AppVersionMiddleware } from "./app-version/app-version.middleware.js";
 import { AppController } from "./app.controller.js";
 import { AuthModule } from "./auth/auth.module.js";
 import { BudgetModule } from "./budget/budget.module.js";
@@ -54,4 +55,12 @@ import { UsersModule } from "./users/users.module.js";
     { provide: APP_FILTER, useClass: PrismaNotFoundFilter },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    // /health zostaje dostępne zawsze: appka sprawdza nim, czy ma internet.
+    consumer
+      .apply(AppVersionMiddleware)
+      .exclude({ path: "health", method: RequestMethod.GET })
+      .forRoutes({ path: "*path", method: RequestMethod.ALL });
+  }
+}
