@@ -134,12 +134,15 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
 21. Limity na kategorie (np. jedzenie do 800 zł w okresie)
 22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
+23. **Martwe subskrypcje** („Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś
+    tego jako używane — anulować?”) — wymaga zapisu „używam / nie używam”
+    przy potwierdzonej subskrypcji; przesunięte z punktu 7 planu 20.10.2026
 
 ### Faza 3
 
-23. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
-24. Wielowalutowość
-25. Eksport PDF/CSV, raporty roczne
+24. Integracja bankowa (Open Banking / PSD2) — **duży temat prawny, wymaga licencji AISP lub pośrednika typu Salt Edge/Kontomatik; nie zaczynaj od tego**
+25. Wielowalutowość
+26. Eksport PDF/CSV, raporty roczne
 
 ### Znane uproszczenia silnika budżetu (Faza 1 → do rewizji w Fazie 2)
 
@@ -197,17 +200,17 @@ Narzędzie: **Turborepo** + **pnpm workspaces**
 
 ### Backend — `apps/api`
 
-| Element          | Wybór                            | Dlaczego                                                                      |
-| ---------------- | -------------------------------- | ----------------------------------------------------------------------------- |
-| Framework        | **NestJS**                       | struktura modułowa, DI, świetnie wygląda w portfolio, standard w ogłoszeniach |
-| Język            | **TypeScript** (strict)          |                                                                               |
-| ORM              | **Prisma**                       | typy generowane z schemy, migracje, świetny DX                                |
-| Baza             | **PostgreSQL**                   |                                                                               |
-| Walidacja        | **Zod**                          | te same schematy współdzielone z frontendem                                   |
-| Auth             | **Auth.js** lub **Lucia** + JWT  |                                                                               |
-| Testy            | **Vitest** + **Supertest**       |                                                                               |
-| Dokumentacja API | **Swagger** (wbudowany w NestJS) |                                                                               |
-| Kolejki/cron     | **BullMQ** + Redis               | powiadomienia, wykrywanie subskrypcji                                         |
+| Element          | Wybór                            | Dlaczego                                                                               |
+| ---------------- | -------------------------------- | -------------------------------------------------------------------------------------- |
+| Framework        | **NestJS**                       | struktura modułowa, DI, świetnie wygląda w portfolio, standard w ogłoszeniach          |
+| Język            | **TypeScript** (strict)          |                                                                                        |
+| ORM              | **Prisma**                       | typy generowane z schemy, migracje, świetny DX                                         |
+| Baza             | **PostgreSQL**                   |                                                                                        |
+| Walidacja        | **Zod**                          | te same schematy współdzielone z frontendem                                            |
+| Auth             | **Auth.js** lub **Lucia** + JWT  |                                                                                        |
+| Testy            | **Vitest** + **Supertest**       |                                                                                        |
+| Dokumentacja API | **Swagger** (wbudowany w NestJS) |                                                                                        |
+| Kolejki/cron     | **BullMQ** + Redis               | na razie niepotrzebne: powiadomienia są lokalne, detektor subskrypcji liczy na bieżąco |
 
 #### Usuwanie danych — który mechanizm
 
@@ -332,7 +335,7 @@ Nie jestem prawnikiem — przy sprzedaży subskrypcji w Polsce skonsultuj kwesti
 **Finso Plus — 12,99 zł/mies. lub 99 zł/rok**
 
 - Nielimitowane cele i symulacje
-- Detektor subskrypcji i podwyżek
+- Detektor subskrypcji i podwyżek (w appce od 20.10.2026, do etapu 8 dostępny dla wszystkich)
 - Nieregularne dochody / prognozy
 - Wspólne wydatki
 - Pełna historia, eksport danych
@@ -473,7 +476,39 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    - ostatnio używane: do 4 najnowszych różnych wydatków (bez stałych płatności,
      „Wydatków przed Finso” i powtórzeń szablonów). Szablony i ostatnie nie
      blokują szybkiego dodawania, gdy się nie wczytają
-7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12)
+7. **Detektor subskrypcji** jako główna funkcja planu Plus (Faza 1, punkt 12) —
+   **ZROBIONE** (`0aa4a5f`..`f3fcb9c`), ustalone 20.10.2026:
+   - **funkcja planu Plus**, ale do etapu 8 bez blokady — dostępna dla
+     wszystkich; limity włączamy razem z płatnościami;
+   - silnik: `packages/shared/src/budget/subscriptions.ts`; wykrywanie z wydatków
+     (potwierdzonych, poza koszem, bez stałych płatności i „Wydatków przed
+     Finso”) z ostatnich 790 dni. Grupa = znormalizowana notatka (małe
+     litery, bez polskich znaków, interpunkcji i fragmentów z cyframi)
+     - kategoria; wydatki bez notatki — kategoria + dokładnie ta sama
+       kwota, tylko co miesiąc;
+   - progi: co tydzień 5–9 dni (średnio 6–8), min. 4 płatności; co miesiąc
+     22–38 dni (średnio 26–34), min. 3; co rok 350–380 dni, min. 2 (tylko
+     z notatką). Jeden brakujący wpis (podwójny odstęp) dozwolony. Ta sama
+     cena = różnica do 5% albo 50 gr. Ostatnia płatność starsza niż 14 /
+     45 / 400 dni = prawdopodobnie anulowana, nie pokazujemy;
+   - podwyżka/obniżka: ostatni poziom ceny vs poprzedni („23 zł → 27 zł od
+     10 października, +48 zł rocznie”); pojedyncza inna kwota między dwiema
+     takimi samymi to wyjątek; seria z dwiema zmianami ceny liczy się od
+     przedostatniej. Dla potwierdzonych — z płatności reguły („Inna kwota”);
+   - nie dubluje stałych płatności: pomija serię, gdy aktywna reguła wydatku
+     ma tę samą nazwę albo tę samą kategorię, cykl i kwotę (w tolerancji);
+   - „To subskrypcja” → `POST /subscriptions/confirm` tworzy regułę wydatku
+     z `isSubscription`, od NASTĘPNEGO terminu (zapłacony cykl nie odlicza się
+     drugi raz); dzień = mediana dni płatności. „To nie subskrypcja” zapisuje
+     klucz w `SubscriptionDismissal` (z „Cofnij”). Wykrytych nie zapisujemy —
+     liczą się przy każdym `GET /subscriptions`;
+   - suma główna tylko z potwierdzonych („Twoje subskrypcje: X zł/mies. =
+     Y zł/rok”), wykryte osobno („+ 2 do sprawdzenia: 45 zł/mies.”);
+     miesięcznie = rocznie / 12 w górę; tydzień = 1/52 roku;
+   - Ustawienia → Subskrypcje; karta „Wykryte subskrypcje” na Dashboardzie,
+     gdy jest coś do sprawdzenia („nowe” = niepotwierdzone i nieodrzucone);
+     przełącznik „To subskrypcja” przy stałym zobowiązaniu;
+   - „martwe subskrypcje” przeniesione do Fazy 2
 8. **Sprzątanie:** nieużywany kod i paczki (knip), importy fontów (dziś do
    appki trafia 26 plików, używamy 3), `expo-system-ui`, aktualizacje Expo
 9. **Reset hasła („Nie pamiętam hasła”) przez e-mail** i potwierdzenie
@@ -701,3 +736,52 @@ Zacznij od Dashboardu. Pokaż mi go, zbiorę feedback, potem kolejne ekrany.
 2. **Testuj silnik budżetu obsesyjnie.** To jedyna część, gdzie błąd jest niewybaczalny — appka finansowa, która źle liczy, traci zaufanie natychmiast. To też najlepiej wygląda w code review u rekrutera.
 
 3. **Nie oczekuj od Claude Code kodu „bez żadnych błędów".** Żadne narzędzie tego nie gwarantuje. Zabezpieczenie to testy, typy TypeScript w trybie strict, CI od pierwszego dnia i to, że sam rozumiesz kod. Proś Claude Code o wyjaśnienia i pytania, nie tylko o gotowy kod — inaczej skończysz z projektem, którego nie umiesz obronić na rozmowie o pracę.
+
+---
+
+## 10. Dziennik decyzji
+
+Od 20.10.2026 Claude Code pracuje samodzielnie (CLAUDE.md, „Jak ze mną
+pracujesz”) i zapisuje tu ważniejsze decyzje do przejrzenia. Format: data,
+decyzja, dlaczego. Zasada przewodnia: liczby pokazywane jako pewne mają być
+pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
+
+### 20.10.2026 — punkt 7, detektor subskrypcji
+
+- **Wykryte subskrypcje liczone na bieżąco, bez tabeli i bez crona.**
+  Wynik da się w każdej chwili wyliczyć z transakcji, a obliczenie na ~790
+  dniach wydatków jest tanie. Zapisujemy tylko decyzje użytkownika
+  (`SubscriptionDismissal`, `RecurringRule.isSubscription`). Brief (Prompt 2)
+  przewidywał tabelę `DetectedSubscription` — niepotrzebna.
+- **Klucz grupy zawiera kategorię** (zgodnie z poleceniem „podobna nazwa
+  i kategoria”). Skutek: zmiana kategorii jednego wydatku z serii może ją
+  rozbić. Bezpieczniej niż sklejać różne zakupy o tej samej nazwie.
+- **Bez rozmytego dopasowania nazw (np. Levenshtein).** Łączyłoby „Netflix”
+  z „Netflix prezent”; normalizacja (wielkość liter, polskie znaki,
+  interpunkcja, fragmenty z cyframi) pokrywa typowe różnice.
+- **Dwie subskrypcje pod jedną nazwą** (np. „Apple” 4,99 i 29,99 zł): gdy cała
+  grupa nie układa się w cykl, każda cena sprawdzana osobno, z kluczem
+  rozszerzonym o kwotę.
+- **Potwierdzenie startuje od następnego terminu**, nie od dziś — ostatnia
+  płatność już jest wydatkiem, więc ten cykl nie może odliczyć się drugi raz.
+  Jeśli następny termin już minął (płatność się spóźnia), reguła startuje
+  od niego i appka zapyta o tę płatność jak o każdą stałą.
+- **Wcześniejsze ręczne wydatki nie są podpinane pod nową regułę.** Zmiana
+  historii mogłaby przesunąć budżety minionych okresów; podwyżki potwierdzonej
+  subskrypcji widać z płatności zapisanych już przez regułę.
+- **Koszty zaokrąglane w górę** (miesięcznie i rocznie, do pełnych złotych na
+  ekranie); ceny i różnice z podwyżek — dokładnie, bo to faktyczne płatności.
+  Suma miesięczna liczona z sumy rocznej, żeby „X/mies. = Y/rok” się zgadzało.
+- **Najbliższa płatność jako „około”** — to prognoza z historii, nie fakt.
+- **„To nie subskrypcja” ma „Cofnij”** (`DELETE /subscriptions/dismissals`) —
+  przypadkowe tapnięcie nie może na zawsze ukryć prawdziwej subskrypcji.
+- **Karta na Dashboardzie** = są wykryte, niepotwierdzone i nieodrzucone
+  pozycje; obie decyzje zdejmują pozycję, więc karta znika sama. Błąd
+  wczytywania nic nie pokazuje — liczby budżetu od tego nie zależą.
+- **Stała płatność może być oznaczona jako subskrypcja ręcznie** (przełącznik
+  w formularzu), bo Netflix wpisany w onboardingu jako zobowiązanie nigdy nie
+  trafiłby do detektora (blokuje go reguła) ani do sumy.
+- **Roczny rytm w formularzu tylko do odczytu** („Co rok, 7 marca”) —
+  formularz nie ma wyboru „co rok”, a przypadkowe „co miesiąc” zwielokrotniłoby
+  kwotę. Lista zobowiązań pokazuje teraz rok z miesiącem, nie tylko dzień.
+- **Polityka prywatności** opisuje detektor i zapis odrzuconych podpowiedzi.
