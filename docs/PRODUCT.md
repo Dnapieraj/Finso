@@ -509,8 +509,13 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
      gdy jest coś do sprawdzenia („nowe” = niepotwierdzone i nieodrzucone);
      przełącznik „To subskrypcja” przy stałym zobowiązaniu;
    - „martwe subskrypcje” przeniesione do Fazy 2
-8. **Sprzątanie:** nieużywany kod i paczki (knip), importy fontów (dziś do
-   appki trafia 26 plików, używamy 3), `expo-system-ui`, aktualizacje Expo
+8. **Sprzątanie** — **ZROBIONE** (`e204206`), 20.10.2026: fonty importowane
+   po jednej grubości (bundle Androida: 4 pliki TTF zamiast 26+, test pilnuje
+   importów), `expo-system-ui` (motyw na Androidzie i tło natywnego okna
+   w kolorze motywu), paczki Expo podniesione do wersji oczekiwanych przez
+   SDK 57; knip: usunięte `@nestjs/mau`, `source-map-support` (API),
+   `lucide-react` (`@vireo/ui`) i zbędne eksporty. `expo-system-ui` to moduł
+   natywny — przed testami e2e potrzebny nowy development build
 9. **Reset hasła („Nie pamiętam hasła”) przez e-mail** i potwierdzenie
    adresu e-mail przy rejestracji (dopisane 13.10.2026). Do ustalenia przy
    tym punkcie: jednorazowy, krótko ważny token (w bazie tylko jego hash),
@@ -785,3 +790,18 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   formularz nie ma wyboru „co rok”, a przypadkowe „co miesiąc” zwielokrotniłoby
   kwotę. Lista zobowiązań pokazuje teraz rok z miesiącem, nie tylko dzień.
 - **Polityka prywatności** opisuje detektor i zapis odrzuconych podpowiedzi.
+
+### 20.10.2026 — punkt 8, sprzątanie
+
+- **knip uruchamiany doraźnie** (`pnpm dlx knip@5`), bez dodawania do repo i CI.
+  Większość jego wyników to fałszywe alarmy (zastępniki modułów w Jest, DTO
+  Nesta potrzebne Swaggerowi, peery NativeWind/Reanimated, `@prisma/client`
+  używany przez wygenerowanego klienta) — w CI blokowałby pracę bez pożytku.
+- **`expo-system-ui`** (zaakceptowany w planie): bez niego Android ignoruje
+  `userInterfaceStyle: automatic`. Przy okazji appka maluje tło natywnego okna
+  kolorem motywu — w ciemnym motywie nie błyska biel pod klawiaturą.
+- **`@expo/metro-runtime` jako bezpośrednia zależność mobile** — nowy
+  expo-router wymaga ^57.0.17, a pośrednio zostawała 57.0.16;
+  `pnpm up --depth Infinity` ruszał ~700 linii lockfile, więc odrzucony.
+- **Fonty po jednej grubości** — import z korzenia paczki dokładał do appki
+  wszystkie grubości; test `fonts.test.ts` pilnuje ścieżek.
