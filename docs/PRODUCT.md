@@ -537,7 +537,7 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
     danych): wydatki, wpływy, cele, stałe zobowiązania; plik przez systemowe
     „Udostępnij”, kwoty i daty w formacie czytelnym dla arkusza. Polityka
     prywatności opisuje, jak z tego skorzystać
-11. **„Zgłoś problem / Kontakt”** w Ustawieniach: adres `kontakt@finso.app`,
+11. **ZROBIONE** (`4e70508..ada53fb`, 20.10.2026) — **„Zgłoś problem / Kontakt”** w Ustawieniach: adres `kontakt@finso.app`,
     wersja appki i systemu dołączona do wiadomości (bez danych finansowych).
     Obok **polityka prywatności i regulamin dostępne w appce** (wymóg Apple,
     wytyczna 5.1.1) — linki do stron `apps/web`
@@ -866,3 +866,18 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   `expo install` dla SDK 57, moduły natywne — potrzebny nowy development
   build). Plugin `expo-sharing` dopisany przez instalację usunięty z
   `app.json` — służy tylko do odbierania udostępnień, których appka nie robi.
+
+### 20.10.2026 — punkt 11, kontakt i dokumenty w appce
+
+- **Ustawienia → Pomoc i informacje**: „Zgłoś problem”, „Polityka prywatności”,
+  „Regulamin” i wersja appki. Zgłoszenie to gotowy e-mail (`mailto:`) do
+  kontakt@finso.app z wersją appki i systemu oraz prośbą, żeby nie wpisywać
+  kwot — appka nie dołącza żadnych danych finansowych.
+- **Bez aplikacji poczty** appka pokazuje adres zamiast milczeć (bez kopiowania
+  do schowka — to wymagałoby nowej biblioteki).
+- **Polityka i regulamin otwierają się w przeglądarce** (`Linking.openURL`), bez
+  `expo-web-browser`; Apple (5.1.1) wymaga dostępu z appki, nie widoku w appce.
+  Adresy: placeholder `https://finso.app` jak na stronie web; test pilnuje,
+  że adresy i e-mail w appce zgadzają się z `apps/web`. **Przed publikacją
+  strona musi działać pod tą domeną** (inaczej linki prowadzą donikąd).
+- Wersja z `expo-constants` (app.json wbudowany w build).
