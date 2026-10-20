@@ -152,6 +152,8 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 - `RecurringRule`: twarde usunięcie — ale transakcje już z niej powstałe zostają
 - `ExpenseTemplate`: twarde usunięcie — to ustawienie szybkiego dodawania, nie dane
   finansowe; wydatki zapisane z szablonu zostają
+- `SubscriptionDismissal` („To nie subskrypcja”): twarde usunięcie przy „Cofnij” —
+  to decyzja o podpowiedzi, nie dane finansowe
 - Wszystkie zapytania i wyliczenia budżetu MUSZĄ pomijać rekordy usunięte/nieaktywne
 
 ### UI (mobile jako główny cel)
@@ -193,33 +195,52 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
 
 ## Jak ze mną pracujesz
 
-1. Pytaj, zanim założysz
-2. Jeden etap na raz, potem stop
-3. Po etapie: wyjaśnij co i dlaczego
-4. Błędne polecenie z mojej strony — powiedz mi to
-5. **Testy pokazujesz mi do akceptacji, zanim napiszesz implementację** —
-   zawsze, nie tylko przy silniku budżetu (logika, API, web, mobile).
-   Implementację zaczynasz dopiero po mojej akceptacji.
-   Dotyczy też **zmian schemy Prisma i migracji**: przed zmianą pokazujesz
-   testy nowego zachowania i SQL migracji. Gdy zmiana nie wprowadza nowego
-   zachowania (np. usunięcie nieużywanej kolumny), pokazujesz SQL i wskazujesz
-   istniejące testy, które ją obejmują
-6. Przed zamknięciem etapu: `pnpm lint`, `pnpm typecheck`, `pnpm test`
+**Tryb samodzielny (od 20.10.2026).** Pracujesz bez czekania na moje
+akceptacje:
+
+1. Testy nadal piszesz **przed** implementacją (logika, API, web, mobile,
+   zmiany schemy Prisma i migracje), ale nie pokazujesz mi ich do
+   akceptacji — sam je oceniasz i od razu implementujesz
+2. Decyzje projektowe podejmujesz sam, kierując się CLAUDE.md, PRODUCT.md
+   i zasadą: **liczby pokazywane jako pewne mają być pewne; w razie
+   wątpliwości wybierz opcję bezpieczniejszą dla użytkownika**
+3. Każdą ważniejszą decyzję zapisujesz krótko w `docs/PRODUCT.md`,
+   sekcja **„Dziennik decyzji”** (data, decyzja, dlaczego), żebym mógł ją
+   przejrzeć później
+4. Po każdym punkcie planu: `pnpm lint`, `pnpm typecheck`, `pnpm test`
    (dla API dodatkowo `pnpm --filter api test:e2e`, wymaga `pnpm db:up`;
-   dla web `pnpm --filter web test:e2e`)
-7. **Wypychasz sam, automatycznie** (`git push`) po każdym commicie, gdy
-   lint, typecheck i testy przechodzą lokalnie. Po wypchnięciu sprawdzasz
-   wynik GitHub Actions (`gh run watch`) i zgłaszasz, jeśli jest czerwony.
-   Nie wypychasz, gdy cokolwiek lokalnie nie przechodzi
-8. **CI nie ma pliku `.env`.** Każda zmienna środowiskowa potrzebna przy
-   instalacji, buildzie lub testach musi być ustawiona jawnie w
-   `.github/workflows/ci.yml` (sekrety przez GitHub Secrets, nigdy w pliku).
-   Nowa zmienna w `.env.example` = sprawdź, czy CI jej nie potrzebuje
+   dla web `pnpm --filter web test:e2e`), commit, push, zielone CI,
+   oznaczenie punktu jako zrobionego w planie — i **od razu bierzesz
+   następny punkt**
+5. Błędne polecenie z mojej strony — powiedz mi to
+
+**Zatrzymaj się i zapytaj mnie TYLKO gdy:**
+
+- coś kosztuje pieniądze albo wymaga założenia konta (usługi, hosting,
+  sklepy, domena, Resend itp.)
+- zmiana jest nieodwracalna albo usuwa dane
+- trzeba coś zrobić fizycznie na moim komputerze/telefonie, czego nie
+  zrobisz sam
+- dochodzisz do etapu 8 (publikacja i płatności) — wtedy jedno
+  podsumowanie: co zrobione, jakie decyzje, co wymaga mojej uwagi
+
+**Git i CI:**
+
+- **Wypychasz sam, automatycznie** (`git push`) po każdym commicie, gdy
+  lint, typecheck i testy przechodzą lokalnie. Po wypchnięciu sprawdzasz
+  wynik GitHub Actions (`gh run watch`); czerwone CI naprawiasz, zanim
+  weźmiesz następny punkt. Nie wypychasz, gdy cokolwiek lokalnie nie przechodzi
+- **CI nie ma pliku `.env`.** Każda zmienna środowiskowa potrzebna przy
+  instalacji, buildzie lub testach musi być ustawiona jawnie w
+  `.github/workflows/ci.yml` (sekrety przez GitHub Secrets, nigdy w pliku).
+  Nowa zmienna w `.env.example` = sprawdź, czy CI jej nie potrzebuje
 
 ## Czego NIE robić
 
 - Nie dodawaj funkcjonalności appki (logowanie, dane użytkownika, płatności) do `apps/web`
-- Nie dodawaj bibliotek spoza stacku bez pytania
+- Nie dodawaj bibliotek spoza stacku bez sprawdzenia wersji i kompatybilności;
+  nowa biblioteka = wpis w „Dzienniku decyzji” (pytasz tylko, gdy kosztuje
+  albo wymaga konta)
 - Nie pisz integracji bankowej — Faza 3
 - Nie pomijaj testów
 - Nigdy nie oznaczaj zadania jako gotowe, jeśli testy nie przechodzą
