@@ -30,6 +30,8 @@ import { pl } from "../../../src/messages/pl";
 import { devicePreferences } from "../../../src/preferences/device-preferences";
 import { useMoney, type Money } from "../../../src/privacy/money";
 import { useAnimatedAmount } from "../../../src/dashboard/use-animated-amount";
+import { useSubscriptions } from "../../../src/subscriptions/queries";
+import { SubscriptionsCard } from "../../../src/subscriptions/subscriptions-card";
 
 const t = pl.dashboard;
 const GOALS_SHOWN = 3;
@@ -327,6 +329,7 @@ export default function DashboardScreen() {
   const goals = useGoals();
   const expenses = useRecentExpenses();
   const confirmations = useConfirmations();
+  const subscriptions = useSubscriptions();
   const [refreshing, setRefreshing] = useState(false);
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
 
@@ -337,6 +340,7 @@ export default function DashboardScreen() {
       confirmations.refetch(),
       goals.refetch(),
       expenses.refetch(),
+      subscriptions.refetch(),
     ]);
     setRefreshing(false);
   }
@@ -368,6 +372,7 @@ export default function DashboardScreen() {
           <BudgetOverview budget={budget.data} />
         )}
         <ConfirmationsCard />
+        <SubscriptionsCard />
         <Goals asOf={budget.data?.asOf ?? null} />
         <RecentExpenses />
       </Screen>

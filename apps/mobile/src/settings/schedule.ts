@@ -7,6 +7,7 @@ import {
   type ScheduleOutput,
 } from "@vireo/shared";
 
+import { formatDayMonth } from "../format/date";
 import { plural } from "../format/plural";
 import { pl } from "../messages/pl";
 import { parseDayOfMonth } from "../onboarding/draft";
@@ -127,6 +128,12 @@ export function scheduleSummary(schedule: ScheduleOutput): string {
         ? s.monthly(day)
         : s.everyMonths(schedule.interval, plural(schedule.interval, s.months), day);
     case "YEARLY":
-      return s.yearly(day);
+      return s.yearly(yearlyDayAndMonth(schedule));
   }
+}
+
+/** "7 marca": the anchor day in the month the yearly schedule started in. */
+export function yearlyDayAndMonth(schedule: ScheduleOutput): string {
+  const day = String(schedule.dayOfMonth ?? 1).padStart(2, "0");
+  return formatDayMonth(`${schedule.startDate.slice(0, 8)}${day}`);
 }

@@ -58,6 +58,7 @@ export default function SettingsScreen() {
           <SettingsLink label={t.incomes} href="/settings/income" />
           <SettingsLink label={t.commitments} href="/settings/commitments" />
           <SettingsLink label={t.templates} href="/settings/templates" />
+          <SettingsLink label={t.subscriptions} href="/settings/subscriptions" />
         </View>
       </View>
       <View className="gap-2">

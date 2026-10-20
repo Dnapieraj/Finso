@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
+import { Text, View } from "react-native";
 
 import {
   parseMoneyInput,
@@ -27,12 +28,13 @@ import {
   scheduleFieldsOf,
   toSchedule,
   validateSchedule,
+  yearlyDayAndMonth,
   type ScheduleErrors,
   type ScheduleFields as Schedule,
 } from "./schedule";
 import { ScheduleFields } from "./schedule-fields";
 import { CategoryPicker } from "./category-picker";
-import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
+import { BackButton, DeleteWithConfirmation, SwitchRow } from "./settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -49,7 +51,9 @@ interface Errors extends ScheduleErrors {
 /**
  * Adding (no `rule`) or editing a fixed commitment — a monthly or weekly
  * expense rule. Only what changed is sent, so an unchanged schedule keeps
- * its start date.
+ * its start date. A yearly rule (only the subscription detector makes
+ * those) shows its rhythm without offering to change it: the form has no
+ * yearly choice, and picking "co miesiąc" by accident would multiply it.
  */
 export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
   const [name, setName] = useState(rule?.name ?? "");
@@ -58,7 +62,9 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
   );
   const [categoryId, setCategoryId] = useState(rule?.categoryId ?? null);
   const [schedule, setSchedule] = useState<Schedule>(rule ? scheduleFieldsOf(rule) : emptySchedule);
+  const [isSubscription, setIsSubscription] = useState(rule?.isSubscription ?? false);
   const [errors, setErrors] = useState<Errors>({});
+  const yearly = rule?.frequency === "YEARLY";
   const budgetClock = useBudgetClock();
   const draft = useDraft((input: CreateRecurringRuleRequest) => api.recurringRules.draft(input));
 
@@ -81,7 +87,7 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
 
     // null = the saved schedule stays, start date included.
     let nextSchedule: SavedSchedule | null = null;
-    if (!isSameSchedule(schedule, rule ?? null)) {
+    if (!yearly && !isSameSchedule(schedule, rule ?? null)) {
       const checked = validateSchedule(schedule);
       if (checked.ok) {
         nextSchedule = toSchedule(schedule, checked.cadence, "EXPENSE", budgetClock());
@@ -111,6 +117,7 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
           ...nextSchedule,
           expectedAmount: parsedAmount.grosze,
           categoryId,
+          isSubscription,
         }),
       });
       return;
@@ -120,6 +127,7 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
     if (parsedName.name !== rule.name) change.name = parsedName.name;
     if (parsedAmount.grosze !== rule.expectedAmount) change.expectedAmount = parsedAmount.grosze;
     if (categoryId !== rule.categoryId) change.categoryId = categoryId;
+    if (isSubscription !== rule.isSubscription) change.isSubscription = isSubscription;
     if (Object.keys(change).length === 0) router.back();
     else save.mutate({ action: "update", id: rule.id, change });
   }
@@ -147,19 +155,30 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
         error={errors.amount}
         keyboardType="decimal-pad"
       />
-      <ScheduleFields
-        value={schedule}
-        errors={errors}
-        onChange={(change) => {
-          setSchedule((current) => ({ ...current, ...change }));
-          setErrors((current) => ({
-            ...current,
-            dayOfMonth: undefined,
-            dayOfWeek: undefined,
-            week: undefined,
-          }));
-        }}
-      />
+      {rule && yearly ? (
+        <View className="gap-1">
+          <Text className="font-sans-semibold text-base text-foreground">
+            {t.commitments.yearlySchedule(yearlyDayAndMonth(rule))}
+          </Text>
+          <Text className="font-sans text-sm text-muted-foreground">
+            {t.commitments.yearlyHint}
+          </Text>
+        </View>
+      ) : (
+        <ScheduleFields
+          value={schedule}
+          errors={errors}
+          onChange={(change) => {
+            setSchedule((current) => ({ ...current, ...change }));
+            setErrors((current) => ({
+              ...current,
+              dayOfMonth: undefined,
+              dayOfWeek: undefined,
+              week: undefined,
+            }));
+          }}
+        />
+      )}
       <CategoryPicker
         value={categoryId}
         error={errors.category}
@@ -168,6 +187,15 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
           setErrors((current) => ({ ...current, category: undefined }));
         }}
       />
+      <View className="rounded-2xl bg-card">
+        <SwitchRow
+          label={t.commitments.subscription}
+          hint={t.commitments.subscriptionHint}
+          value={isSubscription}
+          disabled={false}
+          onChange={setIsSubscription}
+        />
+      </View>
       <Button loading={save.isPending} loadingLabel={t.saving} onPress={submit}>
         {t.save}
       </Button>

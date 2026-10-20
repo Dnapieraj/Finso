@@ -39,6 +39,8 @@ function updateRecent(change: (page: TransactionPage) => TransactionPage) {
 function refreshFromServer() {
   void queryClient.invalidateQueries({ queryKey: BUDGET_KEY });
   void queryClient.invalidateQueries({ queryKey: ["transactions"] });
+  // A third monthly payment can turn an expense into a detected subscription.
+  void queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
 }
 
 /**

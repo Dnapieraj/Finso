@@ -268,6 +268,7 @@ export const pl = {
     incomes: "Dochody",
     commitments: "Stałe zobowiązania",
     templates: "Szablony wydatków",
+    subscriptions: "Subskrypcje",
     app: "Aplikacja",
     notifications: "Powiadomienia",
     appearance: "Wygląd",
@@ -441,7 +442,8 @@ export const pl = {
       everyMonths: (count: number, unit: string, day: number) =>
         `co ${String(count)} ${unit}, ${String(day)}. dnia`,
       months: { one: "miesiąc", few: "miesiące", many: "miesięcy" },
-      yearly: (day: number) => `co rok, ${String(day)}. dnia`,
+      /** "co rok, 7 marca" — the day comes with its month (genitive). */
+      yearly: (dayAndMonth: string) => `co rok, ${dayAndMonth}`,
       weekly: (weekday: string) => `co tydzień, ${weekday}`,
       everyWeeks: (count: number, unit: string, weekday: string) =>
         `co ${String(count)} ${unit}, ${weekday}`,
@@ -510,6 +512,60 @@ export const pl = {
       notFound: "Nie znaleziono tego zobowiązania.",
       delete: "Usuń zobowiązanie",
       deleteWarning: "Zapisane wydatki zostaną.",
+      subscription: "To subskrypcja",
+      subscriptionHint: "Netflix, Spotify i podobne — wlicza się do sumy na ekranie Subskrypcje.",
+      yearlySchedule: (dayAndMonth: string) => `Co rok, ${dayAndMonth}`,
+      yearlyHint:
+        "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
+    },
+  },
+  subscriptions: {
+    title: "Subskrypcje",
+    yours: "Twoje subskrypcje",
+    total: (monthly: string, yearly: string) => `${monthly}/mies. = ${yearly}/rok`,
+    noneConfirmed: "Nie masz jeszcze potwierdzonych subskrypcji.",
+    toReview: (count: number, monthly: string) =>
+      `+ ${String(count)} do sprawdzenia: ${monthly}/mies.`,
+    detectedTitle: "Do sprawdzenia",
+    detectedIntro: "Te wydatki powtarzają się regularnie. Czy to subskrypcje?",
+    confirmedTitle: "Potwierdzone",
+    frequency: { WEEKLY: "co tydzień", MONTHLY: "co miesiąc", YEARLY: "co rok" },
+    every: (count: number, unit: string) => `co ${String(count)} ${unit}`,
+    units: {
+      WEEKLY: { one: "tydzień", few: "tygodnie", many: "tygodni" },
+      MONTHLY: { one: "miesiąc", few: "miesiące", many: "miesięcy" },
+      YEARLY: { one: "rok", few: "lata", many: "lat" },
+    },
+    row: (amount: string, frequency: string) => `${amount} · ${frequency}`,
+    cost: (monthly: string, yearly: string) => `${monthly}/mies. · ${yearly}/rok`,
+    // "około": the next date is a forecast from past payments, not a fact.
+    dates: (last: string, next: string) => `Ostatnio ${last}, następna około ${next}`,
+    priceUp: (from: string, to: string, since: string, delta: string) =>
+      `Cena wzrosła: ${from} → ${to} od ${since}, +${delta} rocznie`,
+    priceDown: (from: string, to: string, since: string, delta: string) =>
+      `Cena spadła: ${from} → ${to} od ${since}, −${delta} rocznie`,
+    confirm: "To subskrypcja",
+    dismiss: "To nie subskrypcja",
+    // Names of the buttons for screen readers: the screen lists several items.
+    forItem: (action: string, name: string) => `${action}: ${name}`,
+    confirming: "Zapisywanie…",
+    confirmed: (name: string, date: string) =>
+      `${name} jest teraz stałą płatnością. Od ${date} Finso odlicza ją z budżetu.`,
+    dismissed: (name: string) => `Ukryto: ${name}. Finso nie będzie już tego podpowiadać.`,
+    undo: "Cofnij",
+    saveFailed: "Nie udało się zapisać. Spróbuj ponownie.",
+    empty:
+      "Finso nie znalazło jeszcze subskrypcji. Wykrywa je z wydatków, które powtarzają się co tydzień, co miesiąc albo co rok — z tą samą notatką i kategorią, np. „Spotify”.",
+    howItWorks:
+      "Podpowiedź pojawia się, gdy ten sam wydatek (notatka i kategoria, a bez notatki — kategoria i dokładnie ta sama kwota) powtarza się co tydzień co najmniej 4 razy, co miesiąc 3 razy albo co rok 2 razy.",
+    loading: "Wczytywanie subskrypcji",
+    error: "Nie udało się wczytać subskrypcji.",
+    card: {
+      title: "Wykryte subskrypcje",
+      body: (names: string) =>
+        `Te płatności powtarzają się regularnie: ${names}. Czy to subskrypcje?`,
+      open: "Sprawdź",
+      openLabel: "Sprawdź subskrypcje",
     },
   },
   // Wording must match apps/web/src/messages/legal/delete-account.ts:

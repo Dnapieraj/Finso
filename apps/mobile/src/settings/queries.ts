@@ -34,6 +34,8 @@ export function refreshBudget(): Promise<void> {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: ["budget"] }),
     queryClient.invalidateQueries({ queryKey: ["simulation"] }),
+    // A commitment covering a detected subscription hides it from the list.
+    queryClient.invalidateQueries({ queryKey: ["subscriptions"] }),
   ]).then(() => undefined);
 }
 
