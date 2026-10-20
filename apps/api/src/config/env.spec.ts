@@ -30,3 +30,13 @@ describe("validateEnv", () => {
     );
   });
 });
+
+describe("MIN_APP_VERSION", () => {
+  it("domyślnie 0.0.0 — nic nie blokuje", () => {
+    expect(validateEnv(base).MIN_APP_VERSION).toBe("0.0.0");
+  });
+
+  it("musi mieć postać major.minor.patch", () => {
+    expect(() => validateEnv({ ...base, MIN_APP_VERSION: "1.0" })).toThrow(/MIN_APP_VERSION/);
+  });
+});

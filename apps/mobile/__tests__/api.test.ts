@@ -2,6 +2,7 @@ import { createApiClient } from "@vireo/shared/api";
 
 import "../src/api";
 import { session } from "../src/session";
+import { updateRequired } from "../src/update/store";
 
 jest.mock("@vireo/shared/api", () => ({ createApiClient: jest.fn(() => ({})) }));
 
@@ -17,4 +18,12 @@ it("ends the session with reason 'expired' when the API client gives up on refre
 
   // Synchronous on purpose: the guards redirect to login on the same render.
   expect(session.getState()).toEqual({ status: "signed-out", signOutReason: "expired" });
+});
+
+it("sends the app version and shows the update screen when the API says it is too old", () => {
+  expect(options.appVersion).toEqual(expect.any(String));
+
+  options.onUpdateRequired?.();
+
+  expect(updateRequired.get()).toBe(true);
 });

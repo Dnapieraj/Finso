@@ -401,6 +401,50 @@ describe("createApiClient", () => {
     await expect(api.exportData()).resolves.toEqual(data);
   });
 
+  describe("app version", () => {
+    it("sends the app version with every request", async () => {
+      const fetch = fakeFetch({ "GET /users/me": [jsonResponse(200, me)] });
+      const api = createApiClient({
+        baseUrl: BASE_URL,
+        tokens: memoryTokenStore(),
+        fetch,
+        appVersion: "1.2.3",
+      });
+
+      await api.users.me();
+
+      expect(sentRequest(fetch, 0).headers.get("X-App-Version")).toBe("1.2.3");
+    });
+
+    it("426 from the API: the app is too old — onUpdateRequired, and the call fails", async () => {
+      const onUpdateRequired = vi.fn();
+      const fetch = fakeFetch({
+        "POST /auth/login": [jsonResponse(426, { message: "update_required" })],
+      });
+      const api = createApiClient({
+        baseUrl: BASE_URL,
+        tokens: memoryTokenStore(null),
+        fetch,
+        appVersion: "0.1.0",
+        onUpdateRequired,
+      });
+
+      await expect(api.auth.login(credentials)).rejects.toMatchObject({
+        kind: "http",
+        status: 426,
+      });
+      expect(onUpdateRequired).toHaveBeenCalledTimes(1);
+    });
+
+    it("without an app version no header is sent", async () => {
+      const { api, fetch } = setup({ "GET /users/me": [jsonResponse(200, me)] });
+
+      await api.users.me();
+
+      expect(sentRequest(fetch, 0).headers.has("X-App-Version")).toBe(false);
+    });
+  });
+
   describe("users.completeOnboarding", () => {
     const onboarding: CompleteOnboardingRequest = {
       periodStartDay: 10,
