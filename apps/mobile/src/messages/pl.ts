@@ -562,6 +562,11 @@ export const pl = {
         "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
     },
   },
+  updateRequired: {
+    title: "Zaktualizuj aplikację",
+    body: "Ta wersja Finso nie jest już obsługiwana. Zaktualizuj aplikację w sklepie — twoje dane czekają na koncie.",
+    openStore: "Otwórz sklep",
+  },
   support: {
     section: "Pomoc i informacje",
     report: "Zgłoś problem",

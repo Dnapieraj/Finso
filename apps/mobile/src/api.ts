@@ -4,6 +4,8 @@ import { randomUUID } from "expo-crypto";
 import { readApiUrl } from "./config";
 import { session } from "./session";
 import { secureTokenStore } from "./secure-token-store";
+import { appVersion } from "./support/support";
+import { updateRequired } from "./update/store";
 
 /** The app's API client; screens reach it through TanStack Query hooks. */
 export const api = createApiClient({
@@ -14,4 +16,7 @@ export const api = createApiClient({
   onSessionExpired: () => void session.signedOut("expired"),
   // Hermes has no crypto.randomUUID; expo-crypto uses the platform's CSPRNG.
   randomUUID,
+  // Sent with every request; an API that no longer supports it answers 426.
+  appVersion: appVersion(),
+  onUpdateRequired: updateRequired.set,
 });
