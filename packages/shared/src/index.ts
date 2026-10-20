@@ -4,6 +4,7 @@ export * from "./money.js";
 export * from "./format/format-money.js";
 export * from "./format/parse-money-input.js";
 export * from "./export/csv.js";
+export * from "./app-version/version.js";
 export * from "./date.js";
 export * from "./budget/types.js";
 export * from "./budget/calculate-available-balance.js";

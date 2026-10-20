@@ -23,6 +23,7 @@ import {
   type AnswerConfirmationRequest,
   type DueConfirmation,
 } from "../confirmations/schemas.js";
+import { APP_VERSION_HEADER } from "../app-version/version.js";
 import type { IdempotentDraft } from "../common/schemas.js";
 import {
   goalSchema,
@@ -99,6 +100,10 @@ export interface ApiClientOptions {
    * Hermes (React Native) go nie ma, więc mobile podaje `expo-crypto`.
    */
   readonly randomUUID?: () => string;
+  /** Wersja appki wysyłana w nagłówku `X-App-Version` (API odrzuca zbyt stare — 426). */
+  readonly appVersion?: string;
+  /** Wywoływane przy 426: ta wersja appki nie jest już wspierana — trzeba ją zaktualizować. */
+  readonly onUpdateRequired?: () => void;
 }
 
 /**
@@ -293,22 +298,29 @@ const errorBodySchema = z.object({ message: z.union([z.string(), z.array(z.strin
  * Równoległe żądania czekają na to samo odświeżenie, bo API rotuje refresh
  * tokeny i drugi refresh starym tokenem zostałby uznany za kradzież sesji.
  */
+/** HTTP 426: API nie obsługuje już tej wersji appki. */
+const UPGRADE_REQUIRED = 426;
+
 export function createApiClient({
   baseUrl,
   tokens,
   fetch = (url, init) => globalThis.fetch(url, init),
   onSessionExpired,
   randomUUID = () => globalThis.crypto.randomUUID(),
+  appVersion,
+  onUpdateRequired,
 }: ApiClientOptions): ApiClient {
   const root = baseUrl.replace(/\/+$/, "");
   let refreshing: Promise<boolean> | null = null;
 
   async function send(request: Request, accessToken: string | null): Promise<Response> {
     const headers: Record<string, string> = { ...request.headers, Accept: "application/json" };
+    if (appVersion !== undefined) headers[APP_VERSION_HEADER] = appVersion;
     if (request.body !== undefined) headers["Content-Type"] = "application/json";
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+    let response: Response;
     try {
-      return await fetch(`${root}${request.path}`, {
+      response = await fetch(`${root}${request.path}`, {
         method: request.method,
         headers,
         body: request.body === undefined ? undefined : JSON.stringify(request.body),
@@ -316,6 +328,9 @@ export function createApiClient({
     } catch (cause) {
       throw new ApiError("network", null, "Network request failed", { cause });
     }
+    // Każda odpowiedź, także odświeżenie sesji: appka pokazuje „Zaktualizuj”.
+    if (response.status === UPGRADE_REQUIRED) onUpdateRequired?.();
+    return response;
   }
 
   /** `true`, gdy zapisano nowe tokeny; `false`, gdy nie było czym odświeżyć. */
