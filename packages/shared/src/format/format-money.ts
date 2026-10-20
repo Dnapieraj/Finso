@@ -32,6 +32,12 @@ export interface FormatMoneyOptions {
    * Zero nigdy nie dostaje znaku. Domyślnie `'auto'`: znak tylko dla ujemnych.
    */
   readonly sign?: "auto" | "always";
+  /**
+   * `spreadsheet` — sama liczba do pliku CSV: „1234,56”, „-86,40”, bez „zł”,
+   * bez spacji między tysiącami i zawsze z groszami (`whole` i `sign` są
+   * pomijane), żeby arkusz rozpoznał liczbę i liczył dalej dokładnie.
+   */
+  readonly style?: "display" | "spreadsheet";
 }
 
 /**
@@ -63,6 +69,11 @@ export function formatMoney(amount: Grosze, options: FormatMoneyOptions = {}): s
   const negative = amount < 0;
   const abs = Math.abs(amount);
   const rest = abs % GROSZE_PER_ZLOTY;
+
+  if (options.style === "spreadsheet") {
+    const units = (abs - rest) / GROSZE_PER_ZLOTY;
+    return `${negative ? "-" : ""}${String(units)},${String(rest).padStart(2, "0")}`;
+  }
   // Odjęcie reszty przed dzieleniem daje wynik dokładny, bez błędów floatów.
   let zloty = (abs - rest) / GROSZE_PER_ZLOTY;
 

@@ -42,6 +42,7 @@ import {
   type ExpenseTemplate,
   type UpdateExpenseTemplateInput,
 } from "../expense-templates/schemas.js";
+import { exportDataSchema, type ExportData } from "../export/schemas.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   subscriptionsOverviewSchema,
@@ -231,6 +232,8 @@ export interface ApiClient {
     /** Usuwa naprawdę — to ustawienie, nie dane finansowe. */
     remove(id: string): Promise<void>;
   };
+  /** Wszystkie dane użytkownika naraz (bez kosza) — do plików CSV. */
+  exportData(): Promise<ExportData>;
   readonly subscriptions: {
     /** Potwierdzone i wykryte subskrypcje, z osobnymi sumami. */
     overview(): Promise<SubscriptionsOverviewOutput>;
@@ -504,6 +507,7 @@ export function createApiClient({
         await execute({ method: "DELETE", path: `/expense-templates/${encodeURIComponent(id)}` });
       },
     },
+    exportData: () => read("/export", exportDataSchema),
     subscriptions: {
       overview: () => read("/subscriptions", subscriptionsOverviewSchema),
       draftConfirm: (input) => ({ input, idempotencyKey: randomUUID() }),
