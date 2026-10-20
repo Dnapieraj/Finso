@@ -54,6 +54,37 @@ export const deleteAccountSchema = z.object({
   password: existingPasswordSchema,
 });
 
+/** Długość jednorazowego kodu z e-maila (reset hasła, potwierdzenie adresu). */
+export const EMAIL_CODE_LENGTH = 6;
+
+/**
+ * Jednorazowy kod z e-maila: same cyfry, wpisywany w appce. Kod zamiast
+ * linku — klienty poczty nie zamieniają adresów `finso://` w linki.
+ */
+export const emailCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/);
+
+/** Body `POST /auth/password/forgot` — wysyła kod, jeśli konto istnieje. */
+export const forgotPasswordSchema = z.object({ email: emailSchema });
+
+/** Body `POST /auth/password/reset` — kod z e-maila i nowe hasło. */
+export const resetPasswordSchema = z.object({
+  email: emailSchema,
+  code: emailCodeSchema,
+  password: newPasswordSchema,
+});
+
+/** Body `POST /users/me/email/verify`. */
+export const verifyEmailSchema = z.object({ code: emailCodeSchema });
+
+/** Body `POST /users/me/password` — zmiana hasła po zalogowaniu. */
+export const changePasswordSchema = z.object({
+  currentPassword: existingPasswordSchema,
+  newPassword: newPasswordSchema,
+});
+
 /** Para tokenów wydawana przy logowaniu, rejestracji i odświeżeniu sesji. */
 export const authTokensSchema = z.object({
   accessToken: z.string(),
@@ -77,5 +108,13 @@ export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
 /** Para tokenów sesji. */
 export type AuthTokens = z.infer<typeof authTokensSchema>;
+/** Prośba o kod do zmiany hasła. */
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+/** Ustawienie nowego hasła kodem z e-maila. */
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+/** Kod potwierdzający adres e-mail. */
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+/** Zmiana hasła po zalogowaniu. */
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 /** Sesja: tokeny + użytkownik. */
 export type AuthSession = z.infer<typeof authSessionSchema>;

@@ -34,6 +34,8 @@ export const publicUserSchema = z.object({
   periodStartDay: z.number().int(),
   /** Onboarding pokazuje się, dopóki to `false` — także na nowym telefonie. */
   onboardingCompleted: z.boolean(),
+  /** Czy użytkownik wpisał kod z e-maila — do tego czasu appka prosi o potwierdzenie. */
+  emailVerified: z.boolean(),
 });
 
 /** Body `PATCH /users/me` — ustawienia wpływające na liczenie budżetu. */

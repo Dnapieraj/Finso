@@ -4,7 +4,9 @@ import {
   authSessionSchema,
   authTokensSchema,
   type AuthTokens,
+  type ChangePasswordInput,
   type DeleteAccountInput,
+  type ResetPasswordInput,
   type LoginInput,
   type RegisterInput,
 } from "../auth/schemas.js";
@@ -132,6 +134,13 @@ export interface ApiClient {
     login(input: LoginInput): Promise<PublicUser>;
     /** Unieważnia sesję na serwerze i zawsze czyści tokeny lokalnie. */
     logout(): Promise<void>;
+    /**
+     * Prosi o kod do zmiany hasła. Ta sama odpowiedź, czy konto istnieje,
+     * czy nie — appka nie zdradza, kto ma konto.
+     */
+    forgotPassword(email: string): Promise<void>;
+    /** Nowe hasło z kodem z e-maila; kończy wszystkie sesje — potem trzeba się zalogować. */
+    resetPassword(input: ResetPasswordInput): Promise<void>;
   };
   readonly users: {
     me(): Promise<PublicUser>;
@@ -144,6 +153,15 @@ export interface ApiClient {
      * `onboardingCompleted: true`. 409 = onboarding był już ukończony.
      */
     completeOnboarding(input: CompleteOnboardingRequest): Promise<PublicUser>;
+    /** Wysyła na adres konta nowy kod potwierdzający. */
+    sendEmailVerification(): Promise<void>;
+    /** Potwierdza adres kodem z e-maila i zwraca użytkownika. 400 = zły albo wygasły kod. */
+    verifyEmail(code: string): Promise<PublicUser>;
+    /**
+     * Zmienia hasło (wymaga obecnego). Wszystkie sesje się kończą, a ta
+     * dostaje nowe tokeny — telefon zostaje zalogowany.
+     */
+    changePassword(input: ChangePasswordInput): Promise<void>;
   };
   readonly budget: {
     /** Ile zostało do końca bieżącego okresu i ile dziennie. */
@@ -407,6 +425,22 @@ export function createApiClient({
           await tokens.clear();
         }
       },
+      async forgotPassword(email) {
+        await execute({
+          method: "POST",
+          path: "/auth/password/forgot",
+          body: { email },
+          isPublic: true,
+        });
+      },
+      async resetPassword(input) {
+        await execute({
+          method: "POST",
+          path: "/auth/password/reset",
+          body: input,
+          isPublic: true,
+        });
+      },
     },
     users: {
       me: async () => parse(await execute({ method: "GET", path: "/users/me" }), publicUserSchema),
@@ -420,6 +454,13 @@ export function createApiClient({
           await execute({ method: "POST", path: "/users/me/onboarding", body: input }),
           publicUserSchema,
         ),
+      async sendEmailVerification() {
+        await execute({ method: "POST", path: "/users/me/email/verification" });
+      },
+      verifyEmail: (code) => write("POST", "/users/me/email/verify", { code }, publicUserSchema),
+      async changePassword(input) {
+        await tokens.setTokens(await write("POST", "/users/me/password", input, authTokensSchema));
+      },
     },
     budget: {
       current: () => read("/budget/current", budgetSummarySchema),
