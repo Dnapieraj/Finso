@@ -541,7 +541,7 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
     wersja appki i systemu dołączona do wiadomości (bez danych finansowych).
     Obok **polityka prywatności i regulamin dostępne w appce** (wymóg Apple,
     wytyczna 5.1.1) — linki do stron `apps/web`
-12. **Komunikat „Zaktualizuj aplikację”**: API podaje minimalną wspieraną
+12. **ZROBIONE** (`a19dd89..5a9e143`, 20.10.2026) — **Komunikat „Zaktualizuj aplikację”**: API podaje minimalną wspieraną
     wersję appki, starsza wersja pokazuje ekran z przyciskiem do sklepu.
     Musi być w pierwszej opublikowanej wersji — wersji już zainstalowanych
     w telefonach nie da się później tego nauczyć
@@ -881,3 +881,22 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   że adresy i e-mail w appce zgadzają się z `apps/web`. **Przed publikacją
   strona musi działać pod tą domeną** (inaczej linki prowadzą donikąd).
 - Wersja z `expo-constants` (app.json wbudowany w build).
+
+### 20.10.2026 — punkt 12, „Zaktualizuj aplikację”
+
+- **Wersja w nagłówku `X-App-Version` przy każdym żądaniu, API odpowiada 426**
+  dla wersji starszej niż `MIN_APP_VERSION` (domyślnie 0.0.0 — nic nie
+  blokuje). Zamiast osobnego `GET /app/version` przy starcie: pierwsze
+  żądanie appki (sesja, logowanie) i tak to wykrywa, a 426 działa też
+  w trakcie sesji, gdy API zmieni się pod działającą appką.
+- **Middleware przed guardami** — 426 wychodzi przed sprawdzeniem tokena, także
+  na publicznych `/auth/*`. `/health` zawsze odpowiada (NetInfo sprawdza nim
+  internet).
+- **Fail-open**: brak nagłówka, nieczytelna wersja, brak sieci — appka działa.
+  Blokada przez pomyłkę odcięłaby użytkownika od jego danych.
+- **Porównanie liczbowe** („0.9.10” < „0.10.0”) w `@vireo/shared` (`isOlderVersion`).
+- **Ekran zastępuje całą appkę** (także logowanie) do restartu; „Otwórz sklep”
+  na Androidzie prowadzi do Google Play po `app.finso`. **App Store nie ma
+  jeszcze identyfikatora appki** (powstaje przy pierwszym zgłoszeniu, etap 8) —
+  do tego czasu iOS otwiera stronę finso.app; adres do podmiany
+  w `apps/mobile/src/update/store-url.ts`.
