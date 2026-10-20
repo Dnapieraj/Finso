@@ -1,5 +1,7 @@
 import type { Server } from "node:http";
 
+import type { PublicUser } from "@vireo/shared";
+
 import type { INestApplication } from "@nestjs/common";
 import type { TestingModuleBuilder } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
@@ -84,7 +86,7 @@ export function uniqueEmail(): string {
 export const TEST_PASSWORD = "correct horse battery staple";
 
 export interface TestSession {
-  user: { id: string; email: string };
+  user: PublicUser;
   accessToken: string;
   refreshToken: string;
 }

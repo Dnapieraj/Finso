@@ -25,6 +25,7 @@ const me = {
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
   onboardingCompleted: true,
+  emailVerified: false,
 } as const;
 
 const credentials = { email: "ola@example.com", password: "tajne-haslo-123" };
@@ -330,6 +331,59 @@ describe("createApiClient", () => {
 
     expect(sentRequest(fetch, 0).body).toEqual({ password: "tajne-haslo-123" });
     expect(tokens.saved).toBeNull();
+  });
+
+  describe("password reset, e-mail verification, password change", () => {
+    it("auth.forgotPassword posts the e-mail without a token", async () => {
+      const { api, fetch } = setup({
+        "POST /auth/password/forgot": [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.auth.forgotPassword("ola@example.com")).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).body).toEqual({ email: "ola@example.com" });
+      expect(sentRequest(fetch, 0).headers.has("Authorization")).toBe(false);
+    });
+
+    it("auth.resetPassword posts e-mail, code and the new password without a token", async () => {
+      const { api, fetch } = setup({
+        "POST /auth/password/reset": [new Response(null, { status: 204 })],
+      });
+      const input = { email: "ola@example.com", code: "123456", password: "nowe-haslo-1" };
+
+      await expect(api.auth.resetPassword(input)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).body).toEqual(input);
+      expect(sentRequest(fetch, 0).headers.has("Authorization")).toBe(false);
+    });
+
+    it("users.sendEmailVerification asks for a new code", async () => {
+      const { api, fetch } = setup({
+        "POST /users/me/email/verification": [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.users.sendEmailVerification()).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("POST");
+    });
+
+    it("users.verifyEmail sends the code and returns the account", async () => {
+      const verified = { ...me, emailVerified: true };
+      const { api, fetch } = setup({
+        "POST /users/me/email/verify": [jsonResponse(200, verified)],
+      });
+
+      await expect(api.users.verifyEmail("123456")).resolves.toEqual(verified);
+      expect(sentRequest(fetch, 0).body).toEqual({ code: "123456" });
+    });
+
+    it("users.changePassword stores the new session tokens (every old session ends)", async () => {
+      const { api, fetch, tokens } = setup({
+        "POST /users/me/password": [jsonResponse(200, newTokens)],
+      });
+      const input = { currentPassword: "stare-haslo", newPassword: "nowe-haslo-1" };
+
+      await expect(api.users.changePassword(input)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).body).toEqual(input);
+      expect(tokens.saved).toEqual(newTokens);
+    });
   });
 
   describe("users.completeOnboarding", () => {

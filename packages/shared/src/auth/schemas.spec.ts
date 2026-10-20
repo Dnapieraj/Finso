@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  changePasswordSchema,
   deleteAccountSchema,
+  emailCodeSchema,
   emailSchema,
+  forgotPasswordSchema,
   loginSchema,
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   refreshTokenSchema,
   registerSchema,
+  resetPasswordSchema,
+  verifyEmailSchema,
 } from "./schemas.js";
 
 describe("emailSchema", () => {
@@ -90,5 +95,60 @@ describe("deleteAccountSchema", () => {
   it("wymaga hasła", () => {
     expect(deleteAccountSchema.safeParse({}).success).toBe(false);
     expect(deleteAccountSchema.safeParse({ password: "x" }).success).toBe(true);
+  });
+});
+
+describe("emailCodeSchema", () => {
+  it.each(["123456", " 012345 "])("przyjmuje 6 cyfr (%s), bez spacji na brzegach", (code) => {
+    expect(emailCodeSchema.parse(code)).toBe(code.trim());
+  });
+
+  it.each(["12345", "1234567", "12a456", "", "12 456"])("odrzuca %s", (code) => {
+    expect(emailCodeSchema.safeParse(code).success).toBe(false);
+  });
+});
+
+describe("forgotPasswordSchema", () => {
+  it("normalizuje e-mail", () => {
+    expect(forgotPasswordSchema.parse({ email: " Ola@Example.com " })).toEqual({
+      email: "ola@example.com",
+    });
+  });
+});
+
+describe("resetPasswordSchema", () => {
+  const valid = { email: "ola@example.com", code: "123456", password: "nowe-haslo-1" };
+
+  it("przyjmuje e-mail, kod i nowe hasło", () => {
+    expect(resetPasswordSchema.parse(valid)).toEqual(valid);
+  });
+
+  it("nowe hasło podlega polityce długości", () => {
+    expect(
+      resetPasswordSchema.safeParse({ ...valid, password: "x".repeat(PASSWORD_MIN_LENGTH - 1) })
+        .success,
+    ).toBe(false);
+  });
+
+  it("zły kod → odrzucony", () => {
+    expect(resetPasswordSchema.safeParse({ ...valid, code: "abc" }).success).toBe(false);
+  });
+});
+
+describe("verifyEmailSchema", () => {
+  it("wymaga kodu", () => {
+    expect(verifyEmailSchema.parse({ code: "654321" })).toEqual({ code: "654321" });
+    expect(verifyEmailSchema.safeParse({}).success).toBe(false);
+  });
+});
+
+describe("changePasswordSchema", () => {
+  it("obecne hasło bez polityki, nowe z polityką", () => {
+    expect(
+      changePasswordSchema.safeParse({ currentPassword: "x", newPassword: "nowe-haslo-1" }).success,
+    ).toBe(true);
+    expect(
+      changePasswordSchema.safeParse({ currentPassword: "x", newPassword: "krotkie" }).success,
+    ).toBe(false);
   });
 });

@@ -33,6 +33,8 @@ import type {
   UpdateRecurringRuleInput,
   UpdateTransactionInput,
   ConfirmSubscriptionInput,
+  ChangePasswordInput,
+  ResetPasswordInput,
   ConfirmedSubscriptionOutput,
   DetectedSubscriptionOutput,
   SubscriptionsOverviewOutput,
@@ -48,7 +50,13 @@ export const testUser: PublicUser = {
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
   onboardingCompleted: true,
+  emailVerified: true,
 };
+
+/** The code the fake server accepts for a password reset and an e-mail check. */
+export const TEST_EMAIL_CODE = "123456";
+
+const invalidCode = () => Promise.reject(new ApiError("http", 400, "Invalid or expired code"));
 
 /**
  * Day 19 of 30; 1234,56 zł left for 12 days → 102,88 zł a day. Nothing
@@ -360,7 +368,12 @@ export function seedFakeServer(data: {
 
 /** The signed-in account has not finished onboarding (e.g. quit halfway last time). */
 export function startBeforeOnboarding(): void {
-  account = { ...testUser, periodStartDay: 1, onboardingCompleted: false };
+  account = { ...testUser, periodStartDay: 1, onboardingCompleted: false, emailVerified: false };
+}
+
+/** The signed-in account has not typed in the code from the e-mail yet. */
+export function startUnverified(): void {
+  account = { ...account, emailVerified: false };
 }
 
 /**
@@ -376,6 +389,10 @@ export const fakeApi = {
     }),
     login: jest.fn((_input: LoginInput) => Promise.resolve(account)),
     logout: jest.fn(() => Promise.resolve()),
+    forgotPassword: jest.fn((_email: string) => Promise.resolve()),
+    resetPassword: jest.fn((input: ResetPasswordInput) =>
+      input.code === TEST_EMAIL_CODE ? Promise.resolve() : invalidCode(),
+    ),
   },
   users: {
     me: jest.fn(() => Promise.resolve(account)),
@@ -393,6 +410,13 @@ export const fakeApi = {
       };
       return Promise.resolve(account);
     }),
+    sendEmailVerification: jest.fn(() => Promise.resolve()),
+    verifyEmail: jest.fn((code: string) => {
+      if (code !== TEST_EMAIL_CODE) return invalidCode();
+      account = { ...account, emailVerified: true };
+      return Promise.resolve(account);
+    }),
+    changePassword: jest.fn((_input: ChangePasswordInput) => Promise.resolve()),
   },
   confirmations: {
     list: jest.fn(() => Promise.resolve(due.map((item) => ({ ...item })))),

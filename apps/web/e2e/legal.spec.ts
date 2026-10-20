@@ -141,6 +141,14 @@ test("privacy policy says the app lock is checked by the phone", async ({ page }
   await expect(lock).toContainText("nie zna kodu");
 });
 
+test("privacy policy names Resend and the e-mail codes it stores", async ({ page }) => {
+  await page.goto("/polityka-prywatnosci");
+  const main = page.locator("main");
+  await expect(main).toContainText("Resend");
+  await expect(main).toContainText("Nie otrzymuje danych finansowych");
+  await expect(main).toContainText("Jednorazowe kody wysyłane e-mailem");
+});
+
 test("privacy policy describes the subscription detector and what it stores", async ({ page }) => {
   await page.goto("/polityka-prywatnosci");
   const main = page.locator("main");

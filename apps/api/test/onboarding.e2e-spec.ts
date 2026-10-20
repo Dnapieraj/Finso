@@ -100,6 +100,7 @@ describe("Onboarding (e2e)", () => {
         timezone: "Europe/Berlin",
         periodStartDay: 10,
         onboardingCompleted: true,
+        emailVerified: false,
       });
       expect(await get<PublicUser>("/users/me")).toEqual(res.body);
     });

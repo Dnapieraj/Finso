@@ -111,6 +111,7 @@ describe("Users (e2e)", () => {
         timezone: "Europe/Warsaw",
         periodStartDay: 1,
         onboardingCompleted: false,
+        emailVerified: false,
       });
     });
   });
