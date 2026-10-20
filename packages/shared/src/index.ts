@@ -16,6 +16,7 @@ export * from "./budget/assemble-budget-input.js";
 export * from "./budget/confirmations.js";
 export * from "./budget/rule-start-date.js";
 export * from "./budget/rebase-rule-starts.js";
+export * from "./budget/subscriptions.js";
 export * from "./budget/schemas.js";
 export * from "./common/schemas.js";
 export * from "./auth/schemas.js";
@@ -28,6 +29,6 @@ export * from "./recurring-rules/schemas.js";
 export * from "./onboarding/schemas.js";
 export * from "./confirmations/schemas.js";
 export * from "./expense-templates/schemas.js";
+export * from "./subscriptions/schemas.js";
 
-// Jeszcze nie zbudowane (poza etapem 3): forecastIrregularIncome,
-// detectRecurringPatterns.
+// Jeszcze nie zbudowane (Faza 2): forecastIrregularIncome.

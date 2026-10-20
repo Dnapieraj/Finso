@@ -42,6 +42,11 @@ import {
 } from "../expense-templates/schemas.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
+  subscriptionsOverviewSchema,
+  type ConfirmSubscriptionInput,
+  type SubscriptionsOverviewOutput,
+} from "../subscriptions/schemas.js";
+import {
   transactionPageSchema,
   transactionSchema,
   transactionSummarySchema,
@@ -207,6 +212,21 @@ export interface ApiClient {
     update(id: string, input: UpdateExpenseTemplateInput): Promise<ExpenseTemplate>;
     /** Usuwa naprawdę — to ustawienie, nie dane finansowe. */
     remove(id: string): Promise<void>;
+  };
+  readonly subscriptions: {
+    /** Potwierdzone i wykryte subskrypcje, z osobnymi sumami. */
+    overview(): Promise<SubscriptionsOverviewOutput>;
+    /** „To subskrypcja” z własnym kluczem idempotencji — jeden draft na jedno potwierdzenie. */
+    draftConfirm(input: ConfirmSubscriptionInput): IdempotentDraft<ConfirmSubscriptionInput>;
+    /**
+     * Zamienia wykrytą pozycję w stałą płatność (subskrypcję) i zwraca regułę.
+     * Po nim trzeba odświeżyć budżet — od następnego terminu kwota się odlicza.
+     */
+    confirm(draft: IdempotentDraft<ConfirmSubscriptionInput>): Promise<RecurringRule>;
+    /** „To nie subskrypcja” — appka więcej jej nie podpowiada. */
+    dismiss(key: string): Promise<void>;
+    /** „Cofnij” po odrzuceniu. */
+    undismiss(key: string): Promise<void>;
   };
   readonly transactions: {
     /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
@@ -441,6 +461,20 @@ export function createApiClient({
         ),
       async remove(id) {
         await execute({ method: "DELETE", path: `/expense-templates/${encodeURIComponent(id)}` });
+      },
+    },
+    subscriptions: {
+      overview: () => read("/subscriptions", subscriptionsOverviewSchema),
+      draftConfirm: (input) => ({ input, idempotencyKey: randomUUID() }),
+      confirm: (draft) => createKeyed("/subscriptions/confirm", draft, recurringRuleSchema),
+      async dismiss(key) {
+        await execute({ method: "POST", path: "/subscriptions/dismissals", body: { key } });
+      },
+      async undismiss(key) {
+        await execute({
+          method: "DELETE",
+          path: `/subscriptions/dismissals?key=${encodeURIComponent(key)}`,
+        });
       },
     },
     recurringRules: {

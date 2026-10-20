@@ -25,6 +25,7 @@ const shapeFieldsSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6).nullable(),
   expectedAmount: amountSchema.nullable(),
   categoryId: idSchema.nullable(),
+  isSubscription: z.boolean().default(false),
 });
 
 type ShapeFields = z.infer<typeof shapeFieldsSchema>;
@@ -38,7 +39,7 @@ type ShapeFields = z.infer<typeof shapeFieldsSchema>;
  *   i `name` (reguła wydatku JEST zobowiązaniem — pokazujemy ją na liście
  *   i w breakdownie budżetu). Reguła INCOME nazwy nie potrzebuje: to tylko
  *   harmonogram, a nazwę ma podpięte pod nią źródło dochodu.
- * - INCOME → bez `categoryId` (kategorie opisują wydatki)
+ * - INCOME → bez `categoryId` (kategorie opisują wydatki) i bez `isSubscription`
  *
  * Komunikaty to stabilne klucze, nie zdania — tłumaczy je klient.
  */
@@ -56,6 +57,9 @@ function checkShape(rule: ShapeFields, ctx: z.RefinementCtx): void {
   }
   if (rule.kind === "INCOME" && rule.categoryId !== null) {
     issue("categoryId", "not_allowed_for_income");
+  }
+  if (rule.kind === "INCOME" && rule.isSubscription) {
+    issue("isSubscription", "not_allowed_for_income");
   }
 }
 
@@ -124,6 +128,8 @@ export const createRecurringRuleSchema = z
     dayOfWeek: z.number().int().min(0).max(6).nullable().default(null),
     expectedAmount: amountSchema.nullable().default(null),
     categoryId: idSchema.nullable().default(null),
+    /** Subskrypcja (Netflix, Spotify) — wchodzi do sumy na ekranie „Subskrypcje”. */
+    isSubscription: z.boolean().default(false),
   })
   .superRefine(checkShape);
 
@@ -143,6 +149,7 @@ export const updateRecurringRuleSchema = z
     categoryId: idSchema.nullable(),
     /** Wyłączenie (np. anulowana subskrypcja) zamiast usunięcia — historia zostaje. */
     isActive: z.boolean(),
+    isSubscription: z.boolean(),
   })
   .partial();
 
@@ -159,6 +166,7 @@ export const recurringRuleSchema = z.object({
   expectedAmount: z.number().int().nullable(),
   categoryId: idSchema.nullable(),
   isActive: z.boolean(),
+  isSubscription: z.boolean(),
 });
 
 /** Dane nowej reguły. */
