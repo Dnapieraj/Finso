@@ -1,4 +1,4 @@
-import { Link } from "expo-router";
+import { Link, useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 
 import { loginSchema } from "@vireo/shared";
@@ -18,10 +18,13 @@ export default function LoginScreen() {
   const { signOutReason } = useSession();
   // A logout is the user's own choice; only a session that ended on its
   // own (expired, deleted account) needs explaining.
-  const notice =
+  const signOutNotice =
     signOutReason === "expired" || signOutReason === "deleted"
       ? pl.signOutNotice[signOutReason]
       : null;
+  // Back from „Nie pamiętam hasła” with a new password.
+  const { passwordReset } = useLocalSearchParams<{ passwordReset?: string }>();
+  const notice = passwordReset ? t.passwordReset : signOutNotice;
 
   return (
     <AuthScreen title={t.title}>
@@ -34,7 +37,9 @@ export default function LoginScreen() {
         error={login.error ? apiErrorMessage(login.error, "login") : null}
         notice={
           notice ? (
-            <FormAlert tone={signOutReason === "expired" ? "error" : "info"}>{notice}</FormAlert>
+            <FormAlert tone={!passwordReset && signOutReason === "expired" ? "error" : "info"}>
+              {notice}
+            </FormAlert>
           ) : null
         }
         onSubmit={(credentials) => {
@@ -42,6 +47,9 @@ export default function LoginScreen() {
         }}
       />
       <View className="items-center">
+        <Link href="/forgot-password" className="py-3">
+          <Text className="font-sans-semibold text-base text-primary">{t.forgotPassword}</Text>
+        </Link>
         <Link href="/register" replace className="py-3">
           <Text className="font-sans-semibold text-base text-primary">{t.toRegister}</Text>
         </Link>

@@ -16,7 +16,8 @@ export const plErrorMap: z.core.$ZodErrorMap = (issue) => {
   if (field === "email") {
     return issue.input === "" ? t.emailRequired : t.emailInvalid;
   }
-  if (field === "password") {
+  if (field === "code") return t.codeInvalid;
+  if (field === "password" || field === "currentPassword" || field === "newPassword") {
     if (issue.code === "too_small") {
       return Number(issue.minimum) <= 1
         ? t.passwordRequired

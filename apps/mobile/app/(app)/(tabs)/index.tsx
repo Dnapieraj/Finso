@@ -8,6 +8,7 @@ import EyeOff from "lucide-react-native/icons/eye-off";
 import Plus from "lucide-react-native/icons/plus";
 import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
+import { VerifyEmailCard } from "../../../src/auth/verify-email-card";
 import { Button } from "../../../src/components/button";
 import { Card } from "../../../src/components/card";
 import { ProgressBar } from "../../../src/components/progress-bar";
@@ -373,6 +374,7 @@ export default function DashboardScreen() {
         )}
         <ConfirmationsCard />
         <SubscriptionsCard />
+        <VerifyEmailCard />
         <Goals asOf={budget.data?.asOf ?? null} />
         <RecentExpenses />
       </Screen>

@@ -10,7 +10,16 @@ import { OrDivider, SocialButtons } from "./social-buttons";
  * unlike the in-app `Screen`, which starts at the top. The content can
  * still scroll when the keyboard leaves too little room.
  */
-export function AuthScreen({ title, children }: { title: string; children: ReactNode }) {
+export function AuthScreen({
+  title,
+  social = true,
+  children,
+}: {
+  title: string;
+  /** Apple/Google buttons — not on screens that are not a way to sign in. */
+  social?: boolean;
+  children: ReactNode;
+}) {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -31,8 +40,12 @@ export function AuthScreen({ title, children }: { title: string; children: React
             >
               {title}
             </Text>
-            <SocialButtons />
-            <OrDivider />
+            {social && (
+              <>
+                <SocialButtons />
+                <OrDivider />
+              </>
+            )}
             {children}
           </View>
         </ScrollView>

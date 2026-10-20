@@ -5,7 +5,14 @@ import { pl } from "../messages/pl";
 const t = pl.apiErrors;
 
 /** The screen that sent the request; the same status means different things per screen. */
-export type AuthAction = "login" | "register" | "delete-account" | "onboarding" | "settings";
+export type AuthAction =
+  | "login"
+  | "register"
+  | "delete-account"
+  | "onboarding"
+  | "settings"
+  | "email-code"
+  | "change-password";
 
 /**
  * A message for the user from a failed request. Never the API's own
@@ -21,12 +28,18 @@ export function apiErrorMessage(error: unknown, action: AuthAction): string {
       // Only login answers 401 for bad credentials; anywhere else it means
       // the refresh failed too, so the session is gone.
       return action === "login" ? t.invalidCredentials : t.sessionExpired;
+    case 400:
+      return action === "email-code" ? t.invalidCode : t.generic;
     case 403:
-      return action === "delete-account" ? t.wrongPassword : t.generic;
+      return action === "delete-account" || action === "change-password"
+        ? t.wrongPassword
+        : t.generic;
     case 409:
       return action === "register" ? t.emailTaken : t.generic;
     case 429:
       return t.tooManyAttempts;
+    case 503:
+      return action === "email-code" ? t.mailNotSent : t.generic;
     default:
       return t.generic;
   }

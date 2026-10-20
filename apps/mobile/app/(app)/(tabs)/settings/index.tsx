@@ -46,6 +46,22 @@ export default function SettingsScreen() {
       <View className="gap-2 rounded-2xl bg-card p-4">
         <Text className="font-sans-semibold text-sm text-muted-foreground">{t.account}</Text>
         <Text className="font-sans text-base text-foreground">{account.email}</Text>
+        <Text className="font-sans text-sm text-muted-foreground">
+          {account.emailVerified ? t.emailVerified : t.emailNotVerified}
+        </Text>
+        {!account.emailVerified && (
+          <Button
+            variant="outline"
+            onPress={() => {
+              router.push("/settings/verify-email");
+            }}
+          >
+            {pl.verifyEmail.open}
+          </Button>
+        )}
+      </View>
+      <View className="divide-y divide-border rounded-2xl bg-card">
+        <SettingsLink label={t.changePassword} href="/settings/change-password" />
       </View>
       <View className="gap-2">
         <Text className="font-sans-semibold text-sm text-muted-foreground">{t.budget}</Text>
