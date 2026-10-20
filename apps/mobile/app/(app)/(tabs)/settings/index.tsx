@@ -1,9 +1,11 @@
 import { router, type Href } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Linking, Pressable, Text, View } from "react-native";
 
 import { useAccount } from "../../../../src/auth/account";
 import { useLogout } from "../../../../src/auth/hooks";
 import { Button } from "../../../../src/components/button";
+import { FormAlert } from "../../../../src/components/form-alert";
 import { Screen } from "../../../../src/components/screen";
 import { useAppLock } from "../../../../src/lock/store";
 import { pl } from "../../../../src/messages/pl";
@@ -12,18 +14,32 @@ import {
   useDevicePreferences,
 } from "../../../../src/preferences/device-preferences";
 import { SwitchRow } from "../../../../src/settings/settings-screen-parts";
+import {
+  appVersion,
+  CONTACT_EMAIL,
+  LEGAL_URLS,
+  thisDeviceSupportMailUrl,
+} from "../../../../src/support/support";
 
 const t = pl.settings;
 
-/** A row that opens a settings screen; `value` shows the current setting. */
-function SettingsLink({ label, value, href }: { label: string; value?: string; href: Href }) {
+/**
+ * A row that opens a settings screen (`href`) or does something (`onPress`,
+ * e.g. opens the browser); `value` shows the current setting.
+ */
+function SettingsLink({
+  label,
+  value,
+  ...target
+}: { label: string; value?: string } & ({ href: Href } | { onPress: () => void })) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint={value}
       onPress={() => {
-        router.push(href);
+        if ("href" in target) router.push(target.href);
+        else target.onPress();
       }}
       // Wraps at large text sizes: the value moves under the label instead of
       // running off the card.
@@ -40,6 +56,8 @@ export default function SettingsScreen() {
   const account = useAccount();
   const lock = useAppLock();
   const preferences = useDevicePreferences();
+  const [noMailApp, setNoMailApp] = useState(false);
+  const s = pl.support;
 
   return (
     <Screen title={t.title}>
@@ -98,6 +116,26 @@ export default function SettingsScreen() {
             }}
           />
         </View>
+      </View>
+      <View className="gap-2">
+        <Text className="font-sans-semibold text-sm text-muted-foreground">{s.section}</Text>
+        {noMailApp && <FormAlert tone="info">{s.noMailApp(CONTACT_EMAIL)}</FormAlert>}
+        <View className="divide-y divide-border rounded-2xl bg-card">
+          <SettingsLink
+            label={s.report}
+            onPress={() => {
+              Linking.openURL(thisDeviceSupportMailUrl()).catch(() => {
+                setNoMailApp(true);
+              });
+            }}
+          />
+          <SettingsLink
+            label={s.privacy}
+            onPress={() => void Linking.openURL(LEGAL_URLS.privacy)}
+          />
+          <SettingsLink label={s.terms} onPress={() => void Linking.openURL(LEGAL_URLS.terms)} />
+        </View>
+        <Text className="font-sans text-sm text-muted-foreground">{s.version(appVersion())}</Text>
       </View>
       <Button
         variant="outline"

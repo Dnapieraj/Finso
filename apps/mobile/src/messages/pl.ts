@@ -562,6 +562,20 @@ export const pl = {
         "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
     },
   },
+  support: {
+    section: "Pomoc i informacje",
+    report: "Zgłoś problem",
+    privacy: "Polityka prywatności",
+    terms: "Regulamin",
+    version: (version: string) => `Finso ${version}`,
+    noMailApp: (email: string) => `Nie znaleziono aplikacji poczty. Napisz na ${email}.`,
+    mailSubject: "Finso — zgłoszenie problemu",
+    mailPrompt: "Opisz, co się stało:",
+    mailVersion: (version: string) => `Wersja aplikacji: ${version}`,
+    mailSystem: (system: string) => `System: ${system}`,
+    mailNoMoney: "Nie wpisuj kwot ani innych danych finansowych — nie są potrzebne.",
+    osNames: { android: "Android", ios: "iOS" } as Record<string, string | undefined>,
+  },
   exportData: {
     title: "Eksport danych",
     intro:
