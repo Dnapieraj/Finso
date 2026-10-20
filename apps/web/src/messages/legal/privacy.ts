@@ -53,6 +53,9 @@ export const privacyPolicy = {
             [
               "Dane sesji: skróty tokenów logowania i ich daty ważności, żeby utrzymać cię zalogowanym i móc unieważnić sesję.",
             ],
+            [
+              "Jednorazowe kody wysyłane e-mailem (zmiana hasła, potwierdzenie adresu): przechowujemy tylko ich skrót, a kod przestaje działać po 15 minutach (hasło) albo 24 godzinach (adres). Zapisujemy też, kiedy potwierdzono adres e-mail.",
+            ],
           ],
         },
         {
@@ -119,6 +122,9 @@ export const privacyPolicy = {
         {
           type: "ul",
           items: [
+            [
+              "Resend — wysyłka e-maili z kodami. Otrzymuje twój adres e-mail i treść wiadomości z kodem. Nie otrzymuje danych finansowych.",
+            ],
             [
               "RevenueCat, Inc. — obsługa i weryfikacja subskrypcji Plus. Otrzymuje identyfikator klienta i informacje o zakupach.",
             ],
