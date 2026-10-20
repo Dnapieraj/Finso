@@ -5,6 +5,8 @@ const { resetLocalAuthentication } = require("./__tests__/helpers/fake-local-aut
 const { resetScreenCapture } = require("./__tests__/helpers/fake-screen-capture");
 const { resetHaptics } = require("./__tests__/helpers/fake-haptics");
 const { resetNetInfo } = require("./__tests__/helpers/fake-netinfo");
+const { resetFileSystem } = require("./__tests__/helpers/fake-file-system");
+const { resetSharing } = require("./__tests__/helpers/fake-sharing");
 
 beforeEach(() => {
   resetFakeServer();
@@ -13,4 +15,6 @@ beforeEach(() => {
   resetScreenCapture();
   resetHaptics();
   resetNetInfo();
+  resetFileSystem();
+  resetSharing();
 });

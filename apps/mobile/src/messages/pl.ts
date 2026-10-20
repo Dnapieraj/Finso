@@ -308,6 +308,7 @@ export const pl = {
     commitments: "Stałe zobowiązania",
     templates: "Szablony wydatków",
     subscriptions: "Subskrypcje",
+    export: "Eksport danych",
     app: "Aplikacja",
     notifications: "Powiadomienia",
     appearance: "Wygląd",
@@ -559,6 +560,59 @@ export const pl = {
       yearlySchedule: (dayAndMonth: string) => `Co rok, ${dayAndMonth}`,
       yearlyHint:
         "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
+    },
+  },
+  exportData: {
+    title: "Eksport danych",
+    intro:
+      "Kopia twoich danych w plikach CSV — otworzysz je w Excelu albo Arkuszach Google. Każdy plik wyślesz przez „Udostępnij”, np. e-mailem albo na Dysk.",
+    files: {
+      expenses: "Wydatki",
+      income: "Wpływy",
+      goals: "Cele",
+      commitments: "Stałe zobowiązania",
+    },
+    exportLabel: (name: string) => `Eksportuj: ${name}`,
+    preparing: "Przygotowywanie…",
+    dialogTitle: (name: string) => `${name} — Finso`,
+    failed: "Nie udało się przygotować pliku. Spróbuj ponownie.",
+    sharingUnavailable: "Na tym urządzeniu nie da się udostępnić pliku.",
+    trashNote:
+      "Wpisy usunięte do kosza nie trafiają do plików. Pełną kopię wszystkich danych wyślemy na prośbę: kontakt@finso.app.",
+    csv: {
+      yes: "tak",
+      no: "nie",
+      expenseStatus: {
+        CONFIRMED: "Zapłacone",
+        PENDING: "Jeszcze nie",
+        DECLINED: "Nie w tym okresie",
+      },
+      incomeStatus: {
+        CONFIRMED: "Wpłynęło",
+        PENDING: "Jeszcze nie",
+        DECLINED: "Nie w tym okresie",
+      },
+      expenses: [
+        "Data",
+        "Kwota (zł)",
+        "Kategoria",
+        "Notatka",
+        "Status",
+        "Stała płatność",
+        "Termin płatności",
+        "Wydatki przed Finso",
+      ],
+      income: ["Data", "Kwota (zł)", "Źródło", "Status", "Termin wpływu"],
+      goals: ["Nazwa", "Kwota docelowa (zł)", "Odłożone (zł)", "Termin"],
+      commitments: [
+        "Nazwa",
+        "Kwota (zł)",
+        "Jak często",
+        "Od",
+        "Kategoria",
+        "Aktywne",
+        "Subskrypcja",
+      ],
     },
   },
   subscriptions: {
