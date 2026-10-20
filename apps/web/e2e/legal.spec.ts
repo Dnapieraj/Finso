@@ -141,6 +141,13 @@ test("privacy policy says the app lock is checked by the phone", async ({ page }
   await expect(lock).toContainText("nie zna kodu");
 });
 
+test("privacy policy says how to export the data from the app", async ({ page }) => {
+  await page.goto("/polityka-prywatnosci");
+  const rights = page.getByRole("region", { name: "Twoje prawa" });
+  await expect(rights).toContainText("Ustawienia → Eksport danych");
+  await expect(rights).toContainText("pliki CSV");
+});
+
 test("privacy policy names Resend and the e-mail codes it stores", async ({ page }) => {
   await page.goto("/polityka-prywatnosci");
   const main = page.locator("main");

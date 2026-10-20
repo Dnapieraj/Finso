@@ -122,6 +122,24 @@ describe("formatMoney", () => {
   });
 });
 
+describe("formatMoney — styl arkusza (eksport CSV)", () => {
+  const sheet = (amount: number) => formatMoney(grosze(amount), { style: "spreadsheet" });
+
+  it("sama liczba z przecinkiem: bez „zł” i bez spacji między tysiącami", () => {
+    expect(sheet(123_456_78)).toBe("123456,78");
+    expect(sheet(5)).toBe("0,05");
+    expect(sheet(0)).toBe("0,00");
+  });
+
+  it("ujemna ze znakiem minus", () => {
+    expect(sheet(-8_640)).toBe("-86,40");
+  });
+
+  it("zawsze dokładnie, z groszami — arkusz liczy dalej sam", () => {
+    expect(formatMoney(grosze(8_699), { style: "spreadsheet", whole: "down" })).toBe("86,99");
+  });
+});
+
 describe("formatMoney a Intl.NumberFormat pl-PL (wyrocznia)", () => {
   // Intl przyjmuje dokładny zapis dziesiętny jako string od ES2023;
   // lib tego pakietu to ES2022, stąd zawężony typ funkcji.

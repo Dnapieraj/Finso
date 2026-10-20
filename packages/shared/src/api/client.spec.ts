@@ -386,6 +386,21 @@ describe("createApiClient", () => {
     });
   });
 
+  it("exportData validates the whole export", async () => {
+    const data = {
+      exportedOn: "2026-10-20",
+      categories: [],
+      expenses: [],
+      incomeSources: [],
+      incomeEntries: [],
+      goals: [],
+      recurringRules: [],
+    };
+    const { api } = setup({ "GET /export": [jsonResponse(200, data)] });
+
+    await expect(api.exportData()).resolves.toEqual(data);
+  });
+
   describe("users.completeOnboarding", () => {
     const onboarding: CompleteOnboardingRequest = {
       periodStartDay: 10,

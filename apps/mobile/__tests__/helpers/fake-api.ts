@@ -558,6 +558,17 @@ export const fakeApi = {
   categories: {
     list: jest.fn(() => Promise.resolve([testCategory])),
   },
+  exportData: jest.fn(() =>
+    Promise.resolve({
+      exportedOn: testBudget.asOf,
+      categories: [testCategory],
+      expenses: allExpenses().map((expense) => ({ ...expense, occurrenceDate: null })),
+      incomeSources: sources,
+      incomeEntries: [],
+      goals,
+      recurringRules: rules,
+    }),
+  ),
   subscriptions: {
     overview: jest.fn(() => Promise.resolve(subscriptionsOverview())),
     draftConfirm: jest.fn((input: ConfirmSubscriptionInput) => keyed(input)),
