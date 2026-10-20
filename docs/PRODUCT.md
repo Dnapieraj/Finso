@@ -517,6 +517,11 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
    `lucide-react` (`@vireo/ui`) i zbędne eksporty. `expo-system-ui` to moduł
    natywny — przed testami e2e potrzebny nowy development build
 9. **Reset hasła („Nie pamiętam hasła”) przez e-mail** i potwierdzenie
+   adresu e-mail — **ZROBIONE** (`ed63ffe..593449d`), 20.10.2026; szczegóły
+   w „Dzienniku decyzji”. **Do uruchomienia na produkcji: konto Resend,
+   zweryfikowana domena nadawcy, `RESEND_API_KEY`** (bez klucza API
+   produkcyjne nie wystartuje; lokalnie e-maile trafiają do logu). Pierwotny
+   opis punktu:
    adresu e-mail przy rejestracji (dopisane 13.10.2026). Do ustalenia przy
    tym punkcie: jednorazowy, krótko ważny token (w bazie tylko jego hash),
    reset unieważnia wszystkie refresh tokeny, ta sama odpowiedź dla
@@ -805,3 +810,35 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   `pnpm up --depth Infinity` ruszał ~700 linii lockfile, więc odrzucony.
 - **Fonty po jednej grubości** — import z korzenia paczki dokładał do appki
   wszystkie grubości; test `fonts.test.ts` pilnuje ścieżek.
+
+### 20.10.2026 — punkt 9, reset hasła, potwierdzenie adresu, zmiana hasła
+
+- **Kod 6-cyfrowy zamiast linku w e-mailu.** Klienty poczty (np. Gmail) nie
+  robią klikalnych linków ze schematu `finso://`, a linki uniwersalne
+  (https) wymagają prawdziwej domeny i plików apple-app-site-association /
+  assetlinks — to etap 8. Kod wpisuje się w appce.
+- **Kod: 15 minut (hasło) / 24 godziny (adres), jednorazowy, najwyżej 5 prób**,
+  nowy najwyżej raz na minutę; nowy unieważnia poprzedni. W bazie tylko HMAC
+  kodu z sekretem `EMAIL_CODE_SECRET` (osobnym od JWT) — sam SHA-256 z 6 cyfr
+  dałoby się odwrócić z wycieku bazy w ułamku sekundy. Tabela `EmailCode`.
+- **„Nie pamiętam hasła” zawsze odpowiada 204 i nie czeka na wysyłkę** — ani
+  treść, ani czas odpowiedzi nie zdradzają, kto ma konto. Reset na nieznany
+  adres to ten sam błąd 400 co zły kod.
+- **Reset kończy wszystkie sesje i potwierdza adres** (kod doszedł na tę
+  skrzynkę). **Zmiana hasła** wymaga obecnego hasła (zły → 403, jak przy
+  usuwaniu konta), kończy wszystkie sesje, a ten telefon dostaje nowe tokeny.
+- **Niepotwierdzony adres niczego nie blokuje** — appka prosi o kod (karta na
+  Dashboardzie, status w Ustawieniach). Blokowanie groziłoby odcięciem od
+  własnych danych przy problemach z pocztą. Konta sprzed tej zmiany są
+  niepotwierdzone (bez backfillu) i dostaną tę samą prośbę.
+- **Awaria wysyłki:** przy rejestracji nie blokuje konta (kod da się wysłać
+  ponownie), przy „Wyślij kod ponownie” → 503 i komunikat w appce.
+- **Resend bez SDK** — jedno żądanie HTTP (`src/mail/resend-mailer.ts`), bez
+  nowej zależności. Bez `RESEND_API_KEY` e-maile idą do logu serwera;
+  na produkcji brak klucza zatrzymuje start (walidacja env).
+- **Polityka prywatności**: Resend jako odbiorca danych (adres e-mail, treść
+  wiadomości z kodem) i kody jako przechowywane dane. Do sprawdzenia przed
+  publikacją: pełna nazwa prawna Resend i umowa powierzenia (DPA) — nie
+  wpisałem nazwy, której nie mogłem potwierdzić.
+- Nie zrobione (poza zakresem punktu): **zmiana adresu e-mail** — przy literówce
+  w adresie dziś pomaga tylko kontakt mailowy; kandydat na Fazę 2.
