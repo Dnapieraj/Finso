@@ -175,7 +175,9 @@ export const privacyPolicy = {
         {
           type: "ul",
           items: [
-            ["dostępu do swoich danych i otrzymania ich kopii,"],
+            [
+              "dostępu do swoich danych i otrzymania ich kopii — wydatki, wpływy, cele i stałe zobowiązania pobierzesz sam w aplikacji (Ustawienia → Eksport danych) jako pliki CSV; pełną kopię, także wpisów usuniętych do kosza, wyślemy na prośbę,",
+            ],
             ["sprostowania danych — większość z nich poprawisz samodzielnie w aplikacji,"],
             [
               "usunięcia danych — instrukcja jest na stronie ",
