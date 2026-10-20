@@ -10,14 +10,14 @@ const PREFERENCES_KEY = "notification-preferences";
 /** Set after the in-app question was answered either way — never asked twice. */
 const PROMPTED_KEY = "notification-prompted";
 
-export const DEFAULT_PREFERENCES: ReminderPreferences = {
+const DEFAULT_PREFERENCES: ReminderPreferences = {
   payday: true,
   payments: true,
   overdue: true,
   showAmounts: false,
 };
 
-export const PREFERENCES_QUERY = ["notifications", "preferences"] as const;
+const PREFERENCES_QUERY = ["notifications", "preferences"] as const;
 export const PERMISSION_QUERY = ["notifications", "permission"] as const;
 
 async function readPreferences(): Promise<ReminderPreferences> {

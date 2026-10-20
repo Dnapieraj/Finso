@@ -5,7 +5,7 @@ import { Screen } from "../components/screen";
 import { pl } from "../messages/pl";
 
 /** How many steps onboarding has. */
-export const STEP_COUNT = 4;
+const STEP_COUNT = 4;
 
 /** One onboarding step: heading, "Krok N z 4", an optional intro and the content. */
 export function OnboardingStep({

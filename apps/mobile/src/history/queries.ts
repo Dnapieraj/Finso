@@ -7,7 +7,7 @@ import { queryClient } from "../query-client";
 import { refreshBudget } from "../settings/queries";
 
 /** How many expenses one page of the history loads. */
-export const HISTORY_PAGE_SIZE = 20;
+const HISTORY_PAGE_SIZE = 20;
 
 /**
  * Confirmed expenses of a period (optionally one category), newest first,

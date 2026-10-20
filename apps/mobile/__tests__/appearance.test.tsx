@@ -3,6 +3,7 @@ import { fireEvent, screen, waitFor, within } from "expo-router/testing-library"
 import { Appearance, StyleSheet } from "react-native";
 
 import { secureTokenStore } from "../src/secure-token-store";
+import { rootBackground } from "./helpers/fake-system-ui";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 import { findTab } from "./helpers/tabs";
@@ -96,6 +97,11 @@ describe("motyw", () => {
     });
     // Switches, the keyboard and the status bar follow the app, not the phone.
     expect(setColorScheme).toHaveBeenLastCalledWith("dark");
+    // The native window behind the screens too: no white flash under the
+    // keyboard or during a transition.
+    await waitFor(() => {
+      expect(rootBackground()).toBe(theme.colors.dark.background);
+    });
   });
 
   it("„Jasny” i z powrotem „Systemowy”", async () => {
@@ -106,6 +112,9 @@ describe("motyw", () => {
       expect(setColorScheme).toHaveBeenLastCalledWith("light");
     });
     expect(rootVariables()["--background"]).toBe(theme.colors.light.background);
+    await waitFor(() => {
+      expect(rootBackground()).toBe(theme.colors.light.background);
+    });
 
     await choose("Motyw", "Systemowy");
     await waitFor(() => {

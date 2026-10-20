@@ -16,6 +16,7 @@ import { Card } from "../../../../src/components/card";
 import { FormAlert } from "../../../../src/components/form-alert";
 import { LoadError, Skeleton } from "../../../../src/components/query-states";
 import { Screen } from "../../../../src/components/screen";
+import { CONFIRMATIONS_KEY } from "../../../../src/confirmations/queries";
 import { useCategories } from "../../../../src/dashboard/queries";
 import { haptics } from "../../../../src/feedback/haptics";
 import { formatDayMonth } from "../../../../src/format/date";
@@ -97,7 +98,7 @@ export default function SubscriptionsScreen() {
       });
       refreshAfterDecision();
       void queryClient.invalidateQueries({ queryKey: RECURRING_RULES_KEY });
-      void queryClient.invalidateQueries({ queryKey: ["confirmations"] });
+      void queryClient.invalidateQueries({ queryKey: CONFIRMATIONS_KEY });
       void refreshBudget();
     },
     onError: () => {

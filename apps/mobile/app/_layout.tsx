@@ -1,15 +1,15 @@
 import "../global.css";
 
-import { BricolageGrotesque_700Bold } from "@expo-google-fonts/bricolage-grotesque";
-import {
-  HankenGrotesk_400Regular,
-  HankenGrotesk_600SemiBold,
-} from "@expo-google-fonts/hanken-grotesk";
+// Per-weight paths: the package root would bundle every weight of the family.
+import { BricolageGrotesque_700Bold } from "@expo-google-fonts/bricolage-grotesque/700Bold";
+import { HankenGrotesk_400Regular } from "@expo-google-fonts/hanken-grotesk/400Regular";
+import { HankenGrotesk_600SemiBold } from "@expo-google-fonts/hanken-grotesk/600SemiBold";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import * as SystemUI from "expo-system-ui";
 import { useEffect } from "react";
 import { Appearance, useColorScheme, View } from "react-native";
 
@@ -75,6 +75,12 @@ export default function RootLayout() {
     // this, not the CSS variables; "unspecified" hands it back to the phone.
     Appearance.setColorScheme(choice.theme === "system" ? "unspecified" : choice.theme);
   }, [choice.theme]);
+
+  useEffect(() => {
+    // The native window behind the screens: without it Android shows white
+    // under the keyboard and during transitions in the dark theme.
+    void SystemUI.setBackgroundColorAsync(theme.colors[scheme].background);
+  }, [scheme]);
 
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();

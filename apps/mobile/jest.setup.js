@@ -31,3 +31,5 @@ jest.mock("expo-screen-capture", () => require("./__tests__/helpers/fake-screen-
 // phone would have felt and switch the network themselves.
 jest.mock("expo-haptics", () => require("./__tests__/helpers/fake-haptics"));
 jest.mock("@react-native-community/netinfo", () => require("./__tests__/helpers/fake-netinfo"));
+// No native root view under Jest; tests read the colour painted behind the screens.
+jest.mock("expo-system-ui", () => require("./__tests__/helpers/fake-system-ui"));

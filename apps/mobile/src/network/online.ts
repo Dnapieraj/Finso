@@ -10,7 +10,7 @@ import { readApiUrl } from "../config";
  * yet" right after connecting; showing the bar for it would flash it on
  * every Wi-Fi change.
  */
-export function isOnline(state: Pick<NetInfoState, "isConnected" | "isInternetReachable">) {
+function isOnline(state: Pick<NetInfoState, "isConnected" | "isInternetReachable">) {
   return state.isConnected !== false && state.isInternetReachable !== false;
 }
 
