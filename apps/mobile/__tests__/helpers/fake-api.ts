@@ -75,6 +75,7 @@ export const testBudget: BudgetSummary = {
     alreadySpent: 176_544,
   },
   awaitingIncome: 0,
+  incomeForecasts: [],
   fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
   goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
   today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },

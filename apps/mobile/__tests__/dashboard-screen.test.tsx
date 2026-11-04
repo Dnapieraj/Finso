@@ -169,6 +169,56 @@ describe("budget", () => {
     expect(await screen.findByText("Nie masz jeszcze dochodu w tym okresie.")).toBeOnTheScreen();
   });
 
+  it("irregular income: says how much of the budget is still only a forecast", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      incomeForecasts: [
+        {
+          incomeSourceId: "01923b6e-0000-7000-8000-000000000051",
+          name: "Zlecenia",
+          forecast: 300_000,
+          periods: 4,
+          low: 300_000,
+          high: 750_000,
+          received: 100_000,
+          notYetReceived: 200_000,
+        },
+      ],
+    });
+    await openDashboard();
+
+    // Rounded up: better to overstate what has not come in yet.
+    expect(
+      await screen.findByText(`W tym ${zl("2000 zł")} z prognozy dochodu — jeszcze nie wpłynęło.`),
+    ).toBeOnTheScreen();
+  });
+
+  it("forecast already reached: no forecast line", async () => {
+    fakeApi.budget.current.mockResolvedValueOnce({
+      ...testBudget,
+      incomeForecasts: [
+        {
+          ...{
+            incomeSourceId: "01923b6e-0000-7000-8000-000000000051",
+            name: "Zlecenia",
+            forecast: 300_000,
+            periods: 4,
+            low: 300_000,
+            high: 750_000,
+            received: 100_000,
+            notYetReceived: 200_000,
+          },
+          received: 400_000,
+          notYetReceived: 0,
+        },
+      ],
+    });
+    await openDashboard();
+    await screen.findByText("Możesz wydać");
+
+    expect(screen.queryByText(/z prognozy dochodu/)).toBeNull();
+  });
+
   it("shows a skeleton while the budget loads", async () => {
     fakeApi.budget.current.mockReturnValueOnce(pending());
     await openDashboard();

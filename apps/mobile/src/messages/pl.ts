@@ -131,6 +131,8 @@ export const pl = {
     expensesError: "Nie udało się wczytać wydatków.",
     allExpenses: "Wszystkie wydatki",
     awaitingIncome: (amount: string) => `W tym ${amount} jeszcze nie wpłynęło.`,
+    forecastAwaiting: (amount: string) =>
+      `W tym ${amount} z prognozy dochodu — jeszcze nie wpłynęło.`,
   },
   confirmations: {
     title: "Do potwierdzenia",
@@ -248,7 +250,8 @@ export const pl = {
       regular: "Stały",
       regularHint: "Pensja, emerytura — co miesiąc podobna kwota.",
       irregular: "Nieregularny",
-      irregularHint: "Zlecenia, freelance — kwoty i terminy się zmieniają.",
+      irregularHint:
+        "Zlecenia, freelance — po 3 pełnych okresach Finso planuje z ostrożnej prognozy.",
       name: "Nazwa dochodu",
       nameTooLong: "Nazwa może mieć najwyżej 100 znaków.",
       defaultName: { REGULAR: "Wypłata", IRREGULAR: "Dochód nieregularny" },
@@ -488,6 +491,9 @@ export const pl = {
       row: (amount: string, schedule: string) => `${amount} · ${schedule}`,
       oncePerPeriod: "raz na okres",
       irregular: "Nieregularny",
+      forecast: (forecast: string, low: string, high: string) =>
+        `Prognoza: ${forecast} na okres · zwykle ${low}–${high}`,
+      noForecastYet: "Liczy się to, co wpłynęło — prognoza po 3 pełnych okresach",
     },
     income: {
       title: "Dochody",
@@ -498,7 +504,8 @@ export const pl = {
       regular: "Stały",
       regularHint: "Pensja, emerytura — co miesiąc podobna kwota.",
       irregular: "Nieregularny",
-      irregularHint: "Zlecenia, freelance — liczy się to, co wpłynie.",
+      irregularHint:
+        "Zlecenia, freelance — na początku liczy się to, co wpłynie, a po 3 pełnych okresach budżet planuje z ostrożnej prognozy.",
       amountHint: "Kwota jednej wypłaty.",
       loading: "Wczytywanie dochodów",
       error: "Nie udało się wczytać dochodów.",

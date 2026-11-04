@@ -1,7 +1,7 @@
 import { ApiError } from "@vireo/shared/api";
 import { fireEvent, screen, waitFor, within } from "expo-router/testing-library";
 
-import { fakeApi, pending, seedFakeServer, testIncomeSource } from "./helpers/fake-api";
+import { fakeApi, pending, seedFakeServer, testBudget, testIncomeSource } from "./helpers/fake-api";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
@@ -100,7 +100,7 @@ describe("list", () => {
 
     const row = (name: string) => within(screen.getByRole("button", { name }));
     expect(await screen.findByText(`${zl("5000 zł")} · co miesiąc, 10. dnia`)).toBeOnTheScreen();
-    expect(row("Zlecenia").getByText("Nieregularny")).toBeOnTheScreen();
+    expect(row("Zlecenia").getByText(/^Nieregularny/)).toBeOnTheScreen();
     expect(
       row("Stypendium").getByText(`${zl("600 zł")} · co 2 tygodnie, w piątek`),
     ).toBeOnTheScreen();
@@ -109,6 +109,50 @@ describe("list", () => {
     ).toBeOnTheScreen();
     // Archived: its history stays, but it is no longer an income.
     expect(screen.queryByText("Stara praca")).not.toBeOnTheScreen();
+  });
+
+  it("irregular with enough history: the forecast the budget uses and the usual range", async () => {
+    seedFakeServer({ sources: [freelance] });
+    fakeApi.budget.current.mockResolvedValue({
+      ...testBudget,
+      incomeForecasts: [
+        {
+          ...{
+            incomeSourceId: "01923b6e-0000-7000-8000-000000000051",
+            name: "Zlecenia",
+            forecast: 300_000,
+            periods: 4,
+            low: 300_000,
+            high: 750_000,
+            received: 100_000,
+            notYetReceived: 200_000,
+          },
+          incomeSourceId: freelance.id,
+        },
+      ],
+    });
+
+    await openList();
+
+    const row = within(await screen.findByRole("button", { name: "Zlecenia" }));
+    // The forecast rounds down — income must not be promised; the range is as it was.
+    expect(
+      await row.findByText(
+        `Prognoza: ${zl("3000 zł")} na okres · zwykle ${zl("3000")}–${zl("7500 zł")}`,
+      ),
+    ).toBeOnTheScreen();
+    fakeApi.budget.current.mockResolvedValue(testBudget);
+  });
+
+  it("irregular without enough history: says the budget counts only what came in", async () => {
+    seedFakeServer({ sources: [freelance] });
+
+    await openList();
+
+    const row = within(await screen.findByRole("button", { name: "Zlecenia" }));
+    expect(
+      await row.findByText("Liczy się to, co wpłynęło — prognoza po 3 pełnych okresach"),
+    ).toBeOnTheScreen();
   });
 
   it("shows a skeleton while loading", async () => {

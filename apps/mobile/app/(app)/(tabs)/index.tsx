@@ -118,6 +118,11 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
   const progress = periodProgress(budget);
   const below = budget.availableBalance < 0;
+  // Part of „Możesz wydać” that is a forecast of irregular income, not money yet.
+  const forecastAwaiting = budget.incomeForecasts.reduce(
+    (sum, line) => sum + line.notYetReceived,
+    0,
+  );
   const dayCount = t.periodDay(progress.day, progress.totalDays);
   const shownBalance = useAnimatedAmount(budget.availableBalance);
 
@@ -150,6 +155,11 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
         {!below && budget.awaitingIncome > 0 && (
           <Text className="font-sans text-sm text-muted-foreground">
             {t.awaitingIncome(money.format(grosze(budget.awaitingIncome), { whole: "up" }))}
+          </Text>
+        )}
+        {!below && forecastAwaiting > 0 && (
+          <Text className="font-sans text-sm text-muted-foreground">
+            {t.forecastAwaiting(money.format(grosze(forecastAwaiting), { whole: "up" }))}
           </Text>
         )}
       </View>
