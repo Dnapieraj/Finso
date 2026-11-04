@@ -5,6 +5,7 @@
 export const pl = {
   common: {
     retry: "Spróbuj ponownie",
+    back: "Wstecz",
   },
   start: {
     wordmark: "Finso",
@@ -19,10 +20,7 @@ export const pl = {
   simulator: {
     title: "Czy mnie stać?",
     amount: "Kwota",
-    category: "Kategoria",
-    loadingCategories: "Wczytywanie kategorii",
-    categoriesError: "Nie udało się wczytać kategorii.",
-    hint: "Wpisz kwotę i wybierz kategorię, żeby sprawdzić.",
+    hint: "Wpisz kwotę, żeby sprawdzić.",
     calculating: "Liczę…",
     error: "Nie udało się policzyć.",
     verdict: {
@@ -131,15 +129,6 @@ export const pl = {
     periodDay: (day: number, total: number) => `Dzień ${String(day)} z ${String(total)}`,
     loadingBudget: "Wczytywanie budżetu",
     budgetError: "Nie udało się wczytać budżetu.",
-    goals: "Cele",
-    goalSaved: (saved: string, target: string) => `${saved} z ${target}`,
-    goalReached: "Cel osiągnięty",
-    goalOverdue: "Po terminie",
-    moreGoals: { one: "kolejny cel", few: "kolejne cele", many: "kolejnych celów" },
-    noGoals: "Nie masz jeszcze celów.",
-    allGoals: "Wszystkie cele",
-    loadingGoals: "Wczytywanie celów",
-    goalsError: "Nie udało się wczytać celów.",
     expenses: "Ostatnie wydatki",
     noCategory: "Bez kategorii",
     noExpenses: "Nie masz jeszcze wydatków.",
@@ -219,8 +208,8 @@ export const pl = {
     amount: "Kwota",
     categories: "Kategoria",
     categoriesHint: "Tapnij kategorię, aby zapisać.",
-    quick: "Szybko",
-    quickHint: "Tapnij, aby zapisać od razu.",
+    // Both headings say that a tap saves — no separate hint lines.
+    quick: "Jednym tapnięciem",
     loadingCategories: "Wczytywanie kategorii",
     categoriesError: "Nie udało się wczytać kategorii.",
     cancel: "Anuluj",

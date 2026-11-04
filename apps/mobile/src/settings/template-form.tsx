@@ -20,7 +20,7 @@ import { amountError } from "../onboarding/draft";
 import { TEMPLATES_KEY } from "../templates/queries";
 import { CategoryPicker } from "./category-picker";
 import { toMoneyInput, useSettingsMutation, validateName } from "./forms";
-import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
+import { DeleteWithConfirmation } from "./settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -95,7 +95,7 @@ export function TemplateForm({ template }: { template?: ExpenseTemplate }) {
 
   const failure = save.error ?? remove.error;
   return (
-    <Screen title={template ? t.templates.editTitle : t.templates.newTitle}>
+    <Screen back title={template ? t.templates.editTitle : t.templates.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
       <TextField
         label={t.name}
@@ -137,7 +137,6 @@ export function TemplateForm({ template }: { template?: ExpenseTemplate }) {
           }}
         />
       )}
-      <BackButton />
     </Screen>
   );
 }

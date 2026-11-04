@@ -190,7 +190,7 @@ describe("ostatnio używane w szybkim dodawaniu", () => {
     await openQuickAdd();
     await screen.findByRole("button", { name: "Jedzenie" });
 
-    expect(screen.queryByText("Szybko")).not.toBeOnTheScreen();
+    expect(screen.queryByText("Jednym tapnięciem")).not.toBeOnTheScreen();
   });
 });
 

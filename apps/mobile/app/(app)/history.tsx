@@ -29,7 +29,6 @@ import { pl } from "../../src/messages/pl";
 import { useMoney } from "../../src/privacy/money";
 import { useBudgetClock } from "../../src/settings/queries";
 import { Pill } from "../../src/settings/schedule-fields";
-import { BackButton } from "../../src/settings/settings-screen-parts";
 
 const t = pl.history;
 
@@ -194,13 +193,30 @@ export default function HistoryScreen() {
   const spending = useSpendingByCategory(period);
   const byId = new Map((categories.data ?? []).map((category) => [category.id, category]));
 
+  // Nothing spent in the period: one message, no chart and no filters to pick from.
+  if (spending.data?.byCategory.length === 0) {
+    return (
+      <Screen back title={t.title}>
+        {notice && <TrashNotice notice={notice} />}
+        <PeriodSwitcher
+          period={period}
+          isCurrent={offset >= 0}
+          onMove={(step) => {
+            setOffset((current) => Math.min(0, current + step));
+          }}
+        />
+        <Card>
+          <Text className="font-sans text-base text-muted-foreground">{t.empty}</Text>
+        </Card>
+      </Screen>
+    );
+  }
+
   let chart: ReactNode;
   if (spending.isPending) {
     chart = <Skeleton label={t.chart.loading} lines={3} />;
   } else if (spending.isError) {
     chart = <LoadError message={t.chart.error} onRetry={() => void spending.refetch()} />;
-  } else if (spending.data.byCategory.length === 0) {
-    chart = <Text className="font-sans text-base text-muted-foreground">{t.empty}</Text>;
   } else {
     chart = (
       <CategoryChart
@@ -247,7 +263,7 @@ export default function HistoryScreen() {
   }
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       {notice && <TrashNotice notice={notice} />}
       <PeriodSwitcher
         period={period}
@@ -283,7 +299,6 @@ export default function HistoryScreen() {
         ))}
       </View>
       <Card>{list}</Card>
-      <BackButton />
     </Screen>
   );
 }

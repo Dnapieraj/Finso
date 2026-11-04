@@ -6,7 +6,6 @@ import { Screen } from "../../../../../src/components/screen";
 import { pl } from "../../../../../src/messages/pl";
 import { IncomeForm } from "../../../../../src/settings/income-form";
 import { useIncomeSources } from "../../../../../src/settings/queries";
-import { BackButton } from "../../../../../src/settings/settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -18,7 +17,7 @@ export default function EditIncome() {
 
   if (source) return <IncomeForm source={source} />;
   return (
-    <Screen title={t.income.editTitle}>
+    <Screen back title={t.income.editTitle}>
       {sources.isPending ? (
         <Skeleton label={t.income.loading} lines={3} />
       ) : sources.isError ? (
@@ -26,7 +25,6 @@ export default function EditIncome() {
       ) : (
         <Text className="font-sans text-base text-foreground">{t.income.notFound}</Text>
       )}
-      <BackButton />
     </Screen>
   );
 }

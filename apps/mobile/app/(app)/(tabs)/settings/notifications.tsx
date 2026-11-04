@@ -11,7 +11,7 @@ import {
   useReminderPreferences,
   useSaveReminderPreferences,
 } from "../../../../src/notifications/preferences";
-import { BackButton, SwitchRow } from "../../../../src/settings/settings-screen-parts";
+import { SwitchRow } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.notifications;
 
@@ -33,14 +33,14 @@ export default function NotificationSettings() {
 
   if (permission.isPending || preferences.isPending) {
     return (
-      <Screen title={t.title}>
+      <Screen back title={t.title}>
         <Skeleton label={t.title} lines={4} />
       </Screen>
     );
   }
   if (permission.isError || preferences.isError) {
     return (
-      <Screen title={t.title}>
+      <Screen back title={t.title}>
         <LoadError
           message={t.loadError}
           onRetry={() => {
@@ -48,7 +48,6 @@ export default function NotificationSettings() {
             void preferences.refetch();
           }}
         />
-        <BackButton />
       </Screen>
     );
   }
@@ -66,7 +65,7 @@ export default function NotificationSettings() {
   }
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       {unavailable && <Text className="font-sans text-base text-foreground">{t.unavailable}</Text>}
       {blocked && (
         <View className="gap-3">
@@ -97,7 +96,6 @@ export default function NotificationSettings() {
         />
       </View>
       <Text className="font-sans text-sm text-muted-foreground">{t.time}</Text>
-      <BackButton />
     </Screen>
   );
 }

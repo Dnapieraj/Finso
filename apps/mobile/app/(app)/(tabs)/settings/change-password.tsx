@@ -13,7 +13,6 @@ import { TextField } from "../../../../src/components/text-field";
 import { haptics } from "../../../../src/feedback/haptics";
 import { plErrorMap } from "../../../../src/forms/error-map";
 import { pl } from "../../../../src/messages/pl";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.changePassword;
 
@@ -40,7 +39,7 @@ export default function ChangePasswordScreen() {
   });
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       {change.error && (
         <FormAlert tone="error">{apiErrorMessage(change.error, "change-password")}</FormAlert>
       )}
@@ -84,7 +83,6 @@ export default function ChangePasswordScreen() {
       <Button loading={change.isPending} loadingLabel={t.submitting} onPress={() => void submit()}>
         {t.submit}
       </Button>
-      <BackButton />
     </Screen>
   );
 }

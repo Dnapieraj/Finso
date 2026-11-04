@@ -1,4 +1,4 @@
-import { grosze, type BudgetSummary, type Category, type Goal } from "@vireo/shared";
+import { grosze, type BudgetSummary, type Category } from "@vireo/shared";
 import { theme } from "@vireo/tokens";
 import { useState, type ReactNode } from "react";
 import { router } from "expo-router";
@@ -8,7 +8,6 @@ import EyeOff from "lucide-react-native/icons/eye-off";
 import Plus from "lucide-react-native/icons/plus";
 import { Pressable, RefreshControl, Text, useColorScheme, View } from "react-native";
 
-import { VerifyEmailCard } from "../../../src/auth/verify-email-card";
 import { Button } from "../../../src/components/button";
 import { Card } from "../../../src/components/card";
 import { ProgressBar } from "../../../src/components/progress-bar";
@@ -16,14 +15,8 @@ import { LoadError, Skeleton } from "../../../src/components/query-states";
 import { Screen } from "../../../src/components/screen";
 import { ConfirmationsCard } from "../../../src/confirmations/confirmations-card";
 import { useConfirmations } from "../../../src/confirmations/queries";
-import { goalProgress } from "../../../src/dashboard/goal-progress";
 import { periodProgress } from "../../../src/dashboard/period-progress";
-import {
-  useBudget,
-  useCategories,
-  useGoals,
-  useRecentExpenses,
-} from "../../../src/dashboard/queries";
+import { useBudget, useCategories, useRecentExpenses } from "../../../src/dashboard/queries";
 import { ExpenseNoticeBar } from "../../../src/expenses/expense-notice";
 import { formatDayMonth } from "../../../src/format/date";
 import { plural } from "../../../src/format/plural";
@@ -35,7 +28,6 @@ import { useSubscriptions } from "../../../src/subscriptions/queries";
 import { SubscriptionsCard } from "../../../src/subscriptions/subscriptions-card";
 
 const t = pl.dashboard;
-const GOALS_SHOWN = 3;
 
 /** Rounded towards the user's safety: money left goes down, a debt goes up. */
 function balanceText(money: Money, balance: number): string {
@@ -184,82 +176,6 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
   );
 }
 
-function GoalRow({ goal, asOf }: { goal: Goal; asOf: string | null }) {
-  const money = useMoney();
-  const { percent, state } = goalProgress(goal, asOf);
-  const percentText = `${String(percent)}%`;
-  const saved = t.goalSaved(
-    money.format(grosze(goal.currentAmount), { whole: "down" }),
-    money.format(grosze(goal.targetAmount), { whole: "up" }),
-  );
-
-  return (
-    <View className="gap-2">
-      <View className="flex-row items-baseline justify-between gap-3">
-        <Text className="shrink font-sans-semibold text-base text-card-foreground">
-          {goal.name}
-        </Text>
-        <Text className="font-sans text-sm text-muted-foreground">{percentText}</Text>
-      </View>
-      <ProgressBar label={goal.name} now={percent} max={100} valueText={percentText} />
-      <View className="flex-row flex-wrap justify-between gap-x-3">
-        <Text
-          accessibilityLabel={money.spoken(saved)}
-          className="font-sans text-sm text-muted-foreground"
-        >
-          {saved}
-        </Text>
-        {state === "reached" && (
-          <Text className="font-sans-semibold text-sm text-safe">{t.goalReached}</Text>
-        )}
-        {state === "overdue" && (
-          <Text className="font-sans-semibold text-sm text-caution">{t.goalOverdue}</Text>
-        )}
-      </View>
-    </View>
-  );
-}
-
-function Goals({ asOf }: { asOf: string | null }) {
-  const goals = useGoals();
-
-  let body: ReactNode;
-  if (goals.isPending) {
-    body = <Skeleton label={t.loadingGoals} />;
-  } else if (goals.isError) {
-    body = <LoadError message={t.goalsError} onRetry={() => void goals.refetch()} />;
-  } else if (goals.data.length === 0) {
-    body = <Text className="font-sans text-base text-muted-foreground">{t.noGoals}</Text>;
-  } else {
-    const hidden = goals.data.length - GOALS_SHOWN;
-    body = (
-      <>
-        {goals.data.slice(0, GOALS_SHOWN).map((goal) => (
-          <GoalRow key={goal.id} goal={goal} asOf={asOf} />
-        ))}
-        {hidden > 0 && (
-          <Text className="font-sans text-sm text-muted-foreground">
-            {`+${String(hidden)} ${plural(hidden, t.moreGoals)}`}
-          </Text>
-        )}
-      </>
-    );
-  }
-  return (
-    <Card title={t.goals}>
-      {body}
-      <Button
-        variant="ghost"
-        onPress={() => {
-          router.push("/goals");
-        }}
-      >
-        {t.allGoals}
-      </Button>
-    </Card>
-  );
-}
-
 function RecentExpenses() {
   const money = useMoney();
   const expenses = useRecentExpenses();
@@ -294,11 +210,12 @@ function RecentExpenses() {
             style={{ backgroundColor: category?.color ?? "transparent" }}
           />
           <View className="flex-1">
-            <Text className="font-sans-semibold text-base text-card-foreground">{title}</Text>
-            {expense.note && (
-              <Text className="font-sans text-sm text-muted-foreground">{expense.note}</Text>
-            )}
-            <Text className="font-sans text-sm text-muted-foreground">{date}</Text>
+            <Text numberOfLines={1} className="font-sans-semibold text-base text-card-foreground">
+              {expense.note ?? title}
+            </Text>
+            <Text numberOfLines={1} className="font-sans text-sm text-muted-foreground">
+              {expense.note ? `${title} · ${date}` : date}
+            </Text>
           </View>
           <Text className="font-sans-semibold text-base text-card-foreground">{amount}</Text>
         </View>
@@ -321,13 +238,12 @@ function RecentExpenses() {
 }
 
 /**
- * „Czy stać mnie na to teraz”: what is left until payday, per day, and
- * where the goals and recent spending stand. Each section loads and fails
+ * „Czy stać mnie na to teraz”: what is left until payday, per day, what
+ * needs an answer, and the latest spending. Goals have their own tab. Each section loads and fails
  * on its own, so one broken request does not blank the whole screen.
  */
 export default function DashboardScreen() {
   const budget = useBudget();
-  const goals = useGoals();
   const expenses = useRecentExpenses();
   const confirmations = useConfirmations();
   const subscriptions = useSubscriptions();
@@ -339,7 +255,6 @@ export default function DashboardScreen() {
     await Promise.all([
       budget.refetch(),
       confirmations.refetch(),
-      goals.refetch(),
       expenses.refetch(),
       subscriptions.refetch(),
     ]);
@@ -374,8 +289,6 @@ export default function DashboardScreen() {
         )}
         <ConfirmationsCard />
         <SubscriptionsCard />
-        <VerifyEmailCard />
-        <Goals asOf={budget.data?.asOf ?? null} />
         <RecentExpenses />
       </Screen>
       <View pointerEvents="box-none" className="absolute bottom-4 left-4 right-4 gap-3">

@@ -6,7 +6,6 @@ import { Screen } from "../../../../../src/components/screen";
 import { pl } from "../../../../../src/messages/pl";
 import { CommitmentForm } from "../../../../../src/settings/commitment-form";
 import { useRecurringRules } from "../../../../../src/settings/queries";
-import { BackButton } from "../../../../../src/settings/settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -18,7 +17,7 @@ export default function EditCommitment() {
 
   if (rule) return <CommitmentForm rule={rule} />;
   return (
-    <Screen title={t.commitments.editTitle}>
+    <Screen back title={t.commitments.editTitle}>
       {rules.isPending ? (
         <Skeleton label={t.commitments.loading} lines={3} />
       ) : rules.isError ? (
@@ -26,7 +25,6 @@ export default function EditCommitment() {
       ) : (
         <Text className="font-sans text-base text-foreground">{t.commitments.notFound}</Text>
       )}
-      <BackButton />
     </Screen>
   );
 }

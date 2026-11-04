@@ -208,12 +208,16 @@ describe("list", () => {
     expect(screen.queryByRole("button", { name: "Pokaż więcej" })).not.toBeOnTheScreen();
   });
 
-  it("has an empty state for the period", async () => {
+  it("an empty period is one message: no chart, no category filters", async () => {
     seedFakeServer({ transactions: [] });
 
     await openHistory();
 
-    expect(await screen.findAllByText("Brak wydatków w tym okresie.")).not.toHaveLength(0);
+    expect(await screen.findAllByText("Brak wydatków w tym okresie.")).toHaveLength(1);
+    expect(screen.queryByTestId("category-chart")).toBeNull();
+    expect(screen.queryByRole("radio", { name: "Transport" })).toBeNull();
+    // The period can still be changed — earlier ones may have expenses.
+    expect(screen.getByRole("button", { name: "Poprzedni okres" })).toBeOnTheScreen();
   });
 
   it("and one for a category with nothing in the period", async () => {
@@ -307,13 +311,13 @@ describe("chart: spending by category", () => {
     expect(chart.getByText(`Razem ${zl("800 zł")} · 4 wydatki`)).toBeOnTheScreen();
   });
 
-  it("has an empty state", async () => {
+  it("no chart for an empty period", async () => {
     seedFakeServer({ transactions: [] });
 
     await openHistory();
 
-    const chart = within(await screen.findByTestId("category-chart"));
-    expect(await chart.findByText("Brak wydatków w tym okresie.")).toBeOnTheScreen();
+    await screen.findByText("Brak wydatków w tym okresie.");
+    expect(screen.queryByTestId("category-chart")).toBeNull();
   });
 
   it("shows a skeleton while loading", async () => {

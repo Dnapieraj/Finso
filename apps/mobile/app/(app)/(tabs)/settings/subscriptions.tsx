@@ -26,7 +26,7 @@ import { useMoney, type Money } from "../../../../src/privacy/money";
 import { queryClient } from "../../../../src/query-client";
 import { useDraft } from "../../../../src/settings/forms";
 import { RECURRING_RULES_KEY, refreshBudget } from "../../../../src/settings/queries";
-import { BackButton, ListRow } from "../../../../src/settings/settings-screen-parts";
+import { ListRow } from "../../../../src/settings/settings-screen-parts";
 import { SUBSCRIPTIONS_KEY, useSubscriptions } from "../../../../src/subscriptions/queries";
 
 const t = pl.subscriptions;
@@ -188,7 +188,7 @@ export default function SubscriptionsScreen() {
   }
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       {notice?.kind === "error" && <FormAlert tone="error">{t.saveFailed}</FormAlert>}
       {notice && notice.kind !== "error" && (
         <View className="gap-2">
@@ -207,7 +207,6 @@ export default function SubscriptionsScreen() {
         </View>
       )}
       {body}
-      <BackButton />
     </Screen>
   );
 }

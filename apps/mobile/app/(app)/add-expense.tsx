@@ -1,5 +1,5 @@
 import { grosze, parseMoneyInput, todayInTimeZone, type Category } from "@vireo/shared";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -76,7 +76,9 @@ function QuickPickChip({ pick, onPress }: { pick: QuickPick; onPress: () => void
  * The save runs on after the screen closes (src/expenses/save-expense).
  */
 export default function AddExpenseScreen() {
-  const [amount, setAmount] = useState("");
+  // From the simulator: the amount is already known, only the category is left.
+  const { amount: planned } = useLocalSearchParams<{ amount?: string }>();
+  const [amount, setAmount] = useState(planned ?? "");
   const [error, setError] = useState<string | undefined>();
   const categories = useCategories();
   const budget = useBudget();
@@ -101,7 +103,13 @@ export default function AddExpenseScreen() {
       return;
     }
     void saveExpense({ amount: parsed.grosze, date: today(), category });
-    router.back();
+    close();
+  }
+
+  /** Back where the user came from; from the simulator — to Start, where the saved notice shows. */
+  function close() {
+    if (planned) router.navigate("/");
+    else router.back();
   }
 
   function saveAgain(pick: QuickPick) {
@@ -150,12 +158,9 @@ export default function AddExpenseScreen() {
       />
       {picks.length > 0 && (
         <View className="gap-3">
-          <View className="gap-0.5">
-            <Text accessibilityRole="header" className="font-sans-semibold text-sm text-foreground">
-              {t.quick}
-            </Text>
-            <Text className="font-sans text-sm text-muted-foreground">{t.quickHint}</Text>
-          </View>
+          <Text accessibilityRole="header" className="font-sans-semibold text-sm text-foreground">
+            {t.quick}
+          </Text>
           <View className="flex-row flex-wrap gap-2">
             {picks.map((pick) => (
               <QuickPickChip
@@ -170,7 +175,9 @@ export default function AddExpenseScreen() {
         </View>
       )}
       <View className="gap-3">
-        <Text className="font-sans text-sm text-muted-foreground">{t.categoriesHint}</Text>
+        <Text accessibilityRole="header" className="font-sans-semibold text-sm text-foreground">
+          {t.categoriesHint}
+        </Text>
         {grid}
       </View>
       <Button

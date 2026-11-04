@@ -69,15 +69,6 @@ describe("where", () => {
     await header("Cele");
     expect(app).toHavePathname("/goals");
   });
-
-  it("the dashboard's goals card leads here", async () => {
-    const app = await renderApp("/", { signedIn: true });
-
-    await press("Wszystkie cele");
-
-    await header("Cele");
-    expect(app).toHavePathname("/goals");
-  });
 });
 
 describe("list", () => {
@@ -91,8 +82,8 @@ describe("list", () => {
       now: 25,
       text: "25%",
     });
-    expect(row.getByText(zl("1000 zł z 4000 zł"))).toBeOnTheScreen();
-    expect(row.getByText("do czerwca 2027")).toBeOnTheScreen();
+    // Saved, target and deadline on one line.
+    expect(row.getByText(`${zl("1000 zł z 4000 zł")} · do czerwca 2027`)).toBeOnTheScreen();
     // The instalment the budget reserves this period, from the API.
     expect(row.getByText(zl("Odkładaj 500 zł na okres"))).toBeOnTheScreen();
   });
@@ -122,7 +113,7 @@ describe("list", () => {
     await openList();
 
     const row = within(await screen.findByRole("button", { name: "Wakacje" }));
-    expect(row.getByText(zl("1000 zł z 4000 zł"))).toBeOnTheScreen();
+    expect(row.getByText(`${zl("1000 zł z 4000 zł")} · do czerwca 2027`)).toBeOnTheScreen();
     expect(row.queryByText(/Odkładaj/)).not.toBeOnTheScreen();
   });
 

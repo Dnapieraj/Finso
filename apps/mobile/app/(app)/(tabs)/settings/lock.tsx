@@ -6,7 +6,7 @@ import { LoadError, Skeleton } from "../../../../src/components/query-states";
 import { Screen } from "../../../../src/components/screen";
 import { appLock, useAppLock } from "../../../../src/lock/store";
 import { pl } from "../../../../src/messages/pl";
-import { BackButton, SwitchRow } from "../../../../src/settings/settings-screen-parts";
+import { SwitchRow } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.lock;
 
@@ -33,16 +33,15 @@ export default function LockSettings() {
 
   if (available.isPending) {
     return (
-      <Screen title={t.title}>
+      <Screen back title={t.title}>
         <Skeleton label={t.title} lines={3} />
       </Screen>
     );
   }
   if (available.isError) {
     return (
-      <Screen title={t.title}>
+      <Screen back title={t.title}>
         <LoadError message={t.loadError} onRetry={() => void refetch()} />
-        <BackButton />
       </Screen>
     );
   }
@@ -60,7 +59,7 @@ export default function LockSettings() {
   }
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       {blocked && <Text className="font-sans text-base text-foreground">{t.noScreenLock}</Text>}
       <View className="rounded-2xl bg-card">
         <SwitchRow
@@ -75,7 +74,6 @@ export default function LockSettings() {
         <Text className="font-sans text-sm text-muted-foreground">{t.privacy}</Text>
         <Text className="font-sans text-sm text-muted-foreground">{t.preview}</Text>
       </View>
-      <BackButton />
     </Screen>
   );
 }

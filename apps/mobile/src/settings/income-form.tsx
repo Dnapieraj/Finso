@@ -34,7 +34,7 @@ import {
   type ScheduleFields as Schedule,
 } from "./schedule";
 import { ScheduleFields } from "./schedule-fields";
-import { BackButton, DeleteWithConfirmation } from "./settings-screen-parts";
+import { DeleteWithConfirmation } from "./settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -134,7 +134,7 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
 
   const failure = save.error ?? remove.error;
   return (
-    <Screen title={source ? t.income.editTitle : t.income.newTitle}>
+    <Screen back title={source ? t.income.editTitle : t.income.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
       {!source && (
         <View accessibilityRole="radiogroup" accessibilityLabel={t.income.kind} className="gap-3">
@@ -207,7 +207,6 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
           }}
         />
       )}
-      <BackButton />
     </Screen>
   );
 }

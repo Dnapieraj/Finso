@@ -9,7 +9,6 @@ import {
 } from "../../../../src/appearance/store";
 import { Screen } from "../../../../src/components/screen";
 import { pl } from "../../../../src/messages/pl";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.appearance;
 
@@ -74,7 +73,7 @@ export default function AppearanceSettings() {
   const current = useAppearance();
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       <Choice
         label={t.textSize}
         hint={t.textSizeHint}
@@ -106,7 +105,6 @@ export default function AppearanceSettings() {
           </Text>
         </View>
       </View>
-      <BackButton />
     </Screen>
   );
 }

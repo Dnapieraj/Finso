@@ -38,6 +38,8 @@ function GoalRow({
     money.format(grosze(goal.currentAmount), { whole: "down" }),
     money.format(grosze(goal.targetAmount), { whole: "up" }),
   );
+  // Saved, target and deadline on one line: the card stays three lines tall.
+  const line = `${saved} · ${t.until(deadline.month, deadline.year)}`;
   const instalmentText =
     instalment === null ? "" : t.instalment(money.format(grosze(instalment), { whole: "up" }));
 
@@ -70,13 +72,10 @@ function GoalRow({
       <Text className="font-sans-semibold text-base text-card-foreground">{goal.name}</Text>
       <ProgressBar label={goal.name} now={percent} max={100} valueText={`${String(percent)}%`} />
       <Text
-        accessibilityLabel={money.spoken(saved)}
+        accessibilityLabel={money.spoken(line)}
         className="font-sans text-sm text-muted-foreground"
       >
-        {saved}
-      </Text>
-      <Text className="font-sans text-sm text-muted-foreground">
-        {t.until(deadline.month, deadline.year)}
+        {line}
       </Text>
       {status}
     </Pressable>

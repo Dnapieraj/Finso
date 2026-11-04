@@ -11,7 +11,7 @@ import { pl } from "../../../../../src/messages/pl";
 import { useMoney, type Money } from "../../../../../src/privacy/money";
 import { useRecurringRules } from "../../../../../src/settings/queries";
 import { scheduleSummary } from "../../../../../src/settings/schedule";
-import { BackButton, ListRow } from "../../../../../src/settings/settings-screen-parts";
+import { ListRow } from "../../../../../src/settings/settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -65,7 +65,7 @@ export default function CommitmentList() {
   }
 
   return (
-    <Screen title={t.commitments.title}>
+    <Screen back title={t.commitments.title}>
       {list}
       <Button
         variant="outline"
@@ -75,7 +75,6 @@ export default function CommitmentList() {
       >
         {t.commitments.add}
       </Button>
-      <BackButton />
     </Screen>
   );
 }

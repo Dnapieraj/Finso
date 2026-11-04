@@ -9,7 +9,7 @@ import { Screen } from "../../../../../src/components/screen";
 import { useCategories } from "../../../../../src/dashboard/queries";
 import { pl } from "../../../../../src/messages/pl";
 import { useMoney } from "../../../../../src/privacy/money";
-import { BackButton, ListRow } from "../../../../../src/settings/settings-screen-parts";
+import { ListRow } from "../../../../../src/settings/settings-screen-parts";
 import { useTemplates } from "../../../../../src/templates/queries";
 
 const t = pl.budgetSettings;
@@ -53,7 +53,7 @@ export default function TemplateList() {
   }
 
   return (
-    <Screen title={t.templates.title}>
+    <Screen back title={t.templates.title}>
       {list}
       <Button
         variant="outline"
@@ -63,7 +63,6 @@ export default function TemplateList() {
       >
         {t.templates.add}
       </Button>
-      <BackButton />
     </Screen>
   );
 }

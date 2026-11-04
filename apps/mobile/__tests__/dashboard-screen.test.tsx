@@ -3,14 +3,7 @@ import { act, fireEvent, screen, within } from "expo-router/testing-library";
 import type { ReactElement } from "react";
 import type { RefreshControlProps } from "react-native";
 
-import {
-  fakeApi,
-  pending,
-  testBudget,
-  testGoal,
-  testTransaction,
-  transactionPage,
-} from "./helpers/fake-api";
+import { fakeApi, pending, testBudget, testTransaction, transactionPage } from "./helpers/fake-api";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 
@@ -196,60 +189,12 @@ describe("budget", () => {
   });
 });
 
-describe("goals", () => {
-  it("shows each goal with a progress bar and the saved amount", async () => {
-    await openDashboard();
+it("no goals card: goals have their own tab, the dashboard answers „can I afford it”", async () => {
+  await openDashboard();
+  await screen.findByText("Jedzenie");
 
-    const bar = await screen.findByRole("progressbar", { name: "Wakacje" });
-    expect(bar).toHaveAccessibilityValue({ min: 0, max: 100, now: 25, text: "25%" });
-    expect(screen.getByText(zl("1000 zł z 4000 zł"))).toBeOnTheScreen();
-  });
-
-  it("shows only the 3 nearest goals and counts the rest", async () => {
-    // The API lists goals by target date, nearest first.
-    fakeApi.goals.list.mockResolvedValueOnce(
-      ["Wakacje", "Laptop", "Rower", "Kurs", "Auto"].map((name, i) =>
-        testGoal({ id: `01923b6e-0000-7000-8000-00000000001${String(i)}`, name }),
-      ),
-    );
-    await openDashboard();
-
-    expect(await screen.findByRole("progressbar", { name: "Rower" })).toBeOnTheScreen();
-    expect(screen.queryByRole("progressbar", { name: "Kurs" })).not.toBeOnTheScreen();
-    expect(screen.getByText("+2 kolejne cele")).toBeOnTheScreen();
-  });
-
-  it("marks a reached goal and an overdue one", async () => {
-    fakeApi.goals.list.mockResolvedValueOnce([
-      testGoal({ name: "Laptop", currentAmount: 400_000 }),
-      testGoal({
-        id: "01923b6e-0000-7000-8000-000000000011",
-        name: "Rower",
-        targetDate: "2026-09-01",
-      }),
-    ]);
-    await openDashboard();
-
-    expect(await screen.findByText("Cel osiągnięty")).toBeOnTheScreen();
-    expect(screen.getByText("Po terminie")).toBeOnTheScreen();
-  });
-
-  it("has an empty state", async () => {
-    fakeApi.goals.list.mockResolvedValueOnce([]);
-    await openDashboard();
-
-    expect(await screen.findByText("Nie masz jeszcze celów.")).toBeOnTheScreen();
-  });
-
-  it("fails on its own: the budget stays visible", async () => {
-    failAllAttempts(fakeApi.goals.list, new ApiError("http", 500, "HTTP 500"));
-    await openDashboard();
-
-    expect(
-      await screen.findByText("Nie udało się wczytać celów.", {}, AFTER_RETRIES),
-    ).toBeOnTheScreen();
-    expect(screen.getByText(zl("1234 zł"))).toBeOnTheScreen();
-  });
+  expect(screen.queryByRole("progressbar", { name: "Wakacje" })).toBeNull();
+  expect(fakeApi.goals.list).not.toHaveBeenCalled();
 });
 
 describe("recent expenses", () => {
@@ -260,7 +205,7 @@ describe("recent expenses", () => {
     expect(fakeApi.transactions.list).toHaveBeenCalledWith({ status: "CONFIRMED", limit: 5 });
   });
 
-  it("shows category, date and the exact amount", async () => {
+  it("two lines: the category, then the date; the exact amount on the right", async () => {
     await openDashboard();
 
     const row = await screen.findByLabelText(`Jedzenie, 27 września, ${zl("45,90 zł")}`);
@@ -269,14 +214,17 @@ describe("recent expenses", () => {
     expect(within(row).getByText(zl("45,90 zł"))).toBeOnTheScreen();
   });
 
-  it("shows the note when there is one, and 'Bez kategorii' without a category", async () => {
+  it("with a note: the note is the title, the category goes next to the date", async () => {
     fakeApi.transactions.list.mockResolvedValueOnce(
       transactionPage([testTransaction({ categoryId: null, note: "Prezent dla mamy" })]),
     );
     await openDashboard();
 
-    expect(await screen.findByText("Bez kategorii")).toBeOnTheScreen();
-    expect(screen.getByText("Prezent dla mamy")).toBeOnTheScreen();
+    const row = await screen.findByLabelText(
+      `Bez kategorii, 27 września, ${zl("45,90 zł")}, Prezent dla mamy`,
+    );
+    expect(within(row).getByText("Prezent dla mamy")).toBeOnTheScreen();
+    expect(within(row).getByText("Bez kategorii · 27 września")).toBeOnTheScreen();
   });
 
   it("has an empty state", async () => {
@@ -299,7 +247,7 @@ describe("recent expenses", () => {
   });
 });
 
-it("pull to refresh reloads the budget, goals and expenses", async () => {
+it("pull to refresh reloads the budget and expenses", async () => {
   await openDashboard();
   await screen.findByText("Jedzenie");
   jest.clearAllMocks();
@@ -316,6 +264,5 @@ it("pull to refresh reloads the budget, goals and expenses", async () => {
   });
 
   expect(fakeApi.budget.current).toHaveBeenCalledTimes(1);
-  expect(fakeApi.goals.list).toHaveBeenCalledTimes(1);
   expect(fakeApi.transactions.list).toHaveBeenCalledTimes(1);
 });

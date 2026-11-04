@@ -31,9 +31,8 @@ async function openSimulator() {
   return app;
 }
 
-async function plan(amount: string, category = "Jedzenie") {
+async function plan(amount: string) {
   await fireEvent.changeText(screen.getByLabelText("Kwota"), amount);
-  await fireEvent.press(await screen.findByRole("radio", { name: category }));
   await wait(DEBOUNCE_MS);
 }
 
@@ -44,19 +43,16 @@ describe("input", () => {
     expect(app).toHavePathname("/simulator");
   });
 
-  it("explains what to do until both amount and category are set", async () => {
+  it("only the amount: no category to pick — it does not change the answer", async () => {
     await openSimulator();
 
-    await fireEvent.changeText(screen.getByLabelText("Kwota"), "120");
-    await wait(DEBOUNCE_MS);
-
-    expect(screen.getByText("Wpisz kwotę i wybierz kategorię, żeby sprawdzić.")).toBeOnTheScreen();
+    expect(screen.getByText("Wpisz kwotę, żeby sprawdzić.")).toBeOnTheScreen();
+    expect(screen.queryByRole("radio", { name: "Jedzenie" })).toBeNull();
     expect(fakeApi.budget.simulate).not.toHaveBeenCalled();
   });
 
   it("asks the API once, 400 ms after the last change (debounce)", async () => {
     await openSimulator();
-    await fireEvent.press(await screen.findByRole("radio", { name: "Jedzenie" }));
 
     for (const typed of ["1", "12", "120"]) {
       await fireEvent.changeText(screen.getByLabelText("Kwota"), typed);
@@ -67,18 +63,7 @@ describe("input", () => {
 
     await wait(1);
     expect(fakeApi.budget.simulate).toHaveBeenCalledTimes(1);
-    expect(fakeApi.budget.simulate).toHaveBeenCalledWith({
-      amount: 12_000,
-      categoryId: testCategory.id,
-    });
-  });
-
-  it("marks the chosen category as selected", async () => {
-    await openSimulator();
-
-    await plan("120");
-
-    expect(screen.getByRole("radio", { name: "Jedzenie" })).toBeSelected();
+    expect(fakeApi.budget.simulate).toHaveBeenCalledWith({ amount: 12_000 });
   });
 
   it("an invalid amount shows why and does not ask the API", async () => {
@@ -243,18 +228,23 @@ describe("Zapisz jako wydatek", () => {
     expect(await screen.findByRole("button", { name: "Zapisz jako wydatek" })).toBeOnTheScreen();
   });
 
-  it("saves the planned purchase like the quick add and returns to Start", async () => {
+  it("opens the quick add with the amount filled in — one tap on a category saves it", async () => {
     const app = await openSimulator();
     await plan("120");
 
     await fireEvent.press(await screen.findByRole("button", { name: "Zapisz jako wydatek" }));
 
     await waitFor(() => {
-      expect(app).toHavePathname("/");
+      expect(app).toHavePathname("/add-expense");
     });
-    expect(fakeApi.transactions.create).toHaveBeenCalledWith({
-      input: { amount: 12_000, date: "2026-09-28", categoryId: testCategory.id },
-      idempotencyKey: "idempotency-key-1",
+    expect(await screen.findByLabelText("Kwota")).toHaveDisplayValue("120");
+    await fireEvent.press(await screen.findByRole("button", { name: "Jedzenie" }));
+
+    await waitFor(() => {
+      expect(fakeApi.transactions.create).toHaveBeenCalledWith({
+        input: { amount: 12_000, date: "2026-09-28", categoryId: testCategory.id },
+        idempotencyKey: "idempotency-key-1",
+      });
     });
     expect(await screen.findByText(`Zapisano ${zl("120,00 zł")} · Jedzenie`)).toBeOnTheScreen();
   });

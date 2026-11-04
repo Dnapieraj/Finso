@@ -15,7 +15,6 @@ import { haptics } from "../../../../src/feedback/haptics";
 import { pl } from "../../../../src/messages/pl";
 import { queryClient } from "../../../../src/query-client";
 import { refreshBudget } from "../../../../src/settings/queries";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -35,7 +34,7 @@ export default function PaydaySettings() {
   });
 
   return (
-    <Screen title={t.payday.title}>
+    <Screen back title={t.payday.title}>
       <Text className="-mt-3 font-sans text-base text-foreground">{t.payday.intro}</Text>
       {save.isError && (
         <FormAlert tone="error">{apiErrorMessage(save.error, "settings")}</FormAlert>
@@ -51,7 +50,6 @@ export default function PaydaySettings() {
       >
         {t.save}
       </Button>
-      <BackButton />
     </Screen>
   );
 }

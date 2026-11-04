@@ -4,7 +4,7 @@ import { Text } from "react-native";
 import { LoadError, Skeleton } from "../../../../../src/components/query-states";
 import { Screen } from "../../../../../src/components/screen";
 import { pl } from "../../../../../src/messages/pl";
-import { BackButton } from "../../../../../src/settings/settings-screen-parts";
+
 import { TemplateForm } from "../../../../../src/settings/template-form";
 import { useTemplates } from "../../../../../src/templates/queries";
 
@@ -18,7 +18,7 @@ export default function EditTemplate() {
 
   if (template) return <TemplateForm template={template} />;
   return (
-    <Screen title={t.templates.editTitle}>
+    <Screen back title={t.templates.editTitle}>
       {templates.isPending ? (
         <Skeleton label={t.templates.loading} lines={3} />
       ) : templates.isError ? (
@@ -26,7 +26,6 @@ export default function EditTemplate() {
       ) : (
         <Text className="font-sans text-base text-foreground">{t.templates.notFound}</Text>
       )}
-      <BackButton />
     </Screen>
   );
 }

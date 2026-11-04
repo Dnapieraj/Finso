@@ -31,7 +31,6 @@ import { pl } from "../../../src/messages/pl";
 import { amountError } from "../../../src/onboarding/draft";
 import { toMoneyInput } from "../../../src/settings/forms";
 import { useBudgetClock } from "../../../src/settings/queries";
-import { BackButton } from "../../../src/settings/settings-screen-parts";
 
 const t = pl.history;
 const e = t.edit;
@@ -208,7 +207,7 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
 
   const failure = save.error ?? remove.error;
   return (
-    <Screen title={e.title}>
+    <Screen back title={e.title}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
       <TextField
         label={e.amount}
@@ -248,7 +247,6 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
       >
         {e.delete}
       </Button>
-      <BackButton />
     </Screen>
   );
 }
@@ -264,7 +262,7 @@ export default function EditExpense() {
     expense.error.kind === "http" &&
     expense.error.status === 404;
   return (
-    <Screen title={e.title}>
+    <Screen back title={e.title}>
       {expense.isPending ? (
         <Skeleton label={e.loading} lines={3} />
       ) : missing ? (
@@ -272,7 +270,6 @@ export default function EditExpense() {
       ) : (
         <LoadError message={e.error} onRetry={() => void expense.refetch()} />
       )}
-      <BackButton />
     </Screen>
   );
 }

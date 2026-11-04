@@ -1,24 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  grosze,
-  parseMoneyInput,
-  todayInTimeZone,
-  type Category,
-  type Goal,
-  type SimulationResult,
-} from "@vireo/shared";
+import { grosze, parseMoneyInput, type Goal, type SimulationResult } from "@vireo/shared";
 import { router } from "expo-router";
 import { useState, type ReactNode } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 
 import { api } from "../../../src/api";
 import { Button } from "../../../src/components/button";
-import { LoadError, Skeleton } from "../../../src/components/query-states";
+import { LoadError } from "../../../src/components/query-states";
 import { Screen } from "../../../src/components/screen";
 import { TextField } from "../../../src/components/text-field";
-import { useBudget, useCategories, useGoals } from "../../../src/dashboard/queries";
-import { CategoryChip } from "../../../src/expenses/category-chip";
-import { saveExpense } from "../../../src/expenses/save-expense";
+import { useGoals } from "../../../src/dashboard/queries";
 import { plural } from "../../../src/format/plural";
 import { useDebouncedValue } from "../../../src/hooks/use-debounced-value";
 import { pl } from "../../../src/messages/pl";
@@ -110,27 +101,20 @@ function GoalImpacts({ result, goals }: { result: SimulationResult; goals: Goal[
 
 /**
  * „Czy stać mnie na to teraz”: a planned purchase against the budget and
- * the goals, before any money is spent. Nothing is saved until the user
- * taps „Zapisz jako wydatek”, which then works like the quick add.
+ * the goals, before any money is spent — just the amount. Nothing is saved
+ * until „Zapisz jako wydatek”, which opens the quick add with the amount
+ * filled in: one tap on a category saves it.
  */
 export default function SimulatorScreen() {
   const [amountText, setAmountText] = useState("");
-  const [category, setCategory] = useState<Category | null>(null);
-  const categories = useCategories();
   const goals = useGoals();
-  const budget = useBudget();
 
-  // A string, so the debounced value only changes when the input does.
-  const debouncedKey = useDebouncedValue(`${amountText}|${category?.id ?? ""}`, DEBOUNCE_MS);
-  const [debouncedAmount = "", debouncedCategoryId = ""] = debouncedKey.split("|");
+  const debouncedAmount = useDebouncedValue(amountText, DEBOUNCE_MS);
   const parsed = parseMoneyInput(debouncedAmount);
-  const request =
-    parsed.ok && debouncedCategoryId !== ""
-      ? { amount: parsed.grosze, categoryId: debouncedCategoryId }
-      : null;
+  const request = parsed.ok ? { amount: parsed.grosze } : null;
 
   const simulation = useQuery({
-    queryKey: ["simulation", request?.amount, request?.categoryId],
+    queryKey: ["simulation", request?.amount],
     queryFn: () => {
       if (!request) throw new Error("No purchase to simulate");
       return api.budget.simulate(request);
@@ -142,38 +126,8 @@ export default function SimulatorScreen() {
     !parsed.ok && parsed.reason !== "empty" ? pl.addExpense.amountErrors[parsed.reason] : undefined;
 
   function saveAsExpense() {
-    if (!request || !category) return;
-    const date =
-      budget.data?.asOf ??
-      todayInTimeZone(new Date(), Intl.DateTimeFormat().resolvedOptions().timeZone);
-    void saveExpense({ amount: request.amount, date, category });
+    router.push({ pathname: "/add-expense", params: { amount: amountText.trim() } });
     setAmountText("");
-    setCategory(null);
-    router.navigate("/");
-  }
-
-  let categoryList: ReactNode;
-  if (categories.isPending) {
-    categoryList = <Skeleton label={t.loadingCategories} lines={2} />;
-  } else if (categories.isError) {
-    categoryList = (
-      <LoadError message={t.categoriesError} onRetry={() => void categories.refetch()} />
-    );
-  } else {
-    categoryList = (
-      <View accessibilityRole="radiogroup" className="flex-row flex-wrap gap-2">
-        {categories.data.map((item) => (
-          <CategoryChip
-            key={item.id}
-            category={item}
-            selected={item.id === category?.id}
-            onPress={() => {
-              setCategory(item);
-            }}
-          />
-        ))}
-      </View>
-    );
   }
 
   let result: ReactNode;
@@ -206,10 +160,6 @@ export default function SimulatorScreen() {
         error={amountError}
         keyboardType="decimal-pad"
       />
-      <View className="gap-2">
-        <Text className="font-sans-semibold text-sm text-foreground">{t.category}</Text>
-        {categoryList}
-      </View>
       {result}
     </Screen>
   );

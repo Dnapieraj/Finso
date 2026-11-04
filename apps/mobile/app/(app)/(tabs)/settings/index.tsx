@@ -1,6 +1,9 @@
+import { theme } from "@vireo/tokens";
 import { router, type Href } from "expo-router";
+// Per-icon import: the package entry pulls in all ~1500 icons.
+import ChevronRight from "lucide-react-native/icons/chevron-right";
 import { useState } from "react";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, Text, useColorScheme, View } from "react-native";
 
 import { useAccount } from "../../../../src/auth/account";
 import { useLogout } from "../../../../src/auth/hooks";
@@ -32,6 +35,7 @@ function SettingsLink({
   value,
   ...target
 }: { label: string; value?: string } & ({ href: Href } | { onPress: () => void })) {
+  const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
   return (
     <Pressable
       accessibilityRole="button"
@@ -46,7 +50,12 @@ function SettingsLink({
       className="min-h-12 flex-row flex-wrap items-center justify-between gap-x-3 gap-y-1 px-4 py-3 active:opacity-70"
     >
       <Text className="shrink font-sans-semibold text-base text-card-foreground">{label}</Text>
-      <Text className="shrink font-sans text-sm text-muted-foreground">{value ?? "›"}</Text>
+      <View className="shrink flex-row items-center gap-1">
+        {value !== undefined && (
+          <Text className="shrink font-sans text-sm text-muted-foreground">{value}</Text>
+        )}
+        <ChevronRight color={colors.mutedForeground} size={18} />
+      </View>
     </Pressable>
   );
 }
@@ -61,25 +70,22 @@ export default function SettingsScreen() {
 
   return (
     <Screen title={t.title}>
-      <View className="gap-2 rounded-2xl bg-card p-4">
+      <View className="gap-2">
         <Text className="font-sans-semibold text-sm text-muted-foreground">{t.account}</Text>
-        <Text className="font-sans text-base text-foreground">{account.email}</Text>
-        <Text className="font-sans text-sm text-muted-foreground">
-          {account.emailVerified ? t.emailVerified : t.emailNotVerified}
-        </Text>
-        {!account.emailVerified && (
-          <Button
-            variant="outline"
-            onPress={() => {
-              router.push("/settings/verify-email");
-            }}
-          >
-            {pl.verifyEmail.open}
-          </Button>
-        )}
-      </View>
-      <View className="divide-y divide-border rounded-2xl bg-card">
-        <SettingsLink label={t.changePassword} href="/settings/change-password" />
+        <View className="divide-y divide-border rounded-2xl bg-card">
+          <View className="gap-0.5 px-4 py-3">
+            <Text className="font-sans-semibold text-base text-card-foreground">
+              {account.email}
+            </Text>
+            <Text className="font-sans text-sm text-muted-foreground">
+              {account.emailVerified ? t.emailVerified : t.emailNotVerified}
+            </Text>
+          </View>
+          {!account.emailVerified && (
+            <SettingsLink label={pl.verifyEmail.open} href="/settings/verify-email" />
+          )}
+          <SettingsLink label={t.changePassword} href="/settings/change-password" />
+        </View>
       </View>
       <View className="gap-2">
         <Text className="font-sans-semibold text-sm text-muted-foreground">{t.budget}</Text>

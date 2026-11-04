@@ -24,7 +24,7 @@ import { haptics } from "../feedback/haptics";
 import { toMoneyInput, useDraft, useSettingsMutation, validateName } from "../settings/forms";
 import { refreshBudget, useBudgetClock } from "../settings/queries";
 import { Pill } from "../settings/schedule-fields";
-import { BackButton } from "../settings/settings-screen-parts";
+
 import { queryClient } from "../query-client";
 import { isBeforeMonth, lastDayOf, monthOf } from "./deadline";
 import { useGoalNotice } from "./notice";
@@ -177,7 +177,7 @@ export function GoalForm({ goal }: { goal?: Goal }) {
 
   const failure = save.error ?? remove.error;
   return (
-    <Screen title={goal ? t.editTitle : t.newTitle}>
+    <Screen back title={goal ? t.editTitle : t.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
       <TextField
         label={t.name}
@@ -255,7 +255,6 @@ export function GoalForm({ goal }: { goal?: Goal }) {
           {t.delete}
         </Button>
       )}
-      <BackButton />
     </Screen>
   );
 }

@@ -4,7 +4,6 @@ import { fireEvent, screen, waitFor } from "expo-router/testing-library";
 import { fakeApi, startUnverified, TEST_EMAIL_CODE } from "./helpers/fake-api";
 import { resetSecureStore } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
-import { findTab } from "./helpers/tabs";
 
 jest.mock("../src/api", () => ({
   api: jest.requireActual<{ fakeApi: unknown }>("./helpers/fake-api").fakeApi,
@@ -123,17 +122,8 @@ describe("„Nie pamiętam hasła”", () => {
 });
 
 describe("potwierdzenie adresu e-mail", () => {
-  it("Dashboard prosi o potwierdzenie, dopóki adres jest niepotwierdzony", async () => {
+  it("Dashboard nie zajmuje się adresem — prośba jest w Ustawieniach", async () => {
     startUnverified();
-    const app = await renderApp("/", { signedIn: true });
-
-    expect(await header("Potwierdź adres e-mail")).toBeOnTheScreen();
-    await press("Potwierdź adres");
-
-    expect(app).toHavePathname("/settings/verify-email");
-  });
-
-  it("potwierdzony adres: bez karty na Dashboardzie", async () => {
     await renderApp("/", { signedIn: true });
     await header("Twój budżet");
 
@@ -154,9 +144,7 @@ describe("potwierdzenie adresu e-mail", () => {
     await waitFor(() => {
       expect(screen.getByText("Adres potwierdzony")).toBeOnTheScreen();
     });
-    await fireEvent.press(await findTab("Start"));
-    await header("Twój budżet");
-    expect(screen.queryByRole("header", { name: "Potwierdź adres e-mail" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Potwierdź adres" })).toBeNull();
   });
 
   it("zły kod — komunikat, adres dalej niepotwierdzony", async () => {

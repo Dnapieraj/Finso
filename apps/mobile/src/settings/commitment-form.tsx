@@ -34,7 +34,7 @@ import {
 } from "./schedule";
 import { ScheduleFields } from "./schedule-fields";
 import { CategoryPicker } from "./category-picker";
-import { BackButton, DeleteWithConfirmation, SwitchRow } from "./settings-screen-parts";
+import { DeleteWithConfirmation, SwitchRow } from "./settings-screen-parts";
 
 const t = pl.budgetSettings;
 
@@ -134,7 +134,7 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
 
   const failure = save.error ?? remove.error;
   return (
-    <Screen title={rule ? t.commitments.editTitle : t.commitments.newTitle}>
+    <Screen back title={rule ? t.commitments.editTitle : t.commitments.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
       <TextField
         label={t.name}
@@ -209,7 +209,6 @@ export function CommitmentForm({ rule }: { rule?: RecurringRule }) {
           }}
         />
       )}
-      <BackButton />
     </Screen>
   );
 }

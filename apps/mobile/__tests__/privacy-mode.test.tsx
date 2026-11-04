@@ -77,11 +77,10 @@ describe("oko przy „Możesz wydać”", () => {
     expect(screen.getByLabelText("Jedzenie, 27 września, ukryta kwota")).toBeOnTheScreen();
   });
 
-  it("słowa i procenty zostają: widać, że stać, ile dni i jak daleko do celu", async () => {
+  it("słowa zostają: widać, że stać i który to dzień okresu", async () => {
     await hideAmounts();
 
     expect(screen.getByText("Możesz wydać")).toBeOnTheScreen();
-    expect(screen.getByText("25%")).toBeOnTheScreen();
     expect(screen.getByText("Dzień 19 z 30")).toBeOnTheScreen();
   });
 });
@@ -104,7 +103,7 @@ describe("ukryte wszędzie", () => {
     await screen.findByRole("button", { name: "Wakacje" });
 
     expect(amountsOnScreen()).toEqual([]);
-    expect(screen.getByText(`${HIDDEN} z ${HIDDEN}`)).toBeOnTheScreen();
+    expect(screen.getByText(`${HIDDEN} z ${HIDDEN} · do czerwca 2027`)).toBeOnTheScreen();
   });
 
   it("Symulator: werdykt słowami, kwoty ukryte (wpisywana kwota zostaje widoczna)", async () => {
@@ -112,7 +111,6 @@ describe("ukryte wszędzie", () => {
 
     await fireEvent.press(await findTab("Symulator"));
     await fireEvent.changeText(await screen.findByLabelText("Kwota"), "120");
-    await fireEvent.press(await screen.findByRole("radio", { name: "Jedzenie" }));
 
     expect(await screen.findByRole("header", { name: "Stać cię" })).toBeOnTheScreen();
     expect(screen.getByText(`Zostanie ${HIDDEN}`)).toBeOnTheScreen();

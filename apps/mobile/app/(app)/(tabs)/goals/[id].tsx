@@ -6,7 +6,6 @@ import { Screen } from "../../../../src/components/screen";
 import { useGoals } from "../../../../src/dashboard/queries";
 import { GoalForm } from "../../../../src/goals/goal-form";
 import { pl } from "../../../../src/messages/pl";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.goals;
 
@@ -18,7 +17,7 @@ export default function EditGoal() {
 
   if (goal) return <GoalForm goal={goal} />;
   return (
-    <Screen title={t.editTitle}>
+    <Screen back title={t.editTitle}>
       {goals.isPending ? (
         <Skeleton label={t.loading} lines={3} />
       ) : goals.isError ? (
@@ -26,7 +25,6 @@ export default function EditGoal() {
       ) : (
         <Text className="font-sans text-base text-foreground">{t.notFound}</Text>
       )}
-      <BackButton />
     </Screen>
   );
 }

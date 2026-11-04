@@ -1,5 +1,4 @@
 import { theme } from "@vireo/tokens";
-import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, Switch, Text, useColorScheme, View } from "react-native";
 
@@ -32,20 +31,6 @@ export function ListRow({
         </Text>
       ))}
     </Pressable>
-  );
-}
-
-/** "Wstecz" at the bottom of a settings screen. */
-export function BackButton() {
-  return (
-    <Button
-      variant="ghost"
-      onPress={() => {
-        router.back();
-      }}
-    >
-      {t.back}
-    </Button>
   );
 }
 
@@ -126,6 +111,8 @@ export function SwitchRow({
         disabled={disabled}
         onValueChange={onChange}
         trackColor={{ true: colors.primary, false: colors.input }}
+        // White thumb on both themes; Android would tint it with its own accent colour.
+        thumbColor="#FFFFFF"
       />
     </View>
   );

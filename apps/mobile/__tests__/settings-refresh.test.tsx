@@ -54,7 +54,6 @@ async function openDashboardAndSimulator() {
   expect(await screen.findByText(zl("1234 zł"))).toBeOnTheScreen();
   await fireEvent.press(await findTab("Symulator"));
   await fireEvent.changeText(await screen.findByLabelText("Kwota"), "120");
-  await fireEvent.press(await screen.findByRole("radio", { name: "Jedzenie" }));
   await wait(400);
   expect(await screen.findByText(`Zostanie ${zl("1114 zł")}`)).toBeOnTheScreen();
   await fireEvent.press(await findTab("Ustawienia"));

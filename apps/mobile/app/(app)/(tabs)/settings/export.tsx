@@ -9,7 +9,6 @@ import { buildExportFile, type ExportKind } from "../../../../src/export/csv-fil
 import { shareCsv, SharingUnavailableError } from "../../../../src/export/share-file";
 import { haptics } from "../../../../src/feedback/haptics";
 import { pl } from "../../../../src/messages/pl";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.exportData;
 const KINDS: readonly ExportKind[] = ["expenses", "income", "goals", "commitments"];
@@ -28,7 +27,7 @@ export default function ExportScreen() {
   });
 
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       <Text className="font-sans text-base text-muted-foreground">{t.intro}</Text>
       {share.error && (
         <FormAlert tone="error">
@@ -52,7 +51,6 @@ export default function ExportScreen() {
         ))}
       </View>
       <Text className="font-sans text-sm text-muted-foreground">{t.trashNote}</Text>
-      <BackButton />
     </Screen>
   );
 }

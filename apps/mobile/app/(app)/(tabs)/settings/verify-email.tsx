@@ -19,7 +19,6 @@ import { haptics } from "../../../../src/feedback/haptics";
 import { plErrorMap } from "../../../../src/forms/error-map";
 import { pl } from "../../../../src/messages/pl";
 import { queryClient } from "../../../../src/query-client";
-import { BackButton } from "../../../../src/settings/settings-screen-parts";
 
 const t = pl.verifyEmail;
 
@@ -58,16 +57,15 @@ export default function VerifyEmailScreen() {
 
   if (account.emailVerified) {
     return (
-      <Screen title={t.title}>
+      <Screen back title={t.title}>
         <FormAlert tone="info">{t.done}</FormAlert>
-        <BackButton />
       </Screen>
     );
   }
 
   const failure = verify.error ?? resend.error;
   return (
-    <Screen title={t.title}>
+    <Screen back title={t.title}>
       <Text className="font-sans text-base text-muted-foreground">{t.intro(account.email)}</Text>
       {failure ? (
         <FormAlert tone="error">{apiErrorMessage(failure, "email-code")}</FormAlert>
@@ -107,7 +105,6 @@ export default function VerifyEmailScreen() {
       >
         {pl.emailCode.resend}
       </Button>
-      <BackButton />
     </Screen>
   );
 }
