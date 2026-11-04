@@ -7,11 +7,11 @@ appId: app.finso
 - assertVisible: "Nowy wydatek"
 - inputText: "12,50"
 - hideKeyboard
-# The tile in the category grid — the quick picks above may also say „Jedzenie”.
+# The tile in the category grid — the quick picks above (and the list on
+# Start under the sheet) may also say „Jedzenie”.
 - tapOn:
     text: "Jedzenie"
-    index: -1
-- assertVisible: "Twój budżet"
+    below: "Tapnij kategorię, aby zapisać."
 - assertVisible: "Zapisano 12,50.zł . Jedzenie"
 - tapOn: "Cofnij"
 - assertNotVisible: "Zapisano 12,50.zł . Jedzenie"

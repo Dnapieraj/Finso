@@ -172,10 +172,12 @@ describe("ekran Subskrypcje", () => {
     expect(screen.getByText(`${zl("49,00 zł")} · co rok`)).toBeOnTheScreen();
   });
 
-  it("pusto: wyjaśnia, skąd biorą się podpowiedzi", async () => {
+  it("pusto: samo wyjaśnienie, skąd biorą się podpowiedzi — bez pustej sumy", async () => {
     await openSubscriptions();
 
     expect(await screen.findByText(/Finso nie znalazło jeszcze subskrypcji/)).toBeOnTheScreen();
+    expect(screen.queryByText("Nie masz jeszcze potwierdzonych subskrypcji.")).toBeNull();
+    expect(screen.queryByRole("header", { name: "Twoje subskrypcje" })).toBeNull();
   });
 
   it("podczas wczytywania: szkielet", async () => {

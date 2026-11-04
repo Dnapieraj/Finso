@@ -135,6 +135,7 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
   const [categoryId, setCategoryId] = useState(expense.categoryId);
   const [note, setNote] = useState(expense.note ?? "");
   const [date, setDate] = useState(isoDate(expense.date));
+  const [pickingDate, setPickingDate] = useState(false);
   const [amountErrorText, setAmountErrorText] = useState<string | undefined>();
 
   const save = useMutation({
@@ -226,13 +227,28 @@ function ExpenseForm({ expense }: { expense: Transaction }) {
       <TextField label={e.note} value={note} onChangeText={setNote} />
       <View className="gap-2">
         <Text className="font-sans-semibold text-sm text-foreground">{e.date}</Text>
-        <DayPicker
-          anchor={isoDate(expense.date)}
-          value={date}
-          today={today}
-          periodStartDay={account.periodStartDay}
-          onChange={setDate}
-        />
+        {pickingDate ? (
+          <DayPicker
+            anchor={isoDate(expense.date)}
+            value={date}
+            today={today}
+            periodStartDay={account.periodStartDay}
+            onChange={setDate}
+          />
+        ) : (
+          // The date rarely changes: one line instead of a month of buttons.
+          <View className="flex-row items-center justify-between gap-3">
+            <Text className="font-sans text-base text-foreground">{formatDayMonth(date)}</Text>
+            <Button
+              variant="ghost"
+              onPress={() => {
+                setPickingDate(true);
+              }}
+            >
+              {e.changeDate}
+            </Button>
+          </View>
+        )}
       </View>
       <Button loading={save.isPending} loadingLabel={pl.budgetSettings.saving} onPress={submit}>
         {pl.budgetSettings.save}

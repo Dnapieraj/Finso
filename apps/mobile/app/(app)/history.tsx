@@ -1,12 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import {
-  budgetPeriodAt,
-  grosze,
-  type BudgetPeriod,
-  type Category,
-  type Transaction,
-} from "@vireo/shared";
-import { router } from "expo-router";
+import { budgetPeriodAt, grosze, type BudgetPeriod } from "@vireo/shared";
 import { useState, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
@@ -18,6 +11,7 @@ import { Screen } from "../../src/components/screen";
 import { useCategories } from "../../src/dashboard/queries";
 import { CategoryChip } from "../../src/expenses/category-chip";
 import { formatDayMonth } from "../../src/format/date";
+import { ExpenseRow } from "../../src/expenses/expense-row";
 import { CategoryChart } from "../../src/history/category-chart";
 import { useExpenseTrashNotice, type ExpenseTrashNotice } from "../../src/history/notice";
 import {
@@ -67,39 +61,6 @@ function PeriodSwitcher({
       </Text>
       {arrow(t.nextPeriod, "›", 1, isCurrent)}
     </View>
-  );
-}
-
-function ExpenseRow({ expense, category }: { expense: Transaction; category?: Category }) {
-  const money = useMoney();
-  const title = category?.name ?? t.noCategory;
-  const date = formatDayMonth(expense.date);
-  // Exact grosze: this is a record of what was paid, not an estimate.
-  const amount = money.format(grosze(expense.amount));
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={money.spoken(
-        [title, date, amount, expense.note].filter(Boolean).join(", "),
-      )}
-      onPress={() => {
-        router.push(`/expense/${expense.id}`);
-      }}
-      className="flex-row items-center gap-3 py-2 active:opacity-70"
-    >
-      <View
-        className="h-3 w-3 rounded-full"
-        style={{ backgroundColor: category?.color ?? "transparent" }}
-      />
-      <View className="flex-1">
-        <Text className="font-sans-semibold text-base text-card-foreground">{title}</Text>
-        {expense.note && (
-          <Text className="font-sans text-sm text-muted-foreground">{expense.note}</Text>
-        )}
-        <Text className="font-sans text-sm text-muted-foreground">{date}</Text>
-      </View>
-      <Text className="font-sans-semibold text-base text-card-foreground">{amount}</Text>
-    </Pressable>
   );
 }
 

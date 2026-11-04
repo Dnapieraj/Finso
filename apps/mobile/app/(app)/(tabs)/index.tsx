@@ -18,6 +18,7 @@ import { useConfirmations } from "../../../src/confirmations/queries";
 import { periodProgress } from "../../../src/dashboard/period-progress";
 import { useBudget, useCategories, useRecentExpenses } from "../../../src/dashboard/queries";
 import { ExpenseNoticeBar } from "../../../src/expenses/expense-notice";
+import { ExpenseRow } from "../../../src/expenses/expense-row";
 import { formatDayMonth } from "../../../src/format/date";
 import { plural } from "../../../src/format/plural";
 import { pl } from "../../../src/messages/pl";
@@ -177,7 +178,6 @@ function BudgetOverview({ budget }: { budget: BudgetSummary }) {
 }
 
 function RecentExpenses() {
-  const money = useMoney();
   const expenses = useRecentExpenses();
   const categories = useCategories();
   const byId = new Map<string, Category>((categories.data ?? []).map((c) => [c.id, c]));
@@ -190,37 +190,13 @@ function RecentExpenses() {
   } else if (expenses.data.items.length === 0) {
     body = <Text className="font-sans text-base text-muted-foreground">{t.noExpenses}</Text>;
   } else {
-    body = expenses.data.items.map((expense) => {
-      const category = expense.categoryId ? byId.get(expense.categoryId) : undefined;
-      const title = category?.name ?? t.noCategory;
-      const date = formatDayMonth(expense.date);
-      // Exact grosze: this is a record of what was paid, not an estimate.
-      const amount = money.format(grosze(expense.amount));
-      return (
-        <View
-          key={expense.id}
-          accessible
-          accessibilityLabel={money.spoken(
-            [title, date, amount, expense.note].filter(Boolean).join(", "),
-          )}
-          className="flex-row items-center gap-3"
-        >
-          <View
-            className="h-3 w-3 rounded-full"
-            style={{ backgroundColor: category?.color ?? "transparent" }}
-          />
-          <View className="flex-1">
-            <Text numberOfLines={1} className="font-sans-semibold text-base text-card-foreground">
-              {expense.note ?? title}
-            </Text>
-            <Text numberOfLines={1} className="font-sans text-sm text-muted-foreground">
-              {expense.note ? `${title} · ${date}` : date}
-            </Text>
-          </View>
-          <Text className="font-sans-semibold text-base text-card-foreground">{amount}</Text>
-        </View>
-      );
-    });
+    body = expenses.data.items.map((expense) => (
+      <ExpenseRow
+        key={expense.id}
+        expense={expense}
+        category={expense.categoryId ? byId.get(expense.categoryId) : undefined}
+      />
+    ));
   }
   return (
     <Card title={t.expenses}>

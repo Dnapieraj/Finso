@@ -945,3 +945,8 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   (wcześniej istniało tylko ręcznie w mojej bazie) — e2e i przeglądy działają
   od zera. Istniejącego konta nie rusza; blokada dla `NODE_ENV=production`.
 - Telemetria Maestro wyłączona w skrypcie (`MAESTRO_CLI_NO_ANALYTICS`).
+- **Wydatek na Starcie otwiera edycję** jak w Historii (wcześniej nie reagował
+  na dotknięcie) — jeden wspólny wiersz wydatku (`src/expenses/expense-row.tsx`).
+- **Edycja wydatku: data jako jedna linia z „Zmień datę”** — kalendarz okresu
+  (30 przycisków) rozwija się dopiero na żądanie; data zmienia się rzadko.
+- **Subskrypcje bez danych: samo objaśnienie** — bez karty z pustą sumą.

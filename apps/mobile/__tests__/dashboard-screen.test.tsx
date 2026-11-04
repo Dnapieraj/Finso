@@ -227,6 +227,17 @@ describe("recent expenses", () => {
     expect(within(row).getByText("Bez kategorii · 27 września")).toBeOnTheScreen();
   });
 
+  it("tapping an expense opens it, like in the history", async () => {
+    const app = await renderApp("/", { signedIn: true });
+
+    await fireEvent.press(
+      await screen.findByRole("button", { name: `Jedzenie, 27 września, ${zl("45,90 zł")}` }),
+    );
+
+    await screen.findByRole("header", { name: "Edytuj wydatek" });
+    expect(app).toHavePathname(`/expense/${testTransaction().id}`);
+  });
+
   it("has an empty state", async () => {
     fakeApi.transactions.list.mockResolvedValueOnce(transactionPage([]));
     await openDashboard();

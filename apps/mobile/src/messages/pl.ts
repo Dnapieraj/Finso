@@ -190,6 +190,7 @@ export const pl = {
       loading: "Wczytywanie wydatku",
       error: "Nie udało się wczytać wydatku.",
       delete: "Usuń wydatek",
+      changeDate: "Zmień datę",
     },
     deleted: (amount: string, category: string | null) =>
       category ? `Usunięto wydatek ${amount} · ${category}.` : `Usunięto wydatek ${amount}.`,

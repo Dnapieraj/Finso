@@ -140,9 +140,10 @@ export default function SubscriptionsScreen() {
     const { confirmed, detected, totals } = subscriptions.data;
     body = (
       <>
-        <Summary totals={totals} money={money} />
-        {confirmed.length === 0 && detected.length === 0 && (
+        {confirmed.length === 0 && detected.length === 0 ? (
           <Text className="font-sans text-base text-muted-foreground">{t.empty}</Text>
+        ) : (
+          <Summary totals={totals} money={money} />
         )}
         {detected.length > 0 && (
           <View className="gap-3">

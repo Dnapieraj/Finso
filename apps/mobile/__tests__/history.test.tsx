@@ -160,7 +160,9 @@ describe("list", () => {
 
     const lunchRow = within(await row("Jedzenie, 27 września"));
     expect(lunchRow.getByText(zl("45,00 zł"))).toBeOnTheScreen();
+    // Two lines, as on Start: the note, then „category · date”.
     expect(lunchRow.getByText("Obiad")).toBeOnTheScreen();
+    expect(lunchRow.getByText("Jedzenie · 27 września")).toBeOnTheScreen();
     // Role names are matched after whitespace normalisation: a plain space here.
     expect(await row("Bez kategorii, 15 września, 50,00 zł")).toBeOnTheScreen();
   });

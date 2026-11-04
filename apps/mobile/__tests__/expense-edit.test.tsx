@@ -67,7 +67,7 @@ describe("editing", () => {
     expect(screen.getByLabelText("Kwota")).toHaveDisplayValue("45");
     expect(await screen.findByRole("radio", { name: "Jedzenie" })).toBeSelected();
     expect(screen.getByLabelText("Notatka")).toHaveDisplayValue("Obiad");
-    expect(screen.getByRole("radio", { name: "27 września" })).toBeSelected();
+    expect(screen.getByText("27 września")).toBeOnTheScreen();
   });
 
   it("sends only what changed and returns to the history", async () => {
@@ -107,9 +107,17 @@ describe("editing", () => {
     });
   });
 
+  it("the date shows as a day; the calendar opens only on „Zmień datę”", async () => {
+    await openEdit();
+
+    expect(screen.getByText("27 września")).toBeOnTheScreen();
+    expect(screen.queryByRole("radio", { name: "25 września" })).toBeNull();
+  });
+
   it("the date: another day of the period — the usual fix is „it was yesterday”", async () => {
     await openEdit();
 
+    await press("Zmień datę");
     await choose("25 września");
     await press("Zapisz");
 
@@ -121,6 +129,7 @@ describe("editing", () => {
   it("the date: a day of the previous period", async () => {
     await openEdit();
 
+    await press("Zmień datę");
     await press("Poprzedni okres");
     await choose("5 września");
     await press("Zapisz");
@@ -132,6 +141,7 @@ describe("editing", () => {
 
   it("days after today cannot be chosen", async () => {
     await openEdit();
+    await press("Zmień datę");
 
     expect(screen.getByRole("radio", { name: "28 września" })).toBeEnabled();
     expect(screen.getByRole("radio", { name: "29 września" })).toBeDisabled();
