@@ -3,23 +3,13 @@ import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-na
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { pl } from "../messages/pl";
-import { OrDivider, SocialButtons } from "./social-buttons";
 
 /**
  * Login and register layout: centred vertically with the wordmark on top,
  * unlike the in-app `Screen`, which starts at the top. The content can
  * still scroll when the keyboard leaves too little room.
  */
-export function AuthScreen({
-  title,
-  social = true,
-  children,
-}: {
-  title: string;
-  /** Apple/Google buttons — not on screens that are not a way to sign in. */
-  social?: boolean;
-  children: ReactNode;
-}) {
+export function AuthScreen({ title, children }: { title: string; children: ReactNode }) {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <KeyboardAvoidingView
@@ -40,12 +30,6 @@ export function AuthScreen({
             >
               {title}
             </Text>
-            {social && (
-              <>
-                <SocialButtons />
-                <OrDivider />
-              </>
-            )}
             {children}
           </View>
         </ScrollView>

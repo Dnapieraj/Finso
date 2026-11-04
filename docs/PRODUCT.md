@@ -575,7 +575,7 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 - Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
-Na ekranach logowania i rejestracji są już przyciski „Kontynuuj z Apple / Google”, ale tylko wizualnie (tapnięcie pokazuje „wkrótce dostępne”). Martwy przycisk nie przejdzie review w sklepie (App Store 2.1), więc przed publikacją muszą działać albo zniknąć. Do zrobienia:
+Atrapy przycisków „Kontynuuj z Apple / Google” usunięte 4.11.2026 (martwy przycisk nie przejdzie review — App Store 2.1 — i zaśmiecał ekran); wracają razem z działającym logowaniem. Do zrobienia:
 
 - **API:** weryfikacja tokenów tożsamości od Apple i Google po stronie serwera, powiązanie z kontem (e-mail / identyfikator dostawcy), konta bez hasła (`passwordHash` opcjonalny)
 - **Usuwanie konta:** konto bez hasła nie potwierdzi usunięcia hasłem — inne potwierdzenie (np. ponowne logowanie u dostawcy) w appce i ta sama zmiana na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`), w jednym etapie; test `apps/mobile/__tests__/delete-account.test.tsx` pilnuje zgodności
@@ -926,3 +926,4 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   własnym kolorem).
 - **Nowy wydatek: dwa nagłówki („Jednym tapnięciem”, „Tapnij kategorię, aby
   zapisać.”) zamiast nagłówka i dwóch podpowiedzi.**
+- **Bez atrap logowania przez Apple/Google** na ekranach logowania i rejestracji — przycisk, który tylko mówi „wkrótce”, to zbędny element; wróci z prawdziwą implementacją (etap 8).

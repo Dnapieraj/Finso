@@ -33,7 +33,7 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState<string | null>(null);
 
   return (
-    <AuthScreen title={t.title} social={false}>
+    <AuthScreen title={t.title}>
       {email === null ? <EmailStep onSent={setEmail} /> : <ResetStep email={email} />}
       <Button
         variant="ghost"
