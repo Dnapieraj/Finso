@@ -120,7 +120,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 
 ### Faza 2 (po publikacji)
 
-13. Nieregularne dochody — uczenie się wzorca
+13. Nieregularne dochody — uczenie się wzorca — **ZROBIONE** (4.11.2026, 893d9c9..f42da80)
 14. Wspólne wydatki / rozliczenia
 15. Widżety iOS/Android („Możesz dziś wydać X zł”)
 16. Tryb offline z synchronizacją
@@ -950,3 +950,19 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - **Edycja wydatku: data jako jedna linia z „Zmień datę”** — kalendarz okresu
   (30 przycisków) rozwija się dopiero na żądanie; data zmienia się rzadko.
 - **Subskrypcje bez danych: samo objaśnienie** — bez karty z pustą sumą.
+
+### 4.11.2026 — Faza 2: prognoza dochodu nieregularnego
+
+- **Ostrożna prognoza = 25. percentyl** sum potwierdzonych wpływów z ostatnich
+  pełnych okresów (najwyżej 6): przy 3–4 okresach to najniższy, przy 5–6 drugi
+  najniższy. Średnia obiecałaby za dużo w słabszym miesiącu.
+- **Okres bez wpływów liczy się jako zero** — u freelancera to też typowy
+  miesiąc. Liczą się tylko okresy w całości po dodaniu źródła do Finso
+  (wcześniej „brak wpływów” znaczyłby „sprzed appki”).
+- **Min. 3 pełne okresy**; wcześniej jak dotąd — tylko to, co wpłynęło.
+- **W budżecie: max(to, co wpłynęło, prognoza)** — nadwyżka ponad prognozę
+  liczy się od razu, niedobór do prognozy jest wliczony, ale **Start mówi
+  wprost**: „W tym X z prognozy dochodu — jeszcze nie wpłynęło” (w górę).
+  Ustawienia → Dochody: „Prognoza: X na okres · zwykle Y–Z”.
+- **„Chudy miesiąc” (podpowiedzi, co przyciąć) — nie zrobione.** Wymaga
+  limitów per kategoria (kolejny punkt), z którymi da się to sensownie połączyć.
