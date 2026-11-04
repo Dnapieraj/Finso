@@ -20,16 +20,12 @@ const DEFAULT_TIGHT_THRESHOLD_RATIO = 0.5;
  * więc `input` to dokładnie to samo, czego oczekuje ta funkcja —
  * rozszerzone tylko o cele i próg 'tight'.
  *
- * `categoryId` NIE wpływa dziś na wynik — MVP nie ma limitów per
- * kategoria (nie ma tego w PRODUCT.md dla Fazy 1). Przyjmowany i
- * zwracany bez zmian, żeby sygnatura była gotowa, gdy taka reguła się
- * pojawi, zamiast zmieniać typ publiczny wtedy. Jeśli wolisz to
- * usunąć, dopóki naprawdę nie jest potrzebne — powiedz, wywalę.
+ * Bez kategorii: Faza 1 nie ma limitów per kategoria, więc kategoria nie
+ * zmieniłaby wyniku. Wróci jako parametr razem z limitami (Faza 2).
  */
 export function simulatePurchase(
   input: SimulatePurchaseInput,
   amountInGrosze: Grosze,
-  _categoryId: string,
 ): SimulatePurchaseOutput {
   const before = calculateAvailableBalance(input);
   const remainingAfter = grosze(before.availableBalance - amountInGrosze);

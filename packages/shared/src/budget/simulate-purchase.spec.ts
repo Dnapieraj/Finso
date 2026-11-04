@@ -32,7 +32,7 @@ function baseInput(): SimulatePurchaseInput {
 
 describe("simulatePurchase", () => {
   it('mały zakup: stać, riskLevel "safe"', () => {
-    const result = simulatePurchase(baseInput(), grosze(10_000), "cat-food");
+    const result = simulatePurchase(baseInput(), grosze(10_000));
 
     expect(result.canAfford).toBe(true);
     expect(result.remainingAfter).toBe(390_000); // 400000 - 10000
@@ -41,7 +41,7 @@ describe("simulatePurchase", () => {
   });
 
   it('duży, ale możliwy zakup: dzienny budżet spada o >50% -> riskLevel "tight"', () => {
-    const result = simulatePurchase(baseInput(), grosze(250_000), "cat-food");
+    const result = simulatePurchase(baseInput(), grosze(250_000));
 
     expect(result.canAfford).toBe(true);
     expect(result.remainingAfter).toBe(150_000); // 400000 - 250000
@@ -51,7 +51,7 @@ describe("simulatePurchase", () => {
   });
 
   it('zakup przekraczający budżet: canAfford false, riskLevel "over"', () => {
-    const result = simulatePurchase(baseInput(), grosze(450_000), "cat-food");
+    const result = simulatePurchase(baseInput(), grosze(450_000));
 
     expect(result.canAfford).toBe(false);
     expect(result.remainingAfter).toBe(-50_000); // 400000 - 450000
@@ -65,7 +65,7 @@ describe("simulatePurchase", () => {
     input.periodIncome = grosze(0);
     input.goalContributions = [];
 
-    const result = simulatePurchase(input, grosze(1), "cat-food");
+    const result = simulatePurchase(input, grosze(1));
 
     expect(result.canAfford).toBe(false);
     expect(result.riskLevel).toBe("over");
@@ -85,7 +85,7 @@ describe("simulatePurchase", () => {
     // zakupem = floor(5/30) = 0. Zakup za dokładnie 5 -> remainingAfter = 0,
     // czyli wciąż "stać" (canAfford true), ale bez żadnego zapasu.
 
-    const result = simulatePurchase(input, grosze(5), "cat-food");
+    const result = simulatePurchase(input, grosze(5));
 
     expect(result.canAfford).toBe(true);
     expect(result.riskLevel).toBe("tight");
@@ -95,7 +95,7 @@ describe("simulatePurchase", () => {
     const input = baseInput();
     input.asOf = isoDate("2026-10-01"); // po period.end (2026-09-30)
 
-    const result = simulatePurchase(input, grosze(10_000), "cat-food");
+    const result = simulatePurchase(input, grosze(10_000));
 
     expect(result.dailyAllowanceAfter).toBe(0);
   });
@@ -104,24 +104,24 @@ describe("simulatePurchase", () => {
     const input = baseInput();
     // remainingAfter = 400000 - 50000 = 350000, dailyAllowanceAfter =
     // floor(350000/30) = 11666. 11666/13333 ≈ 0.875.
-    const withDefault = simulatePurchase(input, grosze(50_000), "cat-food");
+    const withDefault = simulatePurchase(input, grosze(50_000));
     expect(withDefault.riskLevel).toBe("safe"); // 0.875 >= 0.5
 
     input.tightThresholdRatio = 0.9;
-    const withCustomThreshold = simulatePurchase(input, grosze(50_000), "cat-food");
+    const withCustomThreshold = simulatePurchase(input, grosze(50_000));
     expect(withCustomThreshold.riskLevel).toBe("tight"); // 0.875 < 0.9
   });
 
   it("categoryId nie wpływa na wynik (MVP nie ma limitów per kategoria)", () => {
-    const a = simulatePurchase(baseInput(), grosze(50_000), "cat-food");
-    const b = simulatePurchase(baseInput(), grosze(50_000), "cat-transport");
+    const a = simulatePurchase(baseInput(), grosze(50_000));
+    const b = simulatePurchase(baseInput(), grosze(50_000));
 
     expect(a).toEqual(b);
   });
 
   describe("goalImpacts", () => {
     it("bez deficytu (stać na zakup) — żaden cel się nie opóźnia", () => {
-      const result = simulatePurchase(baseInput(), grosze(10_000), "cat-food");
+      const result = simulatePurchase(baseInput(), grosze(10_000));
 
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 0 }]);
     });
@@ -130,7 +130,7 @@ describe("simulatePurchase", () => {
       // amount 450000 -> deficyt 50000 (patrz test "over" wyżej).
       // g1: brakuje 1200000, 365 dni do terminu -> tempo ≈ 3287.67/dzień.
       // ceil(50000 / 3287.67) = ceil(15.21) = 16.
-      const result = simulatePurchase(baseInput(), grosze(450_000), "cat-food");
+      const result = simulatePurchase(baseInput(), grosze(450_000));
 
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 16 }]);
     });
@@ -142,7 +142,7 @@ describe("simulatePurchase", () => {
       // remainingAfter = -110000 -> deficyt 110000, ale wkład na g1 w tym
       // okresie to tylko 10000, więc affectedAmount = min(110000, 10000) = 10000.
       // ceil(10000 / 3287.67) = ceil(3.04) = 4.
-      const result = simulatePurchase(input, grosze(600_000), "cat-food");
+      const result = simulatePurchase(input, grosze(600_000));
 
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 4 }]);
     });
@@ -158,7 +158,7 @@ describe("simulatePurchase", () => {
         },
       ];
 
-      const result = simulatePurchase(input, grosze(450_000), "cat-food");
+      const result = simulatePurchase(input, grosze(450_000));
 
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 0 }]);
     });
@@ -174,7 +174,7 @@ describe("simulatePurchase", () => {
         },
       ];
 
-      const result = simulatePurchase(input, grosze(450_000), "cat-food");
+      const result = simulatePurchase(input, grosze(450_000));
 
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 0 }]);
     });
@@ -208,7 +208,7 @@ describe("simulatePurchase", () => {
       // to jest właśnie test na to, że liczymy je niezależnie.
       // g1: ceil(100000 / 3287.67) = ceil(30.42) = 31
       // g2: ceil(80000 / 2762.43) = ceil(28.96) = 29
-      const result = simulatePurchase(input, grosze(450_000), "cat-food");
+      const result = simulatePurchase(input, grosze(450_000));
 
       expect(result.goalImpacts).toEqual(
         expect.arrayContaining([

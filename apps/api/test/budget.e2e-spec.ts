@@ -330,8 +330,24 @@ describe("Budget (e2e)", () => {
       expect(await db.transaction.count()).toBe(0);
     });
 
-    it("wymaga kategorii i dodatniej kwoty w groszach", async () => {
-      await http().post("/budget/simulate").set(as(me)).send({ amount: 10_000 }).expect(400);
+    it("bez kategorii: ten sam wynik — kategoria nie wpływa dziś na odpowiedź", async () => {
+      await seedTypicalUser(me);
+
+      const withCategory = await http()
+        .post("/budget/simulate")
+        .set(as(me))
+        .send({ amount: 10_000, categoryId })
+        .expect(200);
+      const without = await http()
+        .post("/budget/simulate")
+        .set(as(me))
+        .send({ amount: 10_000 })
+        .expect(200);
+
+      expect(without.body).toEqual(withCategory.body);
+    });
+
+    it("wymaga dodatniej kwoty w groszach", async () => {
       await http().post("/budget/simulate").set(as(me)).send({ amount: 0, categoryId }).expect(400);
       await http()
         .post("/budget/simulate")

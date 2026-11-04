@@ -60,7 +60,7 @@ export class BudgetService {
     await this.refs.assertCategory(userId, request.categoryId);
     const input = assembleBudgetInput(await this.snapshot(userId));
     const before = calculateAvailableBalance(input);
-    const result = simulatePurchase(input, grosze(request.amount), request.categoryId);
+    const result = simulatePurchase(input, grosze(request.amount));
     return {
       canAfford: result.canAfford,
       riskLevel: result.riskLevel,

@@ -9,11 +9,14 @@ import {
 const CATEGORY_ID = "01a0cf55-89a0-7159-b809-6b5abf846e15";
 
 describe("simulatePurchaseRequestSchema", () => {
-  it("wymaga dodatniej kwoty w groszach i kategorii", () => {
+  it("wymaga dodatniej kwoty w groszach; kategoria opcjonalna (nie zmienia wyniku)", () => {
     expect(
       simulatePurchaseRequestSchema.safeParse({ amount: 10_000, categoryId: CATEGORY_ID }).success,
     ).toBe(true);
-    expect(simulatePurchaseRequestSchema.safeParse({ amount: 10_000 }).success).toBe(false);
+    expect(simulatePurchaseRequestSchema.safeParse({ amount: 10_000 }).success).toBe(true);
+    expect(
+      simulatePurchaseRequestSchema.safeParse({ amount: 10_000, categoryId: "jedzenie" }).success,
+    ).toBe(false);
     expect(
       simulatePurchaseRequestSchema.safeParse({ amount: 0, categoryId: CATEGORY_ID }).success,
     ).toBe(false);

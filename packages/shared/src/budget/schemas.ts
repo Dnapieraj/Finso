@@ -46,7 +46,8 @@ export const budgetSummarySchema = z.object({
 /** Body `POST /budget/simulate`. Kategoria jak w specyfikacji: "kwota i kategoria przed zakupem". */
 export const simulatePurchaseRequestSchema = z.object({
   amount: amountSchema,
-  categoryId: idSchema,
+  /** Opcjonalna: dziś nie zmienia wyniku (brak limitów per kategoria w Fazie 1). */
+  categoryId: idSchema.optional(),
 });
 
 /** Odpowiedź `POST /budget/simulate`. */
