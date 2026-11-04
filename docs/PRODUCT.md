@@ -545,7 +545,7 @@ Wcześniej zrobione: ekrany otwarte linkiem (Historia, edycja wydatku,
     wersję appki, starsza wersja pokazuje ekran z przyciskiem do sklepu.
     Musi być w pierwszej opublikowanej wersji — wersji już zainstalowanych
     w telefonach nie da się później tego nauczyć
-13. **Testy e2e mobile.** Przed nimi: nowy development build Androida
+13. **ZROBIONE** (4.11.2026): Maestro, 6 scenariuszy w `apps/mobile/e2e`, nowy development build, „Brak połączenia” sprawdzone na emulatorze (tryb samolotowy i powrót sieci); **wibracje do sprawdzenia na prawdziwym telefonie** (emulator nie ma silniczka). **Testy e2e mobile.** Przed nimi: nowy development build Androida
     (`expo-haptics` i NetInfo z punktu 5 to moduły natywne) i sprawdzenie
     punktu 5 na urządzeniu — wibracje (zapis, błąd, wyłączenie
     w Ustawieniach) i „Brak połączenia” (tryb samolotowy, powrót sieci,
@@ -927,3 +927,21 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - **Nowy wydatek: dwa nagłówki („Jednym tapnięciem”, „Tapnij kategorię, aby
   zapisać.”) zamiast nagłówka i dwóch podpowiedzi.**
 - **Bez atrap logowania przez Apple/Google** na ekranach logowania i rejestracji — przycisk, który tylko mówi „wkrótce”, to zbędny element; wróci z prawdziwą implementacją (etap 8).
+
+### 4.11.2026 — punkt 13, testy e2e mobile
+
+- **Maestro** (CLI 2.11, osobny program, nie paczka npm): scenariusze YAML klikają
+  po tekście, sami czekają na ekran i radzą sobie z klawiaturą — pisane po
+  polsku tak, jak widzi je użytkownik. Detox odrzucony: wymaga zmian w natywnym
+  projekcie i własnego buildu testowego.
+- **Sześć scenariuszy najważniejszych ścieżek**: logowanie, szybkie dodanie
+  wydatku, symulator, nowy cel, „Brak połączenia” (prawdziwy tryb samolotowy)
+  i nawigacja wstecz. Każdy sprząta po sobie (`Cofnij`, usunięcie celu) —
+  konto demo zostaje bez zmian.
+- **Nie w CI.** Emulator Androida w GitHub Actions to długi build natywny i dużo
+  minut (repo prywatne = płatne po limicie) — decyzja kosztowa dla Ciebie.
+  Uruchamiane lokalnie: `pnpm --filter mobile test:e2e` (README mobile).
+- **`pnpm --filter api db:demo`** zakłada konto demo na świeżej bazie
+  (wcześniej istniało tylko ręcznie w mojej bazie) — e2e i przeglądy działają
+  od zera. Istniejącego konta nie rusza; blokada dla `NODE_ENV=production`.
+- Telemetria Maestro wyłączona w skrypcie (`MAESTRO_CLI_NO_ANALYTICS`).
