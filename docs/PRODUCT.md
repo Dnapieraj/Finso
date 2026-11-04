@@ -900,3 +900,29 @@ pewne; w razie wątpliwości opcja bezpieczniejsza dla użytkownika.
   jeszcze identyfikatora appki** (powstaje przy pierwszym zgłoszeniu, etap 8) —
   do tego czasu iOS otwiera stronę finso.app; adres do podmiany
   w `apps/mobile/src/update/store-url.ts`.
+
+### 4.11.2026 — przegląd wyglądu: prościej, spokojniej, bez zbędnych elementów
+
+Polecenie: appka prosta, przyjemna dla oka, nowoczesna, bez rzeczy, które
+nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
+
+- **Strzałka wstecz w nagłówku** (nad tytułem) zamiast zielonego „Wstecz” na
+  dole ~20 ekranów — tam, gdzie ludzie jej szukają, i poza treścią.
+- **Start bez karty „Cele”** — cele mają własną zakładkę na dolnym pasku;
+  Start odpowiada na „czy mnie stać” i pokazuje ostatnie wydatki.
+- **Start bez karty „Potwierdź adres e-mail”** — prośba zostaje w Ustawieniach
+  (status konta). Potwierdzenie i tak niczego nie blokuje.
+- **Wydatek w dwóch linijkach**: notatka (albo kategoria) i „kategoria · data”,
+  zamiast trzech.
+- **Symulator: sama kwota.** Silnik nie używał kategorii (Faza 1 nie ma limitów
+  per kategoria), więc jej wybór był pustym krokiem — parametr usunięty
+  z `simulatePurchase`, w API opcjonalny. „Zapisz jako wydatek” otwiera szybkie
+  dodawanie z wpisaną kwotą: jedno tapnięcie kategorii zapisuje.
+- **Historia: pusty okres to jeden komunikat** — bez pustego wykresu,
+  filtrów kategorii i drugiego „Brak wydatków”.
+- **Cele: „X z Y · do miesiąca rok” w jednej linii.**
+- **Ustawienia: „Zmień hasło” i „Potwierdź adres” w karcie Konto**, wyraźne
+  strzałki zamiast znaku „›”, biały kciuk przełączników (Android barwił go
+  własnym kolorem).
+- **Nowy wydatek: dwa nagłówki („Jednym tapnięciem”, „Tapnij kategorię, aby
+  zapisać.”) zamiast nagłówka i dwóch podpowiedzi.**
