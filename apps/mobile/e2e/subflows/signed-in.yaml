@@ -1,0 +1,17 @@
+# Appka otwarta na Starcie, zalogowana kontem demo (loguje, jeśli trzeba).
+appId: app.finso
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Nie pamiętam hasła"
+    commands:
+      - tapOn: "E-mail"
+      - inputText: "demo@finso.app"
+      - tapOn: "Hasło"
+      - inputText: "demo-haslo-123"
+      - hideKeyboard
+      - tapOn:
+          text: "Zaloguj się"
+          index: 1
+- assertVisible: "Twój budżet"

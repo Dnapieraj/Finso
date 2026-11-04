@@ -1,0 +1,25 @@
+# Nowy cel (termin: grudzień przyszłego roku), widoczny na liście, potem usunięty.
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- tapOn:
+    text: "Cele"
+    index: -1
+- assertVisible: "Dodaj cel"
+- tapOn: "Dodaj cel"
+- tapOn: "Nazwa"
+- inputText: "Test e2e"
+- tapOn: "Kwota docelowa"
+- inputText: "1200"
+- hideKeyboard
+- tapOn: "Grudzień"
+- tapOn: "Następny rok"
+- tapOn: "Zapisz"
+- scrollUntilVisible:
+    element: "Test e2e"
+- tapOn: "Test e2e"
+- scrollUntilVisible:
+    element: "Usuń cel"
+- tapOn: "Usuń cel"
+- assertVisible: "Dodaj cel"
+- assertNotVisible: "Test e2e"

@@ -1,0 +1,8 @@
+# Wylogowanie z dowolnego miejsca appki: zakładka Ustawienia → Wyloguj się.
+appId: app.finso
+---
+- tapOn: "Ustawienia"
+- scrollUntilVisible:
+    element: "Wyloguj się"
+- tapOn: "Wyloguj się"
+- assertVisible: "Zaloguj się"

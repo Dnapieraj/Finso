@@ -1,0 +1,16 @@
+# Podekran z Ustawień i powrót strzałką „Wstecz” w nagłówku; Historia ze Startu.
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- tapOn: "Ustawienia"
+- tapOn: "Szablony wydatków"
+- assertVisible: "Dodaj szablon"
+- tapOn: "Wstecz"
+- assertVisible: "Dzień wypłaty"
+- tapOn: "Start"
+- scrollUntilVisible:
+    element: "Wszystkie wydatki"
+- tapOn: "Wszystkie wydatki"
+- assertVisible: "Historia wydatków"
+- tapOn: "Wstecz"
+- assertVisible: "Twój budżet"

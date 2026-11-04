@@ -85,8 +85,9 @@ Tylko do lokalnego Postgresa z Dockera — to nie są konta na żadnym serwerze.
 | `potwierdzenia@finso.app` | `potwierdzenia-haslo-1` | Wypłata i czynsz 4. dnia miesiąca — karta „Do potwierdzenia”, push |
 | `przeglad0@finso.app`     | `przeglad-haslo-1`      | 400 wydatków — test wydajności historii                            |
 
-`pnpm --filter api db:seed` **ich nie tworzy** (seed dodaje tylko kategorie systemowe) — powstały
-ręcznie w bazie dewelopera. Na świeżej bazie załóż konto w aplikacji („Nie masz konta? Załóż je”).
+`pnpm --filter api db:seed` dodaje tylko kategorie systemowe. Konto demo na świeżej bazie zakłada
+`pnpm --filter api db:demo` (wypłata 6500 zł 10. dnia, bez wydatków; istniejącego nie rusza).
+Pozostałe konta powstały ręcznie w bazie dewelopera.
 
 ## Jak to jest zbudowane
 
@@ -126,6 +127,21 @@ Testy ekranów renderują prawdziwe drzewo `app/` przez `renderApp` (`__tests__/
 klientem API i secure-store w pamięci. Ścieżkę sprawdzasz przez `expect(app).toHavePathname(...)`,
 a zakładki przez `getTab("Ustawienia")`.
 CI dodatkowo buduje bundle Androida (`expo export`), żeby wyłapać błędy Metro, których testy nie widzą.
+
+### Testy e2e (Maestro, na emulatorze)
+
+Scenariusze w `e2e/*.yaml` klikają po prawdziwej appce: logowanie, szybkie dodanie wydatku
+(z „Cofnij”), symulator, cele, „Brak połączenia” (tryb samolotowy) i nawigacja wstecz.
+Konto demo zostaje po nich bez zmian.
+
+1. Zainstaluj [Maestro CLI](https://maestro.mobile.dev) (wymaga Javy 17+, np. JBR z Android Studio:
+   `JAVA_HOME="C:/Program Files/Android/Android Studio/jbr"`).
+2. Uruchom emulator z development buildem, API (`pnpm --filter api start:dev`), Metro
+   (`pnpm --filter mobile start`), a na świeżej bazie `pnpm --filter api db:seed` i `pnpm --filter api db:demo`.
+3. `pnpm --filter mobile test:e2e` — gdy `maestro` nie jest w `PATH`, podaj ścieżkę w `MAESTRO_BIN`.
+
+Telemetria Maestro jest wyłączona (`MAESTRO_CLI_NO_ANALYTICS`). Scenariusze nie działają w CI:
+emulator Androida w GitHub Actions to płatne minuty i długi build — decyzja w `docs/PRODUCT.md`.
 
 ## Uwagi
 

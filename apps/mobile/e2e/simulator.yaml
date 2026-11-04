@@ -1,0 +1,16 @@
+# „Czy mnie stać?”: sama kwota daje odpowiedź; „Zapisz jako wydatek” otwiera
+# szybkie dodawanie z wpisaną kwotą (bez zapisu — wracamy).
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- tapOn: "Symulator"
+- assertVisible: "Czy mnie stać?"
+- tapOn: "Kwota"
+- inputText: "100"
+- hideKeyboard
+- assertVisible: "Stać cię|Stać cię, ale będzie ciasno|Nie stać cię teraz"
+- tapOn: "Zapisz jako wydatek"
+- assertVisible: "Nowy wydatek"
+- assertVisible: "100"
+- tapOn: "Anuluj"
+- assertVisible: "Czy mnie stać?"

@@ -1,0 +1,17 @@
+# Szybkie dodanie wydatku w trzech ruchach: „+”, kwota, kategoria. „Cofnij”
+# na końcu — konto demo zostaje bez zmian.
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- tapOn: "Dodaj wydatek"
+- assertVisible: "Nowy wydatek"
+- inputText: "12,50"
+- hideKeyboard
+# The tile in the category grid — the quick picks above may also say „Jedzenie”.
+- tapOn:
+    text: "Jedzenie"
+    index: -1
+- assertVisible: "Twój budżet"
+- assertVisible: "Zapisano 12,50.zł . Jedzenie"
+- tapOn: "Cofnij"
+- assertNotVisible: "Zapisano 12,50.zł . Jedzenie"

@@ -1,0 +1,15 @@
+# Wylogowanie i logowanie kontem demo.
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- runFlow: subflows/logout.yaml
+- tapOn: "E-mail"
+- inputText: "demo@finso.app"
+- tapOn: "Hasło"
+- inputText: "demo-haslo-123"
+- hideKeyboard
+- tapOn:
+    text: "Zaloguj się"
+    index: 1
+- assertVisible: "Twój budżet"
+- assertVisible: "Ostatnie wydatki"

@@ -1,0 +1,13 @@
+# Bez internetu: pasek „Brak połączenia”; po powrocie sieci znika sam.
+appId: app.finso
+---
+- runFlow: subflows/signed-in.yaml
+- setAirplaneMode: enabled
+- extendedWaitUntil:
+    visible: "Brak połączenia"
+    timeout: 15000
+- setAirplaneMode: disabled
+- extendedWaitUntil:
+    notVisible: "Brak połączenia"
+    timeout: 30000
+- assertVisible: "Twój budżet"
