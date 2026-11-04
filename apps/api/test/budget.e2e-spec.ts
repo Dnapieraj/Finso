@@ -137,6 +137,64 @@ describe("Budget (e2e)", () => {
     });
   });
 
+  describe("dochód nieregularny: prognoza", () => {
+    /** Zlecenia od czerwca: czerwiec 5000, lipiec 3000, sierpień 6000 zł. */
+    async function seedFreelancer() {
+      const source = idOf(
+        await post(me, "/income/sources", { name: "Zlecenia", kind: "IRREGULAR" }),
+      );
+      // Źródło „istnieje” od czerwca — pełne okresy czerwiec–sierpień.
+      await db.incomeSource.update({
+        where: { id: source },
+        data: { createdAt: new Date("2026-06-01T08:00:00Z") },
+      });
+      for (const [date, amount] of [
+        ["2026-06-12", 500_000],
+        ["2026-07-20", 300_000],
+        ["2026-08-05", 600_000],
+      ] as const) {
+        await post(me, "/income/entries", { incomeSourceId: source, amount, date });
+      }
+      return source;
+    }
+
+    it("budżet z ostrożnej prognozy, pokazanej wprost z zakresem", async () => {
+      const source = await seedFreelancer();
+
+      const summary = await current();
+
+      expect(summary.breakdown.periodIncome).toBe(300_000);
+      expect(summary.incomeForecasts).toEqual([
+        {
+          incomeSourceId: source,
+          name: "Zlecenia",
+          forecast: 300_000,
+          periods: 3,
+          low: 300_000,
+          high: 600_000,
+          received: 0,
+          notYetReceived: 300_000,
+        },
+      ]);
+    });
+
+    it("źródło dodane niedawno: za mało historii — liczy się tylko to, co wpłynęło", async () => {
+      const source = idOf(
+        await post(me, "/income/sources", { name: "Zlecenia", kind: "IRREGULAR" }),
+      );
+      await post(me, "/income/entries", {
+        incomeSourceId: source,
+        amount: 200_000,
+        date: "2026-09-05",
+      });
+
+      const summary = await current();
+
+      expect(summary.breakdown.periodIncome).toBe(200_000);
+      expect(summary.incomeForecasts).toEqual([]);
+    });
+  });
+
   describe("GET /budget/current", () => {
     it("nowy użytkownik: zerowy dochód, zero do wydania", async () => {
       const summary = await current();
@@ -148,6 +206,7 @@ describe("Budget (e2e)", () => {
         dailyAllowance: 0,
         breakdown: { periodIncome: 0, fixedCommitments: 0, goalContributions: 0, alreadySpent: 0 },
         awaitingIncome: 0,
+        incomeForecasts: [],
         fixedCommitments: [],
         goalContributions: [],
         today: { limit: 0, spent: 0, left: 0, carriedFromYesterday: 0, nextDays: 0 },

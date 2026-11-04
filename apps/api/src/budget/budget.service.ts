@@ -12,6 +12,7 @@ import {
   calculateAvailableBalance,
   currentBudgetPeriod,
   grosze,
+  incomeForecasts,
   simulatePurchase,
   todayInTimeZone,
 } from "@vireo/shared";
@@ -50,6 +51,7 @@ export class BudgetService {
       dailyAllowance: result.dailyAllowance,
       breakdown: result.breakdown,
       awaitingIncome: awaitingIncome(snapshot),
+      incomeForecasts: incomeForecasts(snapshot),
       fixedCommitments: input.remainingFixedCommitments,
       goalContributions: input.goalContributions,
       today: result.today,
@@ -126,9 +128,12 @@ export class BudgetService {
         expectedAmount: source.expectedAmount === null ? null : grosze(source.expectedAmount),
         isActive: source.isActive,
         schedule: source.recurringRule ? toSchedule(source.recurringRule) : null,
-        ...(source.recurringRule && {
-          trackedSince: todayInTimeZone(source.recurringRule.createdAt, user.timezone),
-        }),
+        // Od dnia dodania harmonogramu, a bez niego (dochód nieregularny) — źródła:
+        // wcześniejsze okresy nie są „miesiącami bez wpływów”, tylko sprzed Finso.
+        trackedSince: todayInTimeZone(
+          source.recurringRule?.createdAt ?? source.createdAt,
+          user.timezone,
+        ),
       })),
       incomeEntries: entries.map((entry) => ({
         incomeSourceId: entry.incomeSourceId,
