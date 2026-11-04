@@ -19,6 +19,7 @@ export * from "./budget/confirmations.js";
 export * from "./budget/rule-start-date.js";
 export * from "./budget/rebase-rule-starts.js";
 export * from "./budget/subscriptions.js";
+export * from "./budget/forecast-irregular-income.js";
 export * from "./budget/schemas.js";
 export * from "./common/schemas.js";
 export * from "./auth/schemas.js";
@@ -33,5 +34,3 @@ export * from "./confirmations/schemas.js";
 export * from "./expense-templates/schemas.js";
 export * from "./subscriptions/schemas.js";
 export * from "./export/schemas.js";
-
-// Jeszcze nie zbudowane (Faza 2): forecastIrregularIncome.

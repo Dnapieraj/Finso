@@ -25,6 +25,22 @@ export const budgetSummarySchema = z.object({
    */
   awaitingIncome: amountOutput,
   /**
+   * Prognozy dochodów nieregularnych w tym okresie (już wliczone do
+   * breakdown.periodIncome) — appka mówi wprost, że to prognoza i z czego.
+   */
+  incomeForecasts: z.array(
+    z.object({
+      incomeSourceId: z.string(),
+      name: z.string(),
+      forecast: amountOutput,
+      periods: z.number().int(),
+      low: amountOutput,
+      high: amountOutput,
+      received: amountOutput,
+      notYetReceived: amountOutput,
+    }),
+  ),
+  /**
    * Nieopłacone jeszcze stałe zobowiązania — pozycje składające się na
    * breakdown.fixedCommitments; `overdue` = zaległe z poprzednich okresów.
    */

@@ -41,6 +41,7 @@ describe("budgetSummarySchema", () => {
         alreadySpent: 50_000,
       },
       awaitingIncome: 0,
+      incomeForecasts: [],
       fixedCommitments: [],
       goalContributions: [],
       today: { limit: -6_250, spent: 0, left: -6_250, carriedFromYesterday: 0, nextDays: -7_143 },

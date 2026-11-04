@@ -1,6 +1,7 @@
 import { addDays, type IsoDate } from "../date.js";
 import { grosze, type Grosze } from "../money.js";
 import { calculateGoalContribution } from "./calculate-goal-contribution.js";
+import { incomeForecasts } from "./forecast-irregular-income.js";
 import { currentBudgetPeriod, periodsUntil } from "./period.js";
 import { openOccurrences, type ConfirmationStatus } from "./occurrences.js";
 import type { RecurrenceSchedule } from "./recurrence.js";
@@ -100,7 +101,9 @@ export interface BudgetSnapshot {
  *   raz na okres, jeśli nic jeszcze nie wpłynęło;
  * - zaległe terminy wpływów z poprzednich okresów się NIE liczą: pieniądze,
  *   których nie ma od miesiąca, nie są do wydania, dopóki nie wpłyną;
- * - IRREGULAR: tylko potwierdzone (dopóki nie ma forecastIrregularIncome).
+ * - aktywne IRREGULAR z prognozą ({@link incomeForecasts}): dodatkowo to,
+ *   czego z ostrożnej prognozy jeszcze nie ma — razem nigdy mniej niż wpłynęło;
+ *   bez prognozy (za mało historii) — tylko potwierdzone.
  *
  * **remainingFixedCommitments** — per aktywna reguła EXPENSE:
  * `expectedAmount × otwarte terminy`, osobno zaległe z poprzednich okresów
@@ -147,7 +150,7 @@ function periodIncome(
   confirmedInPeriod: BudgetIncomeEntry[],
   period: BudgetPeriod,
 ): Grosze {
-  let total = 0;
+  let total = incomeForecasts(snapshot).reduce((sum, line) => sum + line.notYetReceived, 0);
   for (const source of snapshot.incomeSources) {
     const received = confirmedInPeriod.filter((entry) => entry.incomeSourceId === source.id);
     total += sumAmounts(received);
