@@ -1,10 +1,10 @@
-import { Linking, Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 
 import { Button } from "../../../../src/components/button";
 import { LoadError, Skeleton } from "../../../../src/components/query-states";
 import { Screen } from "../../../../src/components/screen";
 import { pl } from "../../../../src/messages/pl";
-import type { ReminderPreferences } from "../../../../src/notifications/plan";
+import { REMINDER_HOURS, type ReminderPreferences } from "../../../../src/notifications/plan";
 import {
   requestNotificationPermission,
   useNotificationPermission,
@@ -57,11 +57,11 @@ export default function NotificationSettings() {
   const unavailable = permission.data === "unavailable";
   const prefs = preferences.data;
 
-  async function change(key: keyof ReminderPreferences, value: boolean) {
+  async function change(key: Exclude<keyof ReminderPreferences, "hour">, value: boolean) {
     if (value && permission.data === "undetermined") {
       if ((await requestNotificationPermission()) !== "granted") return;
     }
-    save.mutate({ [key]: value });
+    save.save({ [key]: value });
   }
 
   return (
@@ -95,7 +95,98 @@ export default function NotificationSettings() {
           onChange={(value) => void change("showAmounts", value)}
         />
       </View>
-      <Text className="font-sans text-sm text-muted-foreground">{t.time}</Text>
+      <HourStepper
+        hour={prefs.hour}
+        disabled={blocked || unavailable}
+        onStep={(step) => {
+          // From the cached value, not this render: quick taps add up.
+          save.save((current) => ({
+            hour: Math.min(REMINDER_HOURS.max, Math.max(REMINDER_HOURS.min, current.hour + step)),
+          }));
+        }}
+      />
+      <Text className="font-sans text-sm text-muted-foreground">
+        {t.time(t.hourValue(prefs.hour))}
+      </Text>
     </Screen>
+  );
+}
+
+/**
+ * The hour every reminder comes at, an hour at a time. One adjustable
+ * element for screen readers (swipe up/down), two buttons for touch.
+ */
+function HourStepper({
+  hour,
+  disabled,
+  onStep,
+}: {
+  hour: number;
+  disabled: boolean;
+  onStep: (step: 1 | -1) => void;
+}) {
+  const canEarlier = !disabled && hour > REMINDER_HOURS.min;
+  const canLater = !disabled && hour < REMINDER_HOURS.max;
+  return (
+    <View className="flex-row items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3">
+      <View
+        accessible
+        accessibilityRole="adjustable"
+        accessibilityLabel={t.hour}
+        accessibilityValue={{ text: t.hourValue(hour) }}
+        accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+        onAccessibilityAction={(event) => {
+          if (event.nativeEvent.actionName === "increment" && canLater) onStep(1);
+          if (event.nativeEvent.actionName === "decrement" && canEarlier) onStep(-1);
+        }}
+        className="shrink gap-0.5"
+      >
+        <Text className="font-sans-semibold text-base text-card-foreground">{t.hour}</Text>
+        <Text className="font-sans text-base text-muted-foreground">{t.hourValue(hour)}</Text>
+      </View>
+      <View className="flex-row gap-2">
+        <StepButton
+          label={t.earlier}
+          symbol="−"
+          enabled={canEarlier}
+          onPress={() => {
+            onStep(-1);
+          }}
+        />
+        <StepButton
+          label={t.later}
+          symbol="+"
+          enabled={canLater}
+          onPress={() => {
+            onStep(1);
+          }}
+        />
+      </View>
+    </View>
+  );
+}
+
+function StepButton({
+  label,
+  symbol,
+  enabled,
+  onPress,
+}: {
+  label: string;
+  symbol: string;
+  enabled: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !enabled }}
+      disabled={!enabled}
+      onPress={onPress}
+      className={`h-12 w-12 items-center justify-center rounded-full border border-input active:opacity-70 ${enabled ? "" : "opacity-40"}`}
+    >
+      <Text className="font-sans-semibold text-xl text-foreground">{symbol}</Text>
+    </Pressable>
   );
 }

@@ -22,7 +22,6 @@ const HORIZON_DAYS = 30;
 const OVERDUE_DAYS = 7;
 /** iOS keeps at most 64 pending notifications and drops the rest silently. */
 const MAX_REMINDERS = 60;
-const REMINDER_HOUR = 9;
 
 /** Which reminders the user wants; stored on the device, not the account. */
 export interface ReminderPreferences {
@@ -31,7 +30,12 @@ export interface ReminderPreferences {
   overdue: boolean;
   /** Off by default: notifications show on the lock screen. */
   showAmounts: boolean;
+  /** Hour of the day (device time) every reminder comes at; see REMINDER_HOURS. */
+  hour: number;
 }
+
+/** The hours a user can choose: early morning to late evening, never at night. */
+export const REMINDER_HOURS = { min: 6, max: 22, default: 9 } as const;
 
 /** One local notification to schedule. */
 export interface Reminder {
@@ -42,15 +46,15 @@ export interface Reminder {
   body: string;
 }
 
-/** 9:00 in the device's time zone on a calendar day. */
-function reminderTime(date: IsoDate): Date {
+/** The chosen hour in the device's time zone on a calendar day. */
+function reminderTime(date: IsoDate, hour: number): Date {
   const [year, month, day] = date.split("-").map(Number);
-  return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1, REMINDER_HOUR, 0);
+  return new Date(year ?? 0, (month ?? 1) - 1, day ?? 1, hour, 0);
 }
 
 /**
  * Local reminders for the next 30 days: income and fixed payments on their
- * day at 9:00, and a daily nudge for a week while answers are missing.
+ * day at the chosen hour (9:00 by default), and a daily nudge for a week while answers are missing.
  *
  * Today's due date gets a reminder only while it still waits for an answer
  * (and not after „Jeszcze nie”), and nothing is planned in the past. At most
@@ -91,7 +95,7 @@ export function planReminders({
   ) {
     for (const date of occurrencesInPeriod(schedule, horizon)) {
       if (date === start && !askedToday(id)) continue;
-      add({ id: `${kind}:${id}:${date}`, at: reminderTime(date), title, body });
+      add({ id: `${kind}:${id}:${date}`, at: reminderTime(date, preferences.hour), title, body });
     }
   }
 
@@ -134,7 +138,12 @@ export function planReminders({
     const body = t.overdue(due.length, plural(due.length, t.items));
     for (let day = 1; day <= OVERDUE_DAYS; day += 1) {
       const date = addDays(start, day);
-      add({ id: `overdue:${date}`, at: reminderTime(date), title: t.overdueTitle, body });
+      add({
+        id: `overdue:${date}`,
+        at: reminderTime(date, preferences.hour),
+        title: t.overdueTitle,
+        body,
+      });
     }
   }
 

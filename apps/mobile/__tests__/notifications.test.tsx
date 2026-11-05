@@ -361,6 +361,46 @@ describe("Ustawienia → Powiadomienia", () => {
 
     expect(await screen.findByText("Przypomnienia przychodzą około 9:00.")).toBeOnTheScreen();
   });
+
+  it("godzina: później przesuwa plan i jest pamiętana na urządzeniu", async () => {
+    setPermission("granted");
+    await openNotificationSettings();
+    expect(await screen.findByText("9:00")).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole("button", { name: "Godzinę później" }));
+
+    expect(await screen.findByText("Przypomnienia przychodzą około 10:00.")).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(scheduled().map((n) => n.trigger.date)).toEqual([
+        new Date(2026, 9, 5, 10, 0),
+        new Date(2026, 9, 10, 10, 0),
+      ]);
+    });
+
+    await screen.unmount();
+    await openNotificationSettings();
+    expect(await screen.findByText("10:00")).toBeOnTheScreen();
+  });
+
+  it("godzina: od 6:00 do 22:00 — dalej przyciski są nieaktywne", async () => {
+    setPermission("granted");
+    await openNotificationSettings();
+    const earlier = await screen.findByRole("button", { name: "Godzinę wcześniej" });
+
+    for (let i = 0; i < 3; i += 1) await fireEvent.press(earlier);
+
+    expect(await screen.findByText("6:00")).toBeOnTheScreen();
+    expect(earlier).toBeDisabled();
+  });
+
+  it("godzina: czytnik ekranu słyszy ją przy przyciskach", async () => {
+    setPermission("granted");
+    await openNotificationSettings();
+
+    expect(
+      await screen.findByRole("adjustable", { name: "Godzina przypomnień" }),
+    ).toHaveAccessibilityValue({ text: "9:00" });
+  });
 });
 
 describe("Android: przed pierwszym pytaniem system mówi „denied”", () => {

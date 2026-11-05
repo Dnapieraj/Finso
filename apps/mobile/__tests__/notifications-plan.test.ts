@@ -10,6 +10,7 @@ const DEFAULTS: ReminderPreferences = {
   payments: true,
   overdue: true,
   showAmounts: false,
+  hour: 9,
 };
 const WITH_AMOUNTS: ReminderPreferences = { ...DEFAULTS, showAmounts: true };
 
@@ -227,4 +228,28 @@ it("najwyżej 60 przypomnień, najbliższe pierwsze (iOS trzyma 64 zaplanowane)"
   expect(reminders).toHaveLength(60);
   const times = reminders.map((r) => r.at.getTime());
   expect(times).toEqual([...times].sort((a, b) => a - b));
+});
+
+describe("godzina przypomnień", () => {
+  it("o wybranej godzinie, np. 19:00", () => {
+    expect(plan({ preferences: { ...DEFAULTS, hour: 19 } })[0]?.at).toEqual(
+      new Date(2026, 9, 5, 19, 0),
+    );
+  });
+
+  it("dzisiejszy termin o godzinie, która już minęła — bez przypomnienia na dziś", () => {
+    // 28.09, 8:00; przypomnienie o 7:00 dzisiaj byłoby w przeszłości.
+    const dueToday = [testDue({ id: rent.id, occurrenceDate: "2026-09-28", askToday: true })];
+    const todayRent = { ...rent, dayOfMonth: 28 };
+
+    const at7 = plan({ rules: [todayRent], due: dueToday, preferences: { ...DEFAULTS, hour: 7 } });
+    const at10 = plan({
+      rules: [todayRent],
+      due: dueToday,
+      preferences: { ...DEFAULTS, hour: 10 },
+    });
+
+    expect(at7.some((r) => r.id.endsWith(":2026-09-28"))).toBe(false);
+    expect(at10.some((r) => r.id === `payment:${rent.id}:2026-09-28`)).toBe(true);
+  });
 });

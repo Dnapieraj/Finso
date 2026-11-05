@@ -3,7 +3,7 @@ import * as SecureStore from "expo-secure-store";
 
 import { queryClient } from "../query-client";
 import { loadNotifications } from "./native";
-import type { ReminderPreferences } from "./plan";
+import { REMINDER_HOURS, type ReminderPreferences } from "./plan";
 
 // On the device, not the account: a second phone may want other reminders.
 const PREFERENCES_KEY = "notification-preferences";
@@ -15,6 +15,7 @@ const DEFAULT_PREFERENCES: ReminderPreferences = {
   payments: true,
   overdue: true,
   showAmounts: false,
+  hour: REMINDER_HOURS.default,
 };
 
 const PREFERENCES_QUERY = ["notifications", "preferences"] as const;
@@ -35,18 +36,32 @@ export function useReminderPreferences() {
   return useQuery({ queryKey: PREFERENCES_QUERY, queryFn: readPreferences });
 }
 
-/** Saves one switch; the reminder plan follows the cache change. */
+/**
+ * Saves settings. The cache changes synchronously, before the write, so the
+ * screen shows the change at once and quick taps on the hour build on each
+ * other; the whole current state is written, so the last write wins.
+ */
 export function useSaveReminderPreferences() {
-  return useMutation({
-    mutationFn: async (change: Partial<ReminderPreferences>) => {
-      const next = { ...(await readPreferences()), ...change };
+  const mutation = useMutation({
+    mutationFn: async (next: ReminderPreferences) => {
       await SecureStore.setItemAsync(PREFERENCES_KEY, JSON.stringify(next));
       return next;
     },
-    onSuccess: (next) => {
-      queryClient.setQueryData(PREFERENCES_QUERY, next);
-    },
   });
+  return {
+    error: mutation.error,
+    save(
+      change:
+        | Partial<ReminderPreferences>
+        | ((current: ReminderPreferences) => Partial<ReminderPreferences>),
+    ) {
+      const current = queryClient.getQueryData<ReminderPreferences>(PREFERENCES_QUERY);
+      if (!current) return;
+      const next = { ...current, ...(typeof change === "function" ? change(current) : change) };
+      queryClient.setQueryData(PREFERENCES_QUERY, next);
+      mutation.mutate(next);
+    },
+  };
 }
 
 /** `unavailable`: Expo Go on Android, where notifications cannot work at all. */
