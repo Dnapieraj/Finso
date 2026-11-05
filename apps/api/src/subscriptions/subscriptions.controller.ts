@@ -6,6 +6,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Query,
   Res,
@@ -79,6 +80,13 @@ export class SubscriptionsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   dismiss(@CurrentUser() user: AuthUser, @Body() body: DismissSubscriptionDto): Promise<void> {
     return this.subscriptions.dismiss(user.id, body.key);
+  }
+
+  /** „Używam” — appka na kilka miesięcy przestaje pytać, czy subskrypcja jest potrzebna. */
+  @Post(":ruleId/used")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  markUsed(@CurrentUser() user: AuthUser, @Param("ruleId") ruleId: string): Promise<void> {
+    return this.subscriptions.markUsed(user.id, ruleId);
   }
 
   @Delete("dismissals")

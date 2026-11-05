@@ -91,6 +91,8 @@ export class SubscriptionsService {
                 categoryId: rule.categoryId,
                 isSubscription: rule.isSubscription,
                 payments: paymentsByRule.get(rule.id) ?? [],
+                startDate: toIsoDate(rule.startDate),
+                usedOn: rule.subscriptionUsedOn && toIsoDate(rule.subscriptionUsedOn),
               },
             ],
       ),
@@ -131,6 +133,24 @@ export class SubscriptionsService {
       create: { userId, key },
       update: {},
     });
+  }
+
+  /**
+   * „Używam” — dzień w strefie użytkownika; pytanie wraca dopiero po kilku
+   * miesiącach. Tylko własna, aktywna subskrypcja, inaczej 404.
+   */
+  async markUsed(userId: string, ruleId: string): Promise<void> {
+    const user = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { timezone: true },
+    });
+    if (!user) throw new UnauthorizedException();
+    const today = todayInTimeZone(this.clock.now(), user.timezone);
+    const { count } = await this.db.recurringRule.updateMany({
+      where: { id: ruleId, userId, kind: "EXPENSE", isSubscription: true, isActive: true },
+      data: { subscriptionUsedOn: fromIsoDate(today) },
+    });
+    if (count === 0) throw new NotFoundException();
   }
 
   /** „Cofnij” po odrzuceniu. */

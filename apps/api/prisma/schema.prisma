@@ -175,6 +175,10 @@ model RecurringRule {
   /// „Twoje subskrypcje”, czynsz czy rata — nie.
   isSubscription Boolean @default(false)
 
+  /// Ostatnie „Używam” przy subskrypcji (dzień użytkownika). Po kilku
+  /// miesiącach bez niego appka pyta, czy subskrypcja jest jeszcze potrzebna.
+  subscriptionUsedOn DateTime? @db.Date
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

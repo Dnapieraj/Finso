@@ -161,6 +161,10 @@ describe("Subskrypcje (e2e)", () => {
           monthly: 2_300,
           yearly: 27_600,
           priceChange: null,
+          // Reguła płaci od następnego terminu — o używanie zapyta za kilka miesięcy.
+          payingSince: "2026-11-10",
+          payingMonths: 0,
+          askIfUsed: false,
         },
       ]);
       expect(result.totals.confirmed).toEqual({ count: 1, monthly: 2_300, yearly: 27_600 });
@@ -295,6 +299,41 @@ describe("Subskrypcje (e2e)", () => {
       ]);
     });
 
+    it("płacisz od 3 miesięcy bez „Używam” → pytanie; „Używam” je wycisza", async () => {
+      const rule = idOf(
+        await post("/recurring-rules", { ...netflix(subs.id), startDate: "2026-07-10" }).expect(
+          201,
+        ),
+      );
+
+      expect((await overview()).confirmed[0]).toMatchObject({
+        payingSince: "2026-07-10",
+        payingMonths: 3,
+        askIfUsed: true,
+      });
+
+      // 21.10, 0:30 w Warszawie — „Używam” zapisuje dzień użytkownika.
+      clock.set("2026-10-20T22:30:00Z");
+      await post(`/subscriptions/${rule}/used`, {}).expect(204);
+
+      expect((await overview()).confirmed[0]).toMatchObject({ askIfUsed: false });
+      const row = await db.recurringRule.findUniqueOrThrow({ where: { id: rule } });
+      expect(row.subscriptionUsedOn?.toISOString().slice(0, 10)).toBe("2026-10-21");
+    });
+
+    it("„Używam” dla zwykłej stałej płatności albo nieistniejącej → 404", async () => {
+      const rent = idOf(
+        await post("/recurring-rules", {
+          ...netflix(subs.id),
+          name: "Czynsz",
+          isSubscription: false,
+        }).expect(201),
+      );
+
+      await post(`/subscriptions/${rent}/used`, {}).expect(404);
+      await post("/subscriptions/01923b6e-0000-7000-8000-000000000999/used", {}).expect(404);
+    });
+
     it("wyłączona albo zwykła stała płatność nie jest subskrypcją", async () => {
       const rule = idOf(await post("/recurring-rules", netflix(subs.id)).expect(201));
       await post("/recurring-rules", {
@@ -345,6 +384,28 @@ describe("Subskrypcje (e2e)", () => {
   });
 
   describe("izolacja", () => {
+    it("„Używam” na cudzej subskrypcji → 404", async () => {
+      const bob = await registerUser(app);
+      const bobs = idOf(
+        await post(
+          "/recurring-rules",
+          {
+            kind: "EXPENSE",
+            name: "Netflix",
+            frequency: "MONTHLY",
+            startDate: "2026-07-10",
+            dayOfMonth: 10,
+            expectedAmount: 4_900,
+            isSubscription: true,
+          },
+          bob,
+        ).expect(201),
+      );
+
+      await post(`/subscriptions/${bobs}/used`, {}).expect(404);
+      expect((await overview(bob)).confirmed[0]).toMatchObject({ askIfUsed: true });
+    });
+
     it("wydatki, odrzucenia i potwierdzenia Boba nie dotyczą Alice", async () => {
       const bob = await registerUser(app);
       await addSpotify(bob);
