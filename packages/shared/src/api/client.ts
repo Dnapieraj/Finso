@@ -49,6 +49,11 @@ import {
   type UpdateExpenseTemplateInput,
 } from "../expense-templates/schemas.js";
 import { exportDataSchema, type ExportData } from "../export/schemas.js";
+import {
+  importResultSchema,
+  type ImportResult,
+  type ImportTransactionsInput,
+} from "../import/schemas.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import {
   subscriptionsOverviewSchema,
@@ -289,6 +294,13 @@ export interface ApiClient {
     update(id: string, input: UpdateTransactionInput): Promise<Transaction>;
     /** Suma i liczba potwierdzonych wydatków okresu wg kategorii. */
     summary(query: TransactionSummaryQuery): Promise<TransactionSummary>;
+    /** Import wyciągu z własnym kluczem idempotencji — jeden draft na jeden import. */
+    draftImport(input: ImportTransactionsInput): IdempotentDraft<ImportTransactionsInput>;
+    /**
+     * Zapisuje wydatki z wyciągu; te, które już są w Finso (ta sama data
+     * i kwota), pomija. Ponowienie z tym samym draftem zwraca pierwszy wynik.
+     */
+    importRows(draft: IdempotentDraft<ImportTransactionsInput>): Promise<ImportResult>;
   };
 }
 
@@ -613,6 +625,8 @@ export function createApiClient({
         write("PATCH", `/transactions/${encodeURIComponent(id)}`, input, transactionSchema),
       summary: (query) =>
         read(`/transactions/summary${queryString(query)}`, transactionSummarySchema),
+      draftImport: (input) => ({ input, idempotencyKey: randomUUID() }),
+      importRows: (draft) => createKeyed("/transactions/import", draft, importResultSchema),
     },
   };
 }

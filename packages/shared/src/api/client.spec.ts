@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { AuthTokens } from "../auth/schemas.js";
+import { isoDate } from "../date.js";
 import type { CompleteOnboardingRequest } from "../onboarding/schemas.js";
 import { ApiError, createApiClient, type ApiClient, type TokenStore } from "./client.js";
 
@@ -909,6 +910,28 @@ describe("createApiClient", () => {
 
       await expect(api.expenseTemplates.remove(TEMPLATE_ID)).resolves.toBeUndefined();
       expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+  });
+
+  describe("transactions import", () => {
+    it("importRows posts the rows with the draft's Idempotency-Key and returns the counts", async () => {
+      const { api, fetch } = setup({
+        "POST /transactions/import": [jsonResponse(201, { imported: 2, duplicates: 1 })],
+      });
+      const input = {
+        rows: [{ date: isoDate("2026-10-03"), amount: 4_590, note: "BIEDRONKA" }],
+      };
+      const draft = api.transactions.draftImport(input);
+
+      await expect(api.transactions.importRows(draft)).resolves.toEqual({
+        imported: 2,
+        duplicates: 1,
+      });
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual({
+        rows: [{ date: "2026-10-03", amount: 4_590, note: "BIEDRONKA" }],
+      });
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
     });
   });
 

@@ -34,5 +34,7 @@ export * from "./onboarding/schemas.js";
 export * from "./confirmations/schemas.js";
 export * from "./expense-templates/schemas.js";
 export * from "./category-limits/schemas.js";
+export * from "./import/schemas.js";
+export * from "./import/bank-csv.js";
 export * from "./subscriptions/schemas.js";
 export * from "./export/schemas.js";
