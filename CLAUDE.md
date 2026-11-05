@@ -154,6 +154,8 @@ z resztą stacku.** Zgłoś problem zamiast cichego obejścia.
   finansowe; wydatki zapisane z szablonu zostają
 - `SubscriptionDismissal` („To nie subskrypcja”): twarde usunięcie przy „Cofnij” —
   to decyzja o podpowiedzi, nie dane finansowe
+- `CategoryLimit`: twarde usunięcie — to ustawienie, nie dane finansowe; wydatki
+  w kategorii zostają. Usunięcie kategorii zabiera jej limit (Cascade)
 - Wszystkie zapytania i wyliczenia budżetu MUSZĄ pomijać rekordy usunięte/nieaktywne
 
 ### UI (mobile jako główny cel)

@@ -132,7 +132,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
     historię postępu i mogłyby zmniejszać dostępne środki w okresie wpłaty
 19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
-21. Limity na kategorie (np. jedzenie do 800 zł w okresie)
+21. Limity na kategorie (np. jedzenie do 800 zł w okresie) — **ZROBIONE** (5.11.2026), razem z podpowiedziami „chudego miesiąca”
 22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
 23. **Martwe subskrypcje** („Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś
     tego jako używane — anulować?”) — wymaga zapisu „używam / nie używam”
@@ -994,3 +994,41 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   (`assets/widget-preview.png`).
 - **iPhone: nie zrobione.** Widżet iOS to rozszerzenie WidgetKit w Swifcie,
   budowane na Macu albo przez EAS Build (konto Expo) — do Twojej decyzji.
+
+### 5.11.2026 — Faza 2: limity na kategorie i „chudy miesiąc”
+
+- **Limit = kwota na okres budżetowy** (od wypłaty do wypłaty), jeden na
+  kategorię (`CategoryLimit`, unikalne `userId + categoryId`). Ustawienie, nie
+  dane finansowe: `PUT /category-limits/:categoryId` nadpisuje (powtórzenie
+  daje to samo, więc bez klucza idempotencji), `DELETE` usuwa naprawdę,
+  usunięcie kategorii zabiera limit.
+- **Liczą się wszystkie potwierdzone wydatki okresu w kategorii** — także
+  płatności stałych zobowiązań, bo to też wydatek w tej kategorii (tak jak
+  wykres w Historii). Wydatki w koszu nie.
+- **Stan:** „Zostało X z Y · Z dziennie” (zostało i dziennie w dół, limit
+  w dół), „blisko”, gdy zostało ≤ 20% (tekst w kolorze ostrzeżenia), „Ponad
+  limit o X” (w górę). Dziennie = to, co zostało, na dni do końca okresu
+  z dzisiejszym.
+- **Limity nie zmieniają „Możesz wydać”.** To osobna granica w kategorii;
+  główną liczbą zostaje saldo okresu. Limit może więc pokazywać „zostało
+  800 zł”, gdy w całym budżecie zostało mniej — Start pokazuje oba, a
+  „Możesz wydać” jest nad limitami.
+- **Na Start karta „Limity”** tylko, gdy są ustawione; dotknięcie otwiera
+  limit. Zarządzanie: Ustawienia → Limity kategorii. Nowy limit nie
+  proponuje kategorii, które już go mają. Po każdym zapisie wydatku limity
+  odświeżają się razem z budżetem (wspólny klucz `["budget", …]`).
+- **„Chudy miesiąc” — tylko dochód nieregularny z prognozą.** Prognoza
+  zwraca teraz też `typical` (medianę). Okres jest „chudy”, gdy budżet
+  liczy z tych źródeł (więcej z: wpłynęło / prognoza) mniej niż 85%
+  zwykłego dochodu. Start mówi wprost: „Z dochodu nieregularnego liczymy
+  w tym okresie X, a zwykle wpływa Y”.
+- **Podpowiedzi cięć:** trzy kategorie o największych zwykłych wydatkach
+  zmiennych (średnia z ≤ 3 ostatnich pełnych okresów po dodaniu do Finso,
+  bez płatności zobowiązań, „Wydatków przed Finso” i kategorii poniżej
+  50 zł). Cięcie proporcjonalne do udziału w niedoborze, **najwyżej 30%**
+  (więcej w miesiąc to nierealny plan), propozycja w dół do pełnych 10 zł.
+  „Ustaw limit” zapisuje ją jednym tapnięciem; kategoria z limitem już
+  niższym niż podpowiedź nie jest podpowiadana. Bez historii — samo
+  ostrzeżenie.
+- Plan Free/Plus: limity nie są jeszcze ograniczane (jak reszta limitów
+  planu — do etapu płatności).
