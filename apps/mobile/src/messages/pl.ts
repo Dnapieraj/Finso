@@ -85,6 +85,19 @@ export const pl = {
       `Na ${email} wyślemy kod, gdy zapomnisz hasła. Wpisz kod z e-maila, żeby sprawdzić, że wiadomości dochodzą.`,
     open: "Potwierdź adres",
   },
+  changeEmail: {
+    title: "Zmień adres e-mail",
+    intro: (email: string) =>
+      `Obecny adres: ${email}. Kod wyślemy na nowy adres — dopiero on zmieni adres konta.`,
+    newEmail: "Nowy adres e-mail",
+    password: "Hasło",
+    send: "Wyślij kod",
+    sending: "Wysyłanie…",
+    codeSent: (email: string) => `Kod wysłaliśmy na ${email}. Wpisz go poniżej.`,
+    submit: "Zmień adres",
+    submitting: "Zapisywanie…",
+    otherAddress: "Inny adres",
+  },
   changePassword: {
     title: "Zmień hasło",
     current: "Obecne hasło",
@@ -808,6 +821,7 @@ export const pl = {
   apiErrors: {
     invalidCredentials: "Nieprawidłowy e-mail lub hasło.",
     emailTaken: "Konto z tym adresem e-mail już istnieje.",
+    sameEmail: "To jest już adres Twojego konta.",
     wrongPassword: "Nieprawidłowe hasło.",
     invalidCode: "Kod jest nieprawidłowy albo wygasł. Sprawdź go albo wyślij nowy.",
     mailNotSent: "Nie udało się wysłać e-maila. Spróbuj za chwilę.",

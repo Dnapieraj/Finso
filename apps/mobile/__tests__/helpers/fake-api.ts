@@ -34,6 +34,7 @@ import type {
   UpdateTransactionInput,
   ConfirmSubscriptionInput,
   ChangePasswordInput,
+  ChangeEmailInput,
   ResetPasswordInput,
   ConfirmedSubscriptionOutput,
   DetectedSubscriptionOutput,
@@ -278,6 +279,8 @@ function inRange(expense: Transaction, from?: string, to?: string): boolean {
 }
 /** Settings of the account; a new account starts before onboarding. */
 let account: PublicUser = testUser;
+/** The address a pending e-mail change sends its code to. */
+let pendingEmail: string | null = null;
 let rules: RecurringRule[] = [];
 let sources: IncomeSource[] = [];
 let goals: Goal[] = [];
@@ -363,6 +366,7 @@ export function resetFakeServer(): void {
   earlier = [testTransaction()];
   trashedExpenses = [];
   account = testUser;
+  pendingEmail = null;
   rules = [salaryRule, testRule()];
   sources = [testIncomeSource()];
   goals = [testGoal()];
@@ -458,6 +462,16 @@ export const fakeApi = {
       return Promise.resolve(account);
     }),
     changePassword: jest.fn((_input: ChangePasswordInput) => Promise.resolve()),
+    requestEmailChange: jest.fn((input: ChangeEmailInput) => {
+      pendingEmail = input.newEmail;
+      return Promise.resolve();
+    }),
+    confirmEmailChange: jest.fn((code: string) => {
+      if (code !== TEST_EMAIL_CODE || pendingEmail === null) return invalidCode();
+      account = { ...account, email: pendingEmail, emailVerified: true };
+      pendingEmail = null;
+      return Promise.resolve(account);
+    }),
   },
   confirmations: {
     list: jest.fn(() => Promise.resolve(due.map((item) => ({ ...item })))),

@@ -84,6 +84,7 @@ export default function SettingsScreen() {
           {!account.emailVerified && (
             <SettingsLink label={pl.verifyEmail.open} href="/settings/verify-email" />
           )}
+          <SettingsLink label={pl.changeEmail.title} href="/settings/change-email" />
           <SettingsLink label={t.changePassword} href="/settings/change-password" />
         </View>
       </View>

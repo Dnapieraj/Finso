@@ -12,7 +12,8 @@ export type AuthAction =
   | "onboarding"
   | "settings"
   | "email-code"
-  | "change-password";
+  | "change-password"
+  | "change-email";
 
 /**
  * A message for the user from a failed request. Never the API's own
@@ -29,17 +30,20 @@ export function apiErrorMessage(error: unknown, action: AuthAction): string {
       // the refresh failed too, so the session is gone.
       return action === "login" ? t.invalidCredentials : t.sessionExpired;
     case 400:
-      return action === "email-code" ? t.invalidCode : t.generic;
+      if (action === "email-code") return t.invalidCode;
+      return action === "change-email" ? t.sameEmail : t.generic;
     case 403:
-      return action === "delete-account" || action === "change-password"
+      return action === "delete-account" ||
+        action === "change-password" ||
+        action === "change-email"
         ? t.wrongPassword
         : t.generic;
     case 409:
-      return action === "register" ? t.emailTaken : t.generic;
+      return action === "register" || action === "change-email" ? t.emailTaken : t.generic;
     case 429:
       return t.tooManyAttempts;
     case 503:
-      return action === "email-code" ? t.mailNotSent : t.generic;
+      return action === "email-code" || action === "change-email" ? t.mailNotSent : t.generic;
     default:
       return t.generic;
   }

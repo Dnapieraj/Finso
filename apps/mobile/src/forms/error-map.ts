@@ -13,7 +13,7 @@ const t = pl.validation;
 export const plErrorMap: z.core.$ZodErrorMap = (issue) => {
   const field = issue.path?.at(-1);
 
-  if (field === "email") {
+  if (field === "email" || field === "newEmail") {
     return issue.input === "" ? t.emailRequired : t.emailInvalid;
   }
   if (field === "code") return t.codeInvalid;
