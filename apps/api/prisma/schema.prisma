@@ -427,6 +427,7 @@ model SubscriptionDismissal {
 enum EmailCodePurpose {
   PASSWORD_RESET
   EMAIL_VERIFICATION
+  EMAIL_CHANGE
 }
 
 /// Jednorazowy 6-cyfrowy kod wysłany e-mailem. Tylko HMAC kodu (z sekretem
@@ -438,6 +439,8 @@ model EmailCode {
   purpose EmailCodePurpose
 
   codeHash  String
+  /// Tylko EMAIL_CHANGE: adres, na który wysłano kod i który kod ustawi.
+  newEmail  String?
   /// Nieudane próby; po 5 kod przestaje działać (6 cyfr = milion kombinacji).
   attempts  Int       @default(0)
   expiresAt DateTime

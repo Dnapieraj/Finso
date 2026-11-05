@@ -1,7 +1,9 @@
 import {
   authSessionSchema,
   authTokensSchema,
+  changeEmailSchema,
   changePasswordSchema,
+  confirmEmailChangeSchema,
   forgotPasswordSchema,
   loginSchema,
   refreshTokenSchema,
@@ -25,3 +27,5 @@ export class ChangePasswordDto extends createZodDto(changePasswordSchema) {}
 
 export class AuthSessionDto extends createZodDto(authSessionSchema) {}
 export class AuthTokensDto extends createZodDto(authTokensSchema) {}
+export class ChangeEmailDto extends createZodDto(changeEmailSchema) {}
+export class ConfirmEmailChangeDto extends createZodDto(confirmEmailChangeSchema) {}

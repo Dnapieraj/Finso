@@ -16,7 +16,13 @@ import type { AuthTokens, PublicUser } from "@vireo/shared";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
 import type { AuthUser } from "../auth/decorators.js";
-import { AuthTokensDto, ChangePasswordDto, VerifyEmailDto } from "../auth/auth.dto.js";
+import {
+  AuthTokensDto,
+  ChangeEmailDto,
+  ChangePasswordDto,
+  ConfirmEmailChangeDto,
+  VerifyEmailDto,
+} from "../auth/auth.dto.js";
 import { AuthService } from "../auth/auth.service.js";
 import { CurrentUser } from "../auth/decorators.js";
 import { UsersService } from "./users.service.js";
@@ -73,6 +79,26 @@ export class UsersController {
   @ZodResponse({ type: PublicUserDto })
   verifyEmail(@CurrentUser() user: AuthUser, @Body() body: VerifyEmailDto): Promise<PublicUser> {
     return this.users.verifyEmail(user.id, body.code);
+  }
+
+  /** Zmiana adresu, krok 1: kod na nowy adres. 403 złe hasło, 409 adres zajęty, 503 e-mail nie wyszedł. */
+  @Post("me/email/change")
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  requestEmailChange(@CurrentUser() user: AuthUser, @Body() body: ChangeEmailDto): Promise<void> {
+    return this.users.requestEmailChange(user.id, body);
+  }
+
+  /** Zmiana adresu, krok 2: kod z e-maila. 400 = zły albo wygasły kod. */
+  @Post("me/email/change/confirm")
+  @UseGuards(ThrottlerGuard)
+  @HttpCode(HttpStatus.OK)
+  @ZodResponse({ type: PublicUserDto })
+  confirmEmailChange(
+    @CurrentUser() user: AuthUser,
+    @Body() body: ConfirmEmailChangeDto,
+  ): Promise<PublicUser> {
+    return this.users.confirmEmailChange(user.id, body.code);
   }
 
   /** Zmiana hasła; zwraca nowe tokeny tej sesji (pozostałe się kończą). */

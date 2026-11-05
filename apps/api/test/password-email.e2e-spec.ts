@@ -3,10 +3,10 @@ import request from "supertest";
 
 import { CLOCK } from "../src/common/clock.js";
 import type { PrismaClient } from "../src/generated/prisma/client.js";
-import type { MailMessage, Mailer } from "../src/mail/mailer.js";
 import { MAILER } from "../src/mail/mailer.js";
 import type { TestApp, TestSession } from "./helpers.js";
 import {
+  CapturingMailer,
   createTestApp,
   createTestDb,
   registerUser,
@@ -14,29 +14,6 @@ import {
   TEST_PASSWORD,
   TestClock,
 } from "./helpers.js";
-
-/** Collects what the API would have e-mailed. */
-class CapturingMailer implements Mailer {
-  sent: MailMessage[] = [];
-  failing = false;
-  /** Every send, failed or not — to wait for work the API does after responding. */
-  attempts = 0;
-
-  send(message: MailMessage): Promise<void> {
-    this.attempts += 1;
-    if (this.failing) return Promise.reject(new Error("mail provider down"));
-    this.sent.push(message);
-    return Promise.resolve();
-  }
-
-  /** The 6-digit code from the newest e-mail to `to`. */
-  codeFor(to: string): string {
-    const mail = this.sent.filter((message) => message.to === to).at(-1);
-    const code = mail?.text.match(/\b(\d{6})\b/)?.[1];
-    if (!code) throw new Error(`No code e-mailed to ${to}`);
-    return code;
-  }
-}
 
 /** The forgot-password e-mail goes out after the response; give it a moment. */
 const settle = () => new Promise((resolve) => setTimeout(resolve, 150));

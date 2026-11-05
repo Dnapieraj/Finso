@@ -1,12 +1,14 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   ServiceUnavailableException,
   UnauthorizedException,
 } from "@nestjs/common";
-import type { PublicUser, UpdateMeInput } from "@vireo/shared";
+import type { ChangeEmailInput, PublicUser, UpdateMeInput } from "@vireo/shared";
 import { rebaseRuleStarts, todayInTimeZone } from "@vireo/shared";
 
 import { EmailCodeService } from "../auth/email-code.service.js";
@@ -14,17 +16,24 @@ import { PasswordService } from "../auth/password.service.js";
 import type { Clock } from "../common/clock.js";
 import { CLOCK } from "../common/clock.js";
 import { fromIsoDate, toIsoDate } from "../common/dates.js";
+import { Prisma } from "../generated/prisma/client.js";
+import type { Mailer } from "../mail/mailer.js";
+import { MAILER } from "../mail/mailer.js";
+import { emailChangedNotice } from "../mail/messages.js";
 import type { Db } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 import { publicUserSelect, toPublicUser } from "./public-user.js";
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @Inject(PRISMA) private readonly db: Db,
     @Inject(CLOCK) private readonly clock: Clock,
     private readonly passwords: PasswordService,
     private readonly emailCodes: EmailCodeService,
+    @Inject(MAILER) private readonly mailer: Mailer,
   ) {}
 
   /**
@@ -145,6 +154,64 @@ export class UsersService {
       data: { emailVerifiedAt: this.clock.now() },
       select: publicUserSelect,
     });
+    return toPublicUser(user);
+  }
+
+  /**
+   * Zmiana adresu, krok 1: hasło (403), inny niż obecny (400), wolny (409),
+   * potem kod na NOWY adres — dowód, że należy do właściciela konta.
+   */
+  async requestEmailChange(userId: string, input: ChangeEmailInput): Promise<void> {
+    const user = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { email: true, passwordHash: true },
+    });
+    const valid = await this.passwords.verify(user?.passwordHash ?? null, input.password);
+    if (!user) throw new UnauthorizedException();
+    if (!valid) throw new ForbiddenException("Invalid password");
+    if (input.newEmail === user.email) throw new BadRequestException("Same e-mail");
+    if (await this.db.user.findUnique({ where: { email: input.newEmail }, select: { id: true } })) {
+      throw new ConflictException("Email already registered");
+    }
+    try {
+      await this.emailCodes.sendEmailChange(userId, input.newEmail);
+    } catch {
+      throw new ServiceUnavailableException("E-mail change code not sent");
+    }
+  }
+
+  /**
+   * Krok 2: kod ustawia adres, na który go wysłano (od razu potwierdzony).
+   * Stary adres dostaje informację — gdyby to nie właściciel, dowie się.
+   */
+  async confirmEmailChange(userId: string, code: string): Promise<PublicUser> {
+    const newEmail = await this.emailCodes.consumeEmailChange(userId, code);
+    if (newEmail === null) throw new BadRequestException("Invalid or expired code");
+    const before = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+    if (!before) throw new UnauthorizedException();
+    let user;
+    try {
+      user = await this.db.user.update({
+        where: { id: userId },
+        data: { email: newEmail, emailVerifiedAt: this.clock.now() },
+        select: publicUserSelect,
+      });
+    } catch (error) {
+      // Ktoś założył konto na ten adres między kodem a potwierdzeniem.
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        throw new ConflictException("Email already registered");
+      }
+      throw error;
+    }
+    try {
+      await this.mailer.send(emailChangedNotice(before.email, newEmail));
+    } catch (error) {
+      // Adres już zmieniony; brak informacji nie może tego cofnąć.
+      this.logger.warn(`E-mail change notice not sent: ${String(error)}`);
+    }
     return toPublicUser(user);
   }
 }

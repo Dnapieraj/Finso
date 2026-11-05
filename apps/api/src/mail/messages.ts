@@ -32,3 +32,31 @@ export function emailVerificationMail(to: string, code: string): MailMessage {
     ].join("\n"),
   };
 }
+
+/** Kod na NOWY adres — potwierdza, że należy do właściciela konta. */
+export function emailChangeMail(to: string, code: string): MailMessage {
+  return {
+    to,
+    subject: "Kod do zmiany adresu e-mail w Finso",
+    text: [
+      `Twój kod: ${code}`,
+      "",
+      "Wpisz go w aplikacji Finso, żeby ten adres stał się adresem Twojego konta. Kod jest ważny 30 minut.",
+      "",
+      "Jeśli to nie Ty zmieniasz adres, zignoruj tę wiadomość — nic się nie zmieni.",
+    ].join("\n"),
+  };
+}
+
+/** Informacja na STARY adres: gdyby to nie właściciel zmienił adres, wie o tym. */
+export function emailChangedNotice(to: string, newEmail: string): MailMessage {
+  return {
+    to,
+    subject: "Adres e-mail w Finso zmieniony",
+    text: [
+      `Adres e-mail Twojego konta w Finso zmieniono na: ${newEmail}`,
+      "",
+      "Jeśli to nie Ty, napisz do nas od razu: kontakt@finso.app.",
+    ].join("\n"),
+  };
+}

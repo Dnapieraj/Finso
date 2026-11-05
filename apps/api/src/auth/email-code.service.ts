@@ -9,7 +9,7 @@ import type { Env } from "../config/env.js";
 import type { EmailCodePurpose } from "../generated/prisma/client.js";
 import type { Mailer } from "../mail/mailer.js";
 import { MAILER } from "../mail/mailer.js";
-import { emailVerificationMail, passwordResetMail } from "../mail/messages.js";
+import { emailChangeMail, emailVerificationMail, passwordResetMail } from "../mail/messages.js";
 import type { Db } from "../prisma/prisma.module.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
@@ -19,6 +19,7 @@ const MINUTE_MS = 60 * 1000;
 const TTL_MS: Record<EmailCodePurpose, number> = {
   PASSWORD_RESET: 15 * MINUTE_MS,
   EMAIL_VERIFICATION: 24 * 60 * MINUTE_MS,
+  EMAIL_CHANGE: 30 * MINUTE_MS,
 };
 
 /** Nowy kod najwyżej raz na minutę — przycisk „Wyślij ponownie” nie zasypie skrzynki. */
@@ -46,7 +47,10 @@ export class EmailCodeService {
    * Wysyła kod (nowy albo — w ciągu minuty od poprzedniego — żaden, bo
    * poprzedni nadal działa). Rzuca, gdy e-mail nie wyszedł.
    */
-  async send(user: { id: string; email: string }, purpose: EmailCodePurpose): Promise<void> {
+  async send(
+    user: { id: string; email: string },
+    purpose: Exclude<EmailCodePurpose, "EMAIL_CHANGE">,
+  ): Promise<void> {
     const code = await this.issue(user.id, purpose);
     if (code === null) return;
     const mail =
@@ -56,16 +60,28 @@ export class EmailCodeService {
     await this.mailer.send(mail);
   }
 
+  /** Kod zmiany adresu na NOWY adres; jak `send` — rzuca, gdy e-mail nie wyszedł. */
+  async sendEmailChange(userId: string, newEmail: string): Promise<void> {
+    const code = await this.issue(userId, "EMAIL_CHANGE", newEmail);
+    if (code === null) return;
+    await this.mailer.send(emailChangeMail(newEmail, code));
+  }
+
   /**
    * Nowy kod; poprzednie tego samego celu przestają działać. `null`, gdy
-   * kod wysłano mniej niż minutę temu — poprzedni nadal działa.
+   * kod (na ten sam adres) wysłano mniej niż minutę temu — poprzedni nadal działa.
    */
-  async issue(userId: string, purpose: EmailCodePurpose): Promise<string | null> {
+  async issue(
+    userId: string,
+    purpose: EmailCodePurpose,
+    newEmail: string | null = null,
+  ): Promise<string | null> {
     const now = this.clock.now();
     const recent = await this.db.emailCode.findFirst({
       where: {
         userId,
         purpose,
+        newEmail,
         usedAt: null,
         createdAt: { gt: new Date(now.getTime() - RESEND_AFTER_MS) },
       },
@@ -82,7 +98,8 @@ export class EmailCodeService {
         data: {
           userId,
           purpose,
-          codeHash: this.hash(userId, purpose, code),
+          newEmail,
+          codeHash: this.hash(userId, purpose, code, newEmail),
           expiresAt: new Date(now.getTime() + TTL_MS[purpose]),
           createdAt: now,
         },
@@ -95,22 +112,39 @@ export class EmailCodeService {
    * Zużywa kod, jeśli pasuje. Zły kod zwiększa licznik prób; wygasły,
    * zużyty albo po 5 złych próbach — zawsze `false`.
    */
-  async consume(userId: string, purpose: EmailCodePurpose, code: string): Promise<boolean> {
+  async consume(
+    userId: string,
+    purpose: Exclude<EmailCodePurpose, "EMAIL_CHANGE">,
+    code: string,
+  ): Promise<boolean> {
+    return (await this.claim(userId, purpose, code)) !== null;
+  }
+
+  /** Zużywa kod zmiany adresu; zwraca adres, który kod ustawia, albo `null`. */
+  async consumeEmailChange(userId: string, code: string): Promise<string | null> {
+    return (await this.claim(userId, "EMAIL_CHANGE", code))?.newEmail ?? null;
+  }
+
+  private async claim(
+    userId: string,
+    purpose: EmailCodePurpose,
+    code: string,
+  ): Promise<{ newEmail: string | null } | null> {
     const now = this.clock.now();
     const active = await this.db.emailCode.findFirst({
       where: { userId, purpose, usedAt: null, expiresAt: { gt: now } },
       orderBy: { createdAt: "desc" },
     });
-    if (!active || active.attempts >= MAX_ATTEMPTS) return false;
+    if (!active || active.attempts >= MAX_ATTEMPTS) return null;
 
     const expected = Buffer.from(active.codeHash, "hex");
-    const given = Buffer.from(this.hash(userId, purpose, code), "hex");
+    const given = Buffer.from(this.hash(userId, purpose, code, active.newEmail), "hex");
     if (!timingSafeEqual(expected, given)) {
       await this.db.emailCode.update({
         where: { id: active.id },
         data: { attempts: { increment: 1 } },
       });
-      return false;
+      return null;
     }
     // Warunek `usedAt: null` w samym UPDATE: dwa równoległe żądania z tym
     // samym kodem — tylko jedno go zużyje.
@@ -118,12 +152,22 @@ export class EmailCodeService {
       where: { id: active.id, usedAt: null },
       data: { usedAt: now },
     });
-    return claimed.count === 1;
+    return claimed.count === 1 ? { newEmail: active.newEmail } : null;
   }
 
-  private hash(userId: string, purpose: EmailCodePurpose, code: string): string {
+  /** Adres w HMAC: kod zmiany zadziała tylko dla adresu, na który go wysłano. */
+  private hash(
+    userId: string,
+    purpose: EmailCodePurpose,
+    code: string,
+    newEmail: string | null = null,
+  ): string {
+    const subject =
+      newEmail === null
+        ? `${purpose}:${userId}:${code}`
+        : `${purpose}:${userId}:${code}:${newEmail}`;
     return createHmac("sha256", this.config.get("EMAIL_CODE_SECRET", { infer: true }))
-      .update(`${purpose}:${userId}:${code}`)
+      .update(subject)
       .digest("hex");
   }
 }

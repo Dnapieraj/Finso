@@ -11,6 +11,7 @@ import request from "supertest";
 import { AppModule } from "../src/app.module.js";
 import type { Clock } from "../src/common/clock.js";
 import { PrismaClient } from "../src/generated/prisma/client.js";
+import type { MailMessage, Mailer } from "../src/mail/mailer.js";
 import { TEST_DATABASE_URL } from "./test-env.js";
 
 /**
@@ -114,5 +115,28 @@ export class TestClock implements Clock {
 
   set(iso: string): void {
     this.current = new Date(iso);
+  }
+}
+
+/** Collects what the API would have e-mailed. */
+export class CapturingMailer implements Mailer {
+  sent: MailMessage[] = [];
+  failing = false;
+  /** Every send, failed or not — to wait for work the API does after responding. */
+  attempts = 0;
+
+  send(message: MailMessage): Promise<void> {
+    this.attempts += 1;
+    if (this.failing) return Promise.reject(new Error("mail provider down"));
+    this.sent.push(message);
+    return Promise.resolve();
+  }
+
+  /** The 6-digit code from the newest e-mail to `to`. */
+  codeFor(to: string): string {
+    const mail = this.sent.filter((message) => message.to === to).at(-1);
+    const code = mail?.text.match(/\b(\d{6})\b/)?.[1];
+    if (!code) throw new Error(`No code e-mailed to ${to}`);
+    return code;
   }
 }
