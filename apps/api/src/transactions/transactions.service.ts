@@ -1,6 +1,8 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import type {
   CreateTransactionInput,
+  ImportResult,
+  ImportTransactionsInput,
   IsoDate,
   ListTransactionsQuery,
   Transaction,
@@ -110,6 +112,57 @@ export class TransactionsService {
       },
     });
     return toTransaction(row);
+  }
+
+  /**
+   * Wydatki z wyciągu, w jednej transakcji bazy. Pomija te, które już są
+   * (potwierdzone, nie w koszu, ta sama data i kwota) — każdy zapisany
+   * tylko raz: dwie kawy w wyciągu przy jednej wpisanej to jedna nowa.
+   * Bez kategorii: bank jej nie zna, użytkownik doda ją w Historii.
+   */
+  async importRows(
+    userId: string,
+    input: ImportTransactionsInput,
+    db?: DbTransaction,
+  ): Promise<ImportResult> {
+    if (!db) return this.db.$transaction((tx) => this.importRows(userId, input, tx));
+
+    // Schemat wymaga co najmniej jednego wiersza; pusty import nic nie robi.
+    const [first, ...rest] = input.rows.map((row) => row.date).sort();
+    if (first === undefined) return { imported: 0, duplicates: 0 };
+    const last = rest.at(-1) ?? first;
+    const existing = await db.transaction.findMany({
+      where: {
+        userId,
+        status: "CONFIRMED",
+        // Jawnie: rozszerzenie soft-delete nie obejmuje zapytań w transakcji.
+        deletedAt: null,
+        date: { gte: fromIsoDate(first), lte: fromIsoDate(last) },
+      },
+      select: { date: true, amount: true },
+    });
+    const left = new Map<string, number>();
+    for (const tx of existing) {
+      const key = `${toIsoDate(tx.date)}|${String(tx.amount)}`;
+      left.set(key, (left.get(key) ?? 0) + 1);
+    }
+
+    const fresh = input.rows.filter((row) => {
+      const key = `${row.date}|${String(row.amount)}`;
+      const count = left.get(key) ?? 0;
+      if (count === 0) return true;
+      left.set(key, count - 1);
+      return false;
+    });
+    await db.transaction.createMany({
+      data: fresh.map((row) => ({
+        userId,
+        amount: row.amount,
+        date: fromIsoDate(row.date),
+        note: row.note,
+      })),
+    });
+    return { imported: fresh.length, duplicates: input.rows.length - fresh.length };
   }
 
   /**

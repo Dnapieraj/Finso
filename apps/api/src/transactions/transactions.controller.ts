@@ -13,7 +13,7 @@ import {
   Res,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
-import type { Transaction, TransactionPage, TransactionSummary } from "@vireo/shared";
+import type { ImportResult, Transaction, TransactionPage, TransactionSummary } from "@vireo/shared";
 import type { Response } from "express";
 import { ZodResponse } from "nestjs-zod";
 
@@ -21,6 +21,8 @@ import type { AuthUser } from "../auth/decorators.js";
 import { CurrentUser } from "../auth/decorators.js";
 import {
   CreateTransactionDto,
+  ImportResultDto,
+  ImportTransactionsDto,
   ListTransactionsQueryDto,
   TransactionDto,
   TransactionPageDto,
@@ -94,6 +96,33 @@ export class TransactionsController {
       request: body,
       res,
       perform: (tx) => this.transactions.create(user.id, body, tx),
+    });
+  }
+
+  /**
+   * Import wyciągu z banku: wydatki przeczytane przez appkę z CSV. Pomija
+   * już zapisane (ta sama data i kwota). Idempotency-Key jak przy wydatku.
+   */
+  @Post("import")
+  @ZodResponse({ status: HttpStatus.CREATED, type: ImportResultDto })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "UUID importu; ten sam klucz przez 24 h zwraca ten sam wynik",
+  })
+  async importRows(
+    @CurrentUser() user: AuthUser,
+    @Body() body: ImportTransactionsDto,
+    @Headers("idempotency-key") rawKey: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ImportResult> {
+    return idempotentPost(this.idempotency, {
+      userId: user.id,
+      scope: "POST /transactions/import",
+      rawKey,
+      request: body,
+      res,
+      perform: (tx) => this.transactions.importRows(user.id, body, tx),
     });
   }
 

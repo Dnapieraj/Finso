@@ -1,5 +1,7 @@
 import {
   createTransactionSchema,
+  importResultSchema,
+  importTransactionsSchema,
   listTransactionsQuerySchema,
   transactionPageSchema,
   transactionSchema,
@@ -16,3 +18,5 @@ export class TransactionDto extends createZodDto(transactionSchema) {}
 export class TransactionPageDto extends createZodDto(transactionPageSchema) {}
 export class TransactionSummaryQueryDto extends createZodDto(transactionSummaryQuerySchema) {}
 export class TransactionSummaryDto extends createZodDto(transactionSummarySchema) {}
+export class ImportTransactionsDto extends createZodDto(importTransactionsSchema) {}
+export class ImportResultDto extends createZodDto(importResultSchema) {}
