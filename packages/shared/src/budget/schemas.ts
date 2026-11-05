@@ -36,6 +36,7 @@ export const budgetSummarySchema = z.object({
       periods: z.number().int(),
       low: amountOutput,
       high: amountOutput,
+      typical: amountOutput,
       received: amountOutput,
       notYetReceived: amountOutput,
     }),

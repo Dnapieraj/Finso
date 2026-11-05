@@ -17,6 +17,8 @@ export interface IrregularIncomeForecast {
   periods: number;
   low: Grosze;
   high: Grosze;
+  /** Mediana — ile zwykle wpływa; z nią porównujemy „chudy” okres. */
+  typical: Grosze;
 }
 
 /** Prognoza jednego źródła w bieżącym okresie — do pokazania wprost. */
@@ -66,7 +68,16 @@ export function forecastIrregularIncome(input: {
     periods: totals.length,
     low: grosze(Math.min(...totals)),
     high: grosze(Math.max(...totals)),
+    typical: grosze(median(totals)),
   };
+}
+
+/** Mediana posortowanych rosnąco sum; przy parzystej liczbie średnia środkowych, w dół. */
+function median(sorted: readonly number[]): number {
+  const mid = Math.floor(sorted.length / 2);
+  const middle =
+    sorted.length % 2 === 1 ? sorted.slice(mid, mid + 1) : sorted.slice(mid - 1, mid + 1);
+  return Math.floor(middle.reduce((sum, total) => sum + total, 0) / middle.length);
 }
 
 /**

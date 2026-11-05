@@ -19,6 +19,11 @@ import {
 } from "../budget/schemas.js";
 import { categorySchema, type Category } from "../categories/schemas.js";
 import {
+  categoryLimitsOverviewSchema,
+  type CategoryLimitsOverview,
+  type SetCategoryLimitInput,
+} from "../category-limits/schemas.js";
+import {
   dueConfirmationListSchema,
   type AnswerConfirmationRequest,
   type DueConfirmation,
@@ -237,6 +242,14 @@ export interface ApiClient {
     /** Usuwa naprawdę — to ustawienie, nie dane finansowe. */
     remove(id: string): Promise<void>;
   };
+  readonly categoryLimits: {
+    /** Limity ze stanem w bieżącym okresie i podpowiedzi „chudego miesiąca”. */
+    overview(): Promise<CategoryLimitsOverview>;
+    /** Ustawia albo zmienia limit kategorii — powtórzenie daje to samo, więc bez klucza. */
+    set(categoryId: string, input: SetCategoryLimitInput): Promise<void>;
+    /** Usuwa limit naprawdę — to ustawienie, nie dane finansowe. */
+    remove(categoryId: string): Promise<void>;
+  };
   /** Wszystkie dane użytkownika naraz (bez kosza) — do plików CSV. */
   exportData(): Promise<ExportData>;
   readonly subscriptions: {
@@ -278,7 +291,7 @@ export interface ApiClient {
 }
 
 interface Request {
-  readonly method: "GET" | "POST" | "PATCH" | "DELETE";
+  readonly method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   readonly path: string;
   readonly body?: unknown;
   /** Dodatkowe nagłówki, np. `Idempotency-Key` — te same przy ponowieniu po 401. */
@@ -520,6 +533,22 @@ export function createApiClient({
         ),
       async remove(id) {
         await execute({ method: "DELETE", path: `/expense-templates/${encodeURIComponent(id)}` });
+      },
+    },
+    categoryLimits: {
+      overview: () => read("/category-limits", categoryLimitsOverviewSchema),
+      async set(categoryId, input) {
+        await execute({
+          method: "PUT",
+          path: `/category-limits/${encodeURIComponent(categoryId)}`,
+          body: input,
+        });
+      },
+      async remove(categoryId) {
+        await execute({
+          method: "DELETE",
+          path: `/category-limits/${encodeURIComponent(categoryId)}`,
+        });
       },
     },
     exportData: () => read("/export", exportDataSchema),

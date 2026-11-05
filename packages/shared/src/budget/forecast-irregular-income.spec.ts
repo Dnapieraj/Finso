@@ -37,6 +37,8 @@ describe("forecastIrregularIncome", () => {
       periods: 6,
       low: 300_000,
       high: 900_000,
+      // Mediana parzystej liczby okresów: średnia dwóch środkowych.
+      typical: 650_000,
     });
   });
 
@@ -61,6 +63,7 @@ describe("forecastIrregularIncome", () => {
       periods: 3,
       low: 0,
       high: 500_000,
+      typical: 500_000,
     });
   });
 
@@ -133,7 +136,7 @@ describe("forecastIrregularIncome", () => {
         trackedSince: d("2026-06-10"),
         entries,
       }),
-    ).toEqual({ forecast: 300_000, periods: 3, low: 300_000, high: 300_000 });
+    ).toEqual({ forecast: 300_000, periods: 3, low: 300_000, high: 300_000, typical: 300_000 });
   });
 });
 
@@ -257,6 +260,7 @@ describe("prognoza w budżecie", () => {
         periods: 3,
         low: 400_000,
         high: 600_000,
+        typical: 500_000,
         received: 150_000,
         notYetReceived: 250_000,
       },

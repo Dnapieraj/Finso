@@ -912,6 +912,47 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("categoryLimits: overview, set and remove", () => {
+    const FOOD = "01923b6e-0000-7000-8000-000000000020";
+    const overview = {
+      limits: [
+        {
+          categoryId: FOOD,
+          limit: 80_000,
+          spent: 50_000,
+          left: 30_000,
+          perDayLeft: 2_727,
+          state: "ok",
+        },
+      ],
+      leanMonth: null,
+    };
+
+    it("categoryLimits.overview validates limits and the lean month", async () => {
+      const { api } = setup({ "GET /category-limits": [jsonResponse(200, overview)] });
+
+      await expect(api.categoryLimits.overview()).resolves.toEqual(overview);
+    });
+
+    it("categoryLimits.set puts the amount for the category — no key, setting it twice is the same", async () => {
+      const { api, fetch } = setup({
+        [`PUT /category-limits/${FOOD}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.categoryLimits.set(FOOD, { amount: 80_000 })).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0)).toMatchObject({ method: "PUT", body: { amount: 80_000 } });
+    });
+
+    it("categoryLimits.remove resolves the 204", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /category-limits/${FOOD}`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.categoryLimits.remove(FOOD)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+    });
+  });
+
   describe("subscriptions: overview, confirm with a key, dismiss and undo", () => {
     const KEY = "n|01a0cf55-89a0-7159-b809-6b5abf846e15|spotify";
     const overview = {
