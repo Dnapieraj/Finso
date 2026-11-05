@@ -130,7 +130,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 18. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
     kwoty. Wpłaty jako osobne zapisy (data, kwota, cofnięcie) dałyby
     historię postępu i mogłyby zmniejszać dostępne środki w okresie wpłaty
-19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3
+19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3 — **ZROBIONE** (5.11.2026)
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
 21. Limity na kategorie (np. jedzenie do 800 zł w okresie) — **ZROBIONE** (5.11.2026), razem z podpowiedziami „chudego miesiąca”
 22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
@@ -1054,3 +1054,38 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - Gdzie: Ustawienia → Subskrypcje, sekcja „Czy jeszcze korzystasz?” (od kiedy
   i ile rocznie, w górę), oraz karta subskrypcji na Start („Czy nadal
   korzystasz z: …?”).
+
+### 5.11.2026 — Faza 2: import wyciągu CSV z banku
+
+- **Plik czyta i rozbiera appka, na telefonie.** Do API trafiają tylko
+  wydatki, które użytkownik importuje (data, kwota, opis z banku) — wyciąg
+  z saldem i numerami rachunków nie opuszcza telefonu. Parser jest czystym
+  TypeScriptem w `@vireo/shared/import` (testowany bez urządzenia).
+- **Jeden parser dla wszystkich banków zamiast formatów per bank.** Szuka
+  wiersza nagłówka (do 30 linii od góry — mBank i ING dają wstęp),
+  separatora (`;`, `,`, tab) i kolumn po nazwach: data operacji/transakcji
+  (księgowania tylko w ostateczności), kwota (nie saldo, blokada ani kwota
+  w walucie), waluta zaraz po kwocie, opis z kolumn opisu/tytułu/kontrahenta
+  i bez nazwy (PKO dzieli w nich opis). Sprawdzony na układach mBanku,
+  PKO BP i ING oraz ogólnym CSV po angielsku.
+- **Kodowanie:** UTF-8 (z BOM i bez), a gdy plik nie jest poprawnym UTF-8 —
+  Windows-1250 (część polskich banków). Własny dekoder, bo Hermes nie
+  gwarantuje `TextDecoder` dla innych kodowań.
+- **Kwoty na tekście, bez liczb zmiennoprzecinkowych**; przecinek albo kropka
+  dziesiętna, spacje (też twarde) w tysiącach, minus typograficzny. Więcej
+  niż 2 miejsca po przecinku albo nieistniejąca data (31.02) = wiersz
+  nieczytelny, liczony w podsumowaniu.
+- **Importujemy tylko wydatki w PLN.** Wpływy wymagają wyboru źródła dochodu
+  i decyzji, czy to dochód okresu — dodaje się je ręcznie; obce waluty
+  wymagałyby kursu. Podgląd mówi, ile czego pominięto.
+- **Duplikaty pomija API:** potwierdzony, nieusunięty wydatek z tą samą datą
+  i kwotą „zużywa” jeden wiersz wyciągu (dwie kawy w wyciągu przy jednej
+  wpisanej = jedna nowa). Inaczej ręcznie wpisany wydatek liczyłby się
+  w budżecie dwa razy. Ten sam plik drugi raz nic nie dodaje.
+- **Bez kategorii** — bank jej nie zna; użytkownik przypisze ją w Historii.
+  Bez `beforeFinso`: to zwykłe wydatki swoich dni.
+- `POST /transactions/import`: najwyżej 2000 wierszy, jedna transakcja bazy,
+  `Idempotency-Key` (ponowienie po błędzie sieci nie dubluje importu).
+- **Nowa biblioteka: `expo-document-picker` ~57.0.3** (systemowy wybór pliku;
+  wersja z `expo install`, zgodna z SDK 57). Wymaga nowego development buildu.
+- Gdzie: Ustawienia → Import z banku (obok eksportu).
