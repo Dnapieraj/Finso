@@ -713,6 +713,21 @@ export const pl = {
       "Podpowiedź pojawia się, gdy ten sam wydatek (notatka i kategoria, a bez notatki — kategoria i dokładnie ta sama kwota) powtarza się co tydzień co najmniej 4 razy, co miesiąc 3 razy albo co rok 2 razy.",
     loading: "Wczytywanie subskrypcji",
     error: "Nie udało się wczytać subskrypcji.",
+    unused: {
+      title: "Czy jeszcze korzystasz?",
+      intro:
+        "Płacisz za nie od miesięcy. Jeśli z którejś już nie korzystasz, anuluj ją — te pieniądze zostaną w budżecie.",
+      // Genitive after „od”: od 1 miesiąca, od 3/5 miesięcy.
+      item: (name: string, months: number, yearly: string) =>
+        `${name}: płacisz od ${String(months)} ${months === 1 ? "miesiąca" : "miesięcy"} — ${yearly} rocznie.`,
+      used: "Używam",
+      notUsed: "Nie używam",
+      usedNotice: (name: string) => `${name}: zapytamy znowu za 3 miesiące.`,
+      notUsedNotice: (name: string) =>
+        `Anuluj ${name} u dostawcy. Gdy płatności się skończą, usuń ją ze stałych zobowiązań — dotychczasowe wydatki zostaną.`,
+      openCommitment: "Otwórz stałą płatność",
+      card: (names: string) => `Czy nadal korzystasz z: ${names}?`,
+    },
     card: {
       title: "Wykryte subskrypcje",
       body: (names: string) =>

@@ -316,5 +316,80 @@ describe("karta na Dashboardzie", () => {
 
     expect(await screen.findByText("Możesz wydać")).toBeOnTheScreen();
     expect(screen.queryByRole("header", { name: "Wykryte subskrypcje" })).toBeNull();
+    // All three queued failures used up — none may leak into the next test.
+    await waitFor(() => {
+      expect(fakeApi.subscriptions.overview).toHaveBeenCalledTimes(3);
+    }, AFTER_RETRIES);
+  });
+});
+
+describe("czy jeszcze korzystasz (martwe subskrypcje)", () => {
+  const unused = testConfirmed({ payingSince: "2026-02-05", payingMonths: 7, askIfUsed: true });
+
+  it("pyta o subskrypcję opłacaną od miesięcy: od kiedy i ile kosztuje rocznie", async () => {
+    seedFakeServer({ confirmedSubscriptions: [unused] });
+    await openSubscriptions();
+
+    expect(await header("Czy jeszcze korzystasz?")).toBeOnTheScreen();
+    expect(
+      screen.getByText(zl("Netflix: płacisz od 7 miesięcy — 588 zł rocznie.")),
+    ).toBeOnTheScreen();
+  });
+
+  it("bez takich subskrypcji — bez pytania", async () => {
+    seedFakeServer({ confirmedSubscriptions: [netflix] });
+    await openSubscriptions();
+    await screen.findByText("Potwierdzone");
+
+    expect(screen.queryByRole("header", { name: "Czy jeszcze korzystasz?" })).toBeNull();
+  });
+
+  it("„Używam” wycisza pytanie na kilka miesięcy", async () => {
+    seedFakeServer({ confirmedSubscriptions: [unused] });
+    await openSubscriptions();
+    await header("Czy jeszcze korzystasz?");
+
+    await press("Używam: Netflix");
+
+    expect(fakeApi.subscriptions.markUsed).toHaveBeenCalledWith(unused.ruleId);
+    expect(await screen.findByText("Netflix: zapytamy znowu za 3 miesiące.")).toBeOnTheScreen();
+    await waitFor(() => {
+      expect(screen.queryByRole("header", { name: "Czy jeszcze korzystasz?" })).toBeNull();
+    });
+  });
+
+  it("„Nie używam” mówi, co zrobić, i prowadzi do stałej płatności — nic nie usuwa samo", async () => {
+    seedFakeServer({ confirmedSubscriptions: [unused] });
+    const app = await openSubscriptions();
+    await header("Czy jeszcze korzystasz?");
+
+    await press("Nie używam: Netflix");
+
+    expect(
+      await screen.findByText(
+        "Anuluj Netflix u dostawcy. Gdy płatności się skończą, usuń ją ze stałych zobowiązań — dotychczasowe wydatki zostaną.",
+      ),
+    ).toBeOnTheScreen();
+    expect(fakeApi.subscriptions.markUsed).not.toHaveBeenCalled();
+    await press("Otwórz stałą płatność");
+    expect(app).toHavePathname(`/settings/commitments/${unused.ruleId}`);
+  });
+
+  it("karta na Starcie pyta o nie, gdy nie ma nic wykrytego", async () => {
+    seedFakeServer({ confirmedSubscriptions: [unused] });
+    const app = await renderApp("/", { signedIn: true });
+
+    expect(await header("Czy jeszcze korzystasz?")).toBeOnTheScreen();
+    expect(screen.getByText("Czy nadal korzystasz z: Netflix?")).toBeOnTheScreen();
+    await press("Sprawdź subskrypcje");
+    expect(app).toHavePathname("/settings/subscriptions");
+  });
+
+  it("karta z wykrytymi i nieużywanymi mówi o obu", async () => {
+    seedFakeServer({ detected: [spotify], confirmedSubscriptions: [unused] });
+    await renderApp("/", { signedIn: true });
+
+    expect(await header("Wykryte subskrypcje")).toBeOnTheScreen();
+    expect(screen.getByText("Czy nadal korzystasz z: Netflix?")).toBeOnTheScreen();
   });
 });

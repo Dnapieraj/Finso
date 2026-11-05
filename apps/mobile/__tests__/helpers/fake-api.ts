@@ -227,6 +227,9 @@ export function testConfirmed(
     monthly: 4_900,
     yearly: 58_800,
     priceChange: null,
+    payingSince: "2026-08-05",
+    payingMonths: 1,
+    askIfUsed: false,
     ...overrides,
   };
 }
@@ -644,6 +647,12 @@ export const fakeApi = {
     undismiss: jest.fn((key: string) => {
       detected = [...detected, ...dismissed.filter((item) => item.key === key)];
       dismissed = dismissed.filter((item) => item.key !== key);
+      return Promise.resolve();
+    }),
+    markUsed: jest.fn((ruleId: string) => {
+      confirmedSubscriptions = confirmedSubscriptions.map((item) =>
+        item.ruleId === ruleId ? { ...item, askIfUsed: false } : item,
+      );
       return Promise.resolve();
     }),
   },

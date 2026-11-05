@@ -61,6 +61,8 @@ function priceChangeText(money: Money, change: PriceChangeOutput): string {
 
 type Notice =
   | { kind: "confirmed"; text: string }
+  | { kind: "used"; text: string }
+  | { kind: "notUsed"; text: string; ruleId: string }
   | { kind: "dismissed"; text: string; key: string }
   | { kind: "error" };
 
@@ -131,6 +133,19 @@ export default function SubscriptionsScreen() {
     },
   });
 
+  const markUsed = useMutation({
+    mutationFn: (item: ConfirmedSubscriptionOutput) => api.subscriptions.markUsed(item.ruleId),
+    onSuccess: (_result, item) => {
+      haptics.saved();
+      setNotice({ kind: "used", text: t.unused.usedNotice(item.name) });
+      refreshAfterDecision();
+    },
+    onError: () => {
+      haptics.failed();
+      setNotice({ kind: "error" });
+    },
+  });
+
   let body: ReactNode;
   if (subscriptions.isPending) {
     body = <Skeleton label={t.loading} lines={4} />;
@@ -138,12 +153,39 @@ export default function SubscriptionsScreen() {
     body = <LoadError message={t.error} onRetry={() => void subscriptions.refetch()} />;
   } else {
     const { confirmed, detected, totals } = subscriptions.data;
+    const unused = confirmed.filter((item) => item.askIfUsed);
     body = (
       <>
         {confirmed.length === 0 && detected.length === 0 ? (
           <Text className="font-sans text-base text-muted-foreground">{t.empty}</Text>
         ) : (
           <Summary totals={totals} money={money} />
+        )}
+        {unused.length > 0 && (
+          <View className="gap-3">
+            <Text accessibilityRole="header" className="font-heading text-xl text-foreground">
+              {t.unused.title}
+            </Text>
+            <Text className="font-sans text-base text-muted-foreground">{t.unused.intro}</Text>
+            {unused.map((item) => (
+              <UnusedItem
+                key={item.ruleId}
+                item={item}
+                money={money}
+                busy={markUsed.isPending && markUsed.variables.ruleId === item.ruleId}
+                onUsed={() => {
+                  markUsed.mutate(item);
+                }}
+                onNotUsed={() => {
+                  setNotice({
+                    kind: "notUsed",
+                    text: t.unused.notUsedNotice(item.name),
+                    ruleId: item.ruleId,
+                  });
+                }}
+              />
+            ))}
+          </View>
         )}
         {detected.length > 0 && (
           <View className="gap-3">
@@ -194,6 +236,16 @@ export default function SubscriptionsScreen() {
       {notice && notice.kind !== "error" && (
         <View className="gap-2">
           <FormAlert tone="info">{notice.text}</FormAlert>
+          {notice.kind === "notUsed" && (
+            <Button
+              variant="ghost"
+              onPress={() => {
+                router.push(`/settings/commitments/${notice.ruleId}`);
+              }}
+            >
+              {t.unused.openCommitment}
+            </Button>
+          )}
           {notice.kind === "dismissed" && (
             <Button
               variant="ghost"
@@ -292,6 +344,54 @@ function DetectedItem({
       >
         {t.dismiss}
       </Button>
+    </View>
+  );
+}
+
+/** A subscription paid for months without „Używam”: keep it, or how to let it go. */
+function UnusedItem({
+  item,
+  money,
+  busy,
+  onUsed,
+  onNotUsed,
+}: {
+  item: ConfirmedSubscriptionOutput;
+  money: Money;
+  busy: boolean;
+  onUsed: () => void;
+  onNotUsed: () => void;
+}) {
+  const text = t.unused.item(
+    item.name,
+    item.payingMonths,
+    money.format(grosze(item.yearly), { whole: "up" }),
+  );
+  return (
+    <View className="gap-3 rounded-2xl bg-card p-4">
+      <Text
+        accessibilityLabel={money.spoken(text)}
+        className="font-sans text-base text-card-foreground"
+      >
+        {text}
+      </Text>
+      <View className="gap-2">
+        <Button
+          accessibilityLabel={t.forItem(t.unused.used, item.name)}
+          loading={busy}
+          loadingLabel={t.confirming}
+          onPress={onUsed}
+        >
+          {t.unused.used}
+        </Button>
+        <Button
+          variant="outline"
+          accessibilityLabel={t.forItem(t.unused.notUsed, item.name)}
+          onPress={onNotUsed}
+        >
+          {t.unused.notUsed}
+        </Button>
+      </View>
     </View>
   );
 }
