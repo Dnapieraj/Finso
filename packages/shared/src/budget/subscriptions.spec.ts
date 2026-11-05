@@ -61,6 +61,8 @@ function rule(overrides: Partial<SubscriptionRule> = {}): SubscriptionRule {
     categoryId: "cat-home",
     isSubscription: false,
     payments: [],
+    startDate: d("2026-07-01"),
+    usedOn: null,
     ...overrides,
   };
 }
@@ -655,6 +657,9 @@ describe("subscriptionsOverview — potwierdzone i sumy", () => {
         monthly: 4_900,
         yearly: 58_800,
         priceChange: null,
+        payingSince: "2026-07-01",
+        payingMonths: 3,
+        askIfUsed: true,
       },
       expect.objectContaining({ ruleId: "rule-domain", monthly: 825, yearly: 9_900 }),
     ]);
@@ -715,5 +720,77 @@ describe("subscriptionsOverview — potwierdzone i sumy", () => {
       "Netflix",
       "Tani",
     ]);
+  });
+});
+
+describe("czy jeszcze używasz (martwe subskrypcje)", () => {
+  /** Dziś 20.10.2026 (overview). */
+  const sub = (overrides: Partial<SubscriptionRule> = {}) =>
+    rule({ id: "rule-sub", name: "Netflix", isSubscription: true, ...overrides });
+  const confirmed = (overrides: Partial<SubscriptionRule> = {}) =>
+    overview({ rules: [sub(overrides)] }).confirmed[0];
+
+  it("płacisz od 3 pełnych miesięcy i nigdy nie powiedziałeś „Używam” — pyta", () => {
+    expect(confirmed({ startDate: d("2026-07-20") })).toMatchObject({
+      payingSince: "2026-07-20",
+      payingMonths: 3,
+      askIfUsed: true,
+    });
+  });
+
+  it("krócej niż 3 pełne miesiące — jeszcze nie pyta", () => {
+    expect(confirmed({ startDate: d("2026-07-21") })).toMatchObject({
+      payingMonths: 2,
+      askIfUsed: false,
+    });
+  });
+
+  it("„Używam” wycisza pytanie na 3 miesiące, potem pyta znowu", () => {
+    expect(confirmed({ startDate: d("2026-01-10"), usedOn: d("2026-09-01") })).toMatchObject({
+      payingMonths: 9,
+      askIfUsed: false,
+    });
+    expect(confirmed({ startDate: d("2026-01-10"), usedOn: d("2026-07-20") })).toMatchObject({
+      askIfUsed: true,
+    });
+  });
+
+  it("płatności sprzed startu reguły: płacisz od pierwszej z nich", () => {
+    const payments = [
+      { amount: g(4_900), date: d("2026-03-05") },
+      { amount: g(4_900), date: d("2026-04-05") },
+    ];
+
+    expect(confirmed({ startDate: d("2026-09-01"), payments })).toMatchObject({
+      payingSince: "2026-03-05",
+      payingMonths: 7,
+    });
+  });
+
+  it("koniec miesiąca: z 31.01 do 30.04 to 2 pełne miesiące, nie 3 — pytamy raczej później", () => {
+    const at = (asOf: string) =>
+      overview({ asOf: d(asOf), rules: [sub({ startDate: d("2026-01-31") })] }).confirmed[0];
+
+    expect(at("2026-04-30")).toMatchObject({ payingMonths: 2, askIfUsed: false });
+    expect(at("2026-05-01")).toMatchObject({ payingMonths: 3, askIfUsed: true });
+  });
+
+  it("rok przestępny: od 29.02.2028 do 28.02.2029 to 11 pełnych miesięcy", () => {
+    expect(
+      overview({ asOf: d("2029-02-28"), rules: [sub({ startDate: d("2028-02-29") })] })
+        .confirmed[0],
+    ).toMatchObject({ payingMonths: 11 });
+  });
+
+  it("potwierdzona z detektora startuje od następnego terminu: 0 miesięcy, jeszcze nie pyta", () => {
+    expect(confirmed({ startDate: d("2026-11-10") })).toMatchObject({
+      payingSince: "2026-11-10",
+      payingMonths: 0,
+      askIfUsed: false,
+    });
+  });
+
+  it("zwykła stała płatność (nie subskrypcja) — nigdy nie pyta", () => {
+    expect(overview({ rules: [rule({ startDate: d("2020-01-01") })] }).confirmed).toEqual([]);
   });
 });

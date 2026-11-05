@@ -998,6 +998,36 @@ describe("createApiClient", () => {
       await expect(api.subscriptions.overview()).resolves.toEqual(overview);
     });
 
+    it("subscriptions.overview: a confirmed one says since when it is paid and whether to ask", async () => {
+      const netflix = {
+        ruleId: rule.id,
+        name: "Netflix",
+        categoryId: null,
+        frequency: "MONTHLY",
+        interval: 1,
+        amount: 4_900,
+        monthly: 4_900,
+        yearly: 58_800,
+        priceChange: null,
+        payingSince: "2026-03-05",
+        payingMonths: 7,
+        askIfUsed: true,
+      };
+      const withConfirmed = { ...overview, confirmed: [netflix] };
+      const { api } = setup({ "GET /subscriptions": [jsonResponse(200, withConfirmed)] });
+
+      await expect(api.subscriptions.overview()).resolves.toEqual(withConfirmed);
+    });
+
+    it("subscriptions.markUsed posts „Używam” for the rule", async () => {
+      const { api, fetch } = setup({
+        [`POST /subscriptions/${rule.id}/used`]: [new Response(null, { status: 204 })],
+      });
+
+      await expect(api.subscriptions.markUsed(rule.id)).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).method).toBe("POST");
+    });
+
     it("subscriptions.confirm posts the draft with its Idempotency-Key and returns the rule", async () => {
       const { api, fetch } = setup({ "POST /subscriptions/confirm": [jsonResponse(201, rule)] });
       const draft = api.subscriptions.draftConfirm({ key: KEY, name: "Spotify" });

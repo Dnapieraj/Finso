@@ -48,3 +48,12 @@ export function dayOfWeekOf(date: IsoDate): number {
 export function laterOf(a: IsoDate, b: IsoDate): IsoDate {
   return a > b ? a : b;
 }
+
+/**
+ * Pełne miesiące od `from` do `to`: miesiąc liczy się dopiero, gdy minął
+ * jego dzień (31.01 → 30.04 to 2, nie 3 — przy końcu miesiąca raczej mniej).
+ */
+export function fullMonthsBetween(from: IsoDate, to: IsoDate): number {
+  const months = monthIndexOf(to) - monthIndexOf(from);
+  return yearMonth(to).day < yearMonth(from).day ? months - 1 : months;
+}

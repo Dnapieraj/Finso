@@ -42,6 +42,11 @@ export const confirmedSubscriptionSchema = z.object({
   amount: z.number().int(),
   ...costFields,
   priceChange: priceChangeSchema.nullable(),
+  /** Pierwsza płatność — „płacisz od…”. */
+  payingSince: isoDateOutputSchema,
+  payingMonths: z.number().int(),
+  /** „Czy nadal z niej korzystasz?” — długo bez „Używam”. */
+  askIfUsed: z.boolean(),
 });
 
 /** Wykryta, jeszcze niepotwierdzona subskrypcja. */

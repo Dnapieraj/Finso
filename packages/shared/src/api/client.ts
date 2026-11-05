@@ -266,6 +266,8 @@ export interface ApiClient {
     dismiss(key: string): Promise<void>;
     /** „Cofnij” po odrzuceniu. */
     undismiss(key: string): Promise<void>;
+    /** „Używam” — appka na kilka miesięcy przestaje pytać o tę subskrypcję. */
+    markUsed(ruleId: string): Promise<void>;
   };
   readonly transactions: {
     /** Strona wydatków od najnowszych; pominięte filtry nie trafiają do URL-a. */
@@ -563,6 +565,12 @@ export function createApiClient({
         await execute({
           method: "DELETE",
           path: `/subscriptions/dismissals?key=${encodeURIComponent(key)}`,
+        });
+      },
+      async markUsed(ruleId) {
+        await execute({
+          method: "POST",
+          path: `/subscriptions/${encodeURIComponent(ruleId)}/used`,
         });
       },
     },

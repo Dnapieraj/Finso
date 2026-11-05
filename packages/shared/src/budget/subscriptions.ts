@@ -1,6 +1,12 @@
 import { addDays, daysBetween, type IsoDate } from "../date.js";
 import { grosze, type Grosze } from "../money.js";
-import { clampedDayInMonth, dayOfWeekOf, monthIndexOf, yearMonth } from "./calendar.js";
+import {
+  clampedDayInMonth,
+  dayOfWeekOf,
+  fullMonthsBetween,
+  monthIndexOf,
+  yearMonth,
+} from "./calendar.js";
 import type { RecurrenceSchedule } from "./recurrence.js";
 import type { ConfirmationStatus } from "./occurrences.js";
 
@@ -38,6 +44,10 @@ export interface SubscriptionRule {
   isSubscription: boolean;
   /** Potwierdzone płatności tej reguły — z nich widać podwyżkę ceny. */
   payments: SubscriptionPayment[];
+  /** Start harmonogramu reguły. */
+  startDate: IsoDate;
+  /** Ostatnie „Używam” przy subskrypcji; `null` = nigdy. */
+  usedOn: IsoDate | null;
 }
 
 /** Zmiana ceny: „23 zł → 27 zł od marca, +48 zł rocznie”. */
@@ -83,7 +93,19 @@ export interface ConfirmedSubscription extends SubscriptionCost {
   interval: number;
   amount: Grosze;
   priceChange: PriceChange | null;
+  /** Pierwsza płatność (albo start reguły, gdy wcześniejszych nie ma). */
+  payingSince: IsoDate;
+  /** Ile pełnych miesięcy już płaci. */
+  payingMonths: number;
+  /** „Czy nadal z niej korzystasz?” — patrz {@link ASK_IF_USED_MONTHS}. */
+  askIfUsed: boolean;
 }
+
+/**
+ * Po tylu pełnych miesiącach płacenia bez „Używam” (albo od ostatniego
+ * „Używam”) appka pyta, czy subskrypcja jest jeszcze potrzebna.
+ */
+export const ASK_IF_USED_MONTHS = 3;
 
 /** Wejście {@link subscriptionsOverview}. */
 export interface SubscriptionsOverviewInput {
@@ -238,6 +260,7 @@ export function subscriptionsOverview(input: SubscriptionsOverviewInput): Subscr
       amount: rule.expectedAmount,
       ...subscriptionCost(rule.expectedAmount, rule.frequency, rule.interval),
       priceChange: detectPriceChange(rule.payments, rule.frequency, rule.interval),
+      ...usage(rule, input.asOf),
     }))
     .sort((a, b) => b.monthly - a.monthly || a.name.localeCompare(b.name, "pl"));
 
@@ -500,4 +523,21 @@ function within(value: number, [min, max]: readonly [number, number]): boolean {
 
 function byDate<T extends SubscriptionPayment>(payments: readonly T[]): T[] {
   return [...payments].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** Od kiedy płaci i czy czas zapytać, czy subskrypcja jest jeszcze używana. */
+function usage(
+  rule: SubscriptionRule,
+  asOf: IsoDate,
+): Pick<ConfirmedSubscription, "payingSince" | "payingMonths" | "askIfUsed"> {
+  const payingSince = rule.payments.reduce(
+    (earliest, payment) => (payment.date < earliest ? payment.date : earliest),
+    rule.startDate,
+  );
+  return {
+    payingSince,
+    // Reguła z detektora startuje od następnego terminu — jeszcze nic nie płaci.
+    payingMonths: Math.max(0, fullMonthsBetween(payingSince, asOf)),
+    askIfUsed: fullMonthsBetween(rule.usedOn ?? payingSince, asOf) >= ASK_IF_USED_MONTHS,
+  };
 }
