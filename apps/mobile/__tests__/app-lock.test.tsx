@@ -12,7 +12,7 @@ import {
   setEnrolledLevel,
 } from "./helpers/fake-local-authentication";
 import { previewHidden, previewVisible, resetScreenCapture } from "./helpers/fake-screen-capture";
-import { getItemAsync, resetSecureStore } from "./helpers/memory-secure-store";
+import { getItemAsync, resetSecureStore, storedItem } from "./helpers/memory-secure-store";
 import { renderApp } from "./helpers/render-app";
 import { findTab } from "./helpers/tabs";
 
@@ -380,8 +380,8 @@ describe("wylogowanie wyłącza blokadę", () => {
 
       await session.signedOut(reason);
 
-      await waitFor(async () => {
-        expect(await getItemAsync("app-lock")).toBeNull();
+      await waitFor(() => {
+        expect(storedItem("app-lock")).toBeNull();
       });
       expect(previewVisible()).toBe(true);
     },

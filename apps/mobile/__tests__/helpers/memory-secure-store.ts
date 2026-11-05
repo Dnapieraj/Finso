@@ -16,6 +16,14 @@ export const deleteItemAsync = jest.fn((key: string) => {
   return Promise.resolve();
 });
 
+/**
+ * What is stored under `key`, read synchronously — for `waitFor`, whose
+ * callback must not be async (overlapping act() scopes starve later tests).
+ */
+export function storedItem(key: string): string | null {
+  return items.get(key) ?? null;
+}
+
 /** Forgets every stored item; call in `beforeEach`. */
 export function resetSecureStore(): void {
   items.clear();
