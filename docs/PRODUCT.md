@@ -133,7 +133,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3 — **ZROBIONE** (5.11.2026)
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
 21. Limity na kategorie (np. jedzenie do 800 zł w okresie) — **ZROBIONE** (5.11.2026), razem z podpowiedziami „chudego miesiąca”
-22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
+22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00) — **ZROBIONE** (5.11.2026)
 23. **Martwe subskrypcje** — **ZROBIONE** (5.11.2026) („Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś
     tego jako używane — anulować?”) — wymaga zapisu „używam / nie używam”
     przy potwierdzonej subskrypcji; przesunięte z punktu 7 planu 20.10.2026
@@ -1089,3 +1089,21 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - **Nowa biblioteka: `expo-document-picker` ~57.0.3** (systemowy wybór pliku;
   wersja z `expo install`, zgodna z SDK 57). Wymaga nowego development buildu.
 - Gdzie: Ustawienia → Import z banku (obok eksportu).
+
+### 5.11.2026 — Faza 2: wybór godziny przypomnień
+
+- **Jedna godzina dla wszystkich przypomnień**, pełne godziny od 6:00 do
+  22:00, domyślnie 9:00. Osobne godziny per rodzaj to więcej ustawień niż
+  pożytku; w nocy przypomnienia o płatnościach nie mają sensu.
+- **Zapisana na urządzeniu**, jak reszta ustawień powiadomień (drugi telefon
+  może chcieć innej); stare zapisy bez godziny dostają 9:00.
+- Ekran: „Godzina przypomnień 9:00” z przyciskami „−/+” (Godzinę wcześniej /
+  później), dla czytnika ekranu jeden regulowany element (przesunięcie
+  w górę/dół). Tekst pod spodem nadal mówi „około” — Android dostarcza
+  przypomnienia z opóźnieniem do godziny.
+- Zmiana od razu przelicza plan przypomnień. Przy okazji: zapis ustawień
+  zmienia stan w pamięci od razu (szybkie tapnięcia się sumowały źle — każde
+  liczyło od wartości sprzed zapisu) i zapisuje cały stan, więc wygrywa
+  ostatni zapis.
+- Dzisiejszy termin po wybranej godzinie, która już minęła, nie dostaje
+  przypomnienia na dziś (nic w przeszłości).
