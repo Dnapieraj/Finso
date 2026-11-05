@@ -5,6 +5,7 @@ import {
   authTokensSchema,
   type AuthTokens,
   type ChangePasswordInput,
+  type ChangeEmailInput,
   type DeleteAccountInput,
   type ResetPasswordInput,
   type LoginInput,
@@ -178,6 +179,13 @@ export interface ApiClient {
      * dostaje nowe tokeny — telefon zostaje zalogowany.
      */
     changePassword(input: ChangePasswordInput): Promise<void>;
+    /**
+     * Wysyła kod na nowy adres (wymaga hasła). 409 = adres zajęty,
+     * 403 = złe hasło, 503 = e-mail nie wyszedł.
+     */
+    requestEmailChange(input: ChangeEmailInput): Promise<void>;
+    /** Zmienia adres kodem z e-maila i zwraca użytkownika. 400 = zły albo wygasły kod. */
+    confirmEmailChange(code: string): Promise<PublicUser>;
   };
   readonly budget: {
     /** Ile zostało do końca bieżącego okresu i ile dziennie. */
@@ -506,6 +514,11 @@ export function createApiClient({
       async changePassword(input) {
         await tokens.setTokens(await write("POST", "/users/me/password", input, authTokensSchema));
       },
+      async requestEmailChange(input) {
+        await execute({ method: "POST", path: "/users/me/email/change", body: input });
+      },
+      confirmEmailChange: (code) =>
+        write("POST", "/users/me/email/change/confirm", { code }, publicUserSchema),
     },
     budget: {
       current: () => read("/budget/current", budgetSummarySchema),

@@ -913,6 +913,42 @@ describe("createApiClient", () => {
     });
   });
 
+  describe("e-mail change", () => {
+    const user = {
+      id: "01923b6e-0000-7000-8000-000000000001",
+      email: "nowy@example.com",
+      plan: "FREE",
+      currency: "PLN",
+      timezone: "Europe/Warsaw",
+      periodStartDay: 10,
+      onboardingCompleted: true,
+      emailVerified: true,
+    };
+
+    it("requestEmailChange posts the new address and the password", async () => {
+      const { api, fetch } = setup({
+        "POST /users/me/email/change": [new Response(null, { status: 204 })],
+      });
+
+      await expect(
+        api.users.requestEmailChange({ newEmail: "nowy@example.com", password: "haslo" }),
+      ).resolves.toBeUndefined();
+      expect(sentRequest(fetch, 0).body).toEqual({
+        newEmail: "nowy@example.com",
+        password: "haslo",
+      });
+    });
+
+    it("confirmEmailChange posts the code and returns the user with the new address", async () => {
+      const { api, fetch } = setup({
+        "POST /users/me/email/change/confirm": [jsonResponse(200, user)],
+      });
+
+      await expect(api.users.confirmEmailChange("123456")).resolves.toEqual(user);
+      expect(sentRequest(fetch, 0).body).toEqual({ code: "123456" });
+    });
+  });
+
   describe("transactions import", () => {
     it("importRows posts the rows with the draft's Idempotency-Key and returns the counts", async () => {
       const { api, fetch } = setup({

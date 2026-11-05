@@ -85,6 +85,15 @@ export const changePasswordSchema = z.object({
   newPassword: newPasswordSchema,
 });
 
+/** Body `POST /users/me/email/change` — kod idzie na NOWY adres. */
+export const changeEmailSchema = z.object({
+  newEmail: emailSchema,
+  password: existingPasswordSchema,
+});
+
+/** Body `POST /users/me/email/change/confirm` — kod z e-maila na nowy adres. */
+export const confirmEmailChangeSchema = z.object({ code: emailCodeSchema });
+
 /** Para tokenów wydawana przy logowaniu, rejestracji i odświeżeniu sesji. */
 export const authTokensSchema = z.object({
   accessToken: z.string(),
@@ -116,5 +125,7 @@ export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 /** Zmiana hasła po zalogowaniu. */
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+/** Prośba o zmianę adresu e-mail. */
+export type ChangeEmailInput = z.infer<typeof changeEmailSchema>;
 /** Sesja: tokeny + użytkownik. */
 export type AuthSession = z.infer<typeof authSessionSchema>;

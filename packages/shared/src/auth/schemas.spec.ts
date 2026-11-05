@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   changePasswordSchema,
+  changeEmailSchema,
+  confirmEmailChangeSchema,
   deleteAccountSchema,
   emailCodeSchema,
   emailSchema,
@@ -150,5 +152,27 @@ describe("changePasswordSchema", () => {
     expect(
       changePasswordSchema.safeParse({ currentPassword: "x", newPassword: "krotkie" }).success,
     ).toBe(false);
+  });
+});
+
+describe("changeEmailSchema", () => {
+  it("nowy adres (przycięty, małymi literami) i obecne hasło", () => {
+    expect(
+      changeEmailSchema.parse({ newEmail: "  Ola@Example.COM ", password: "stare hasło 123" }),
+    ).toEqual({ newEmail: "ola@example.com", password: "stare hasło 123" });
+  });
+
+  it.each([
+    ["zły adres", { newEmail: "ola", password: "x" }],
+    ["bez hasła", { newEmail: "ola@example.com", password: "" }],
+  ])("odrzuca: %s", (_case, body) => {
+    expect(changeEmailSchema.safeParse(body).success).toBe(false);
+  });
+});
+
+describe("confirmEmailChangeSchema", () => {
+  it("sam 6-cyfrowy kod z e-maila", () => {
+    expect(confirmEmailChangeSchema.parse({ code: "123456" })).toEqual({ code: "123456" });
+    expect(confirmEmailChangeSchema.safeParse({ code: "12345" }).success).toBe(false);
   });
 });
