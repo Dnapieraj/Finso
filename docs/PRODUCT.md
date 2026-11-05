@@ -1107,3 +1107,24 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   ostatni zapis.
 - Dzisiejszy termin po wybranej godzinie, która już minęła, nie dostaje
   przypomnienia na dziś (nic w przeszłości).
+
+### 5.11.2026 — Faza 2: zmiana adresu e-mail
+
+- **Dwa kroki:** nowy adres + obecne hasło → 6-cyfrowy kod na **nowy** adres →
+  kod zmienia adres konta (od razu potwierdzony). Hasło, bo odblokowany
+  telefon nie może wystarczyć do przejęcia konta; kod na nowy adres, bo to
+  jedyny dowód, że adres należy do właściciela (od niego zależy reset hasła).
+- **Stary adres dostaje informację** „Adres e-mail w Finso zmieniony” z nowym
+  adresem i kontaktem — gdyby to nie właściciel, dowie się od razu. Gdy ta
+  wiadomość nie wyjdzie, zmiana i tak zostaje (już się dokonała); błąd jest
+  logowany.
+- **Nowy cel kodu `EMAIL_CHANGE`**, ważny 30 minut, z adresem docelowym
+  zapisanym przy kodzie i wliczonym w HMAC — kod zadziała tylko dla adresu,
+  na który go wysłano. Nowa prośba (o inny adres) unieważnia poprzedni kod;
+  ten sam adres w ciągu minuty nie wysyła drugiego kodu (jak przy innych
+  kodach). Najwyżej 5 prób, limit zapytań jak na `/auth/*`.
+- Błędy: złe hasło 403, adres zajęty 409 (też gdy ktoś zajmie go między
+  kodem a potwierdzeniem), ten sam adres 400, e-mail nie wyszedł 503.
+- **Sesje zostają** — hasło się nie zmienia, a logowanie i tak wymaga hasła;
+  inaczej niż przy zmianie hasła.
+- Gdzie: Ustawienia → Konto → „Zmień adres e-mail”.
