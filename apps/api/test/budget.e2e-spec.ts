@@ -172,6 +172,7 @@ describe("Budget (e2e)", () => {
           periods: 3,
           low: 300_000,
           high: 600_000,
+          typical: 500_000,
           received: 0,
           notYetReceived: 300_000,
         },

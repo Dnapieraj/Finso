@@ -84,6 +84,7 @@ model User {
   goals                  Goal[]
   idempotencyKeys        IdempotencyKey[]
   expenseTemplates       ExpenseTemplate[]
+  categoryLimits         CategoryLimit[]
   subscriptionDismissals SubscriptionDismissal[]
   emailCodes             EmailCode[]
 }
@@ -132,6 +133,7 @@ model Category {
   transactions     Transaction[]
   recurringRules   RecurringRule[]
   expenseTemplates ExpenseTemplate[]
+  categoryLimits   CategoryLimit[]
 
   @@index([userId])
 }
@@ -374,6 +376,28 @@ model ExpenseTemplate {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+}
+
+// --- Limity na kategorie --------------------------------------------------
+
+/// Ile najwyżej wydać w kategorii w jednym okresie budżetowym. Ustawienie,
+/// nie dane finansowe: twarde usunięcie, wydatki zostają.
+model CategoryLimit {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Cascade: bez kategorii limit nie ma czego pilnować.
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  /// Grosze na okres budżetowy.
+  amount Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, categoryId])
 }
 
 // --- Detektor subskrypcji --------------------------------------------------
