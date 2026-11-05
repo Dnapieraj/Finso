@@ -134,7 +134,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 20. Podsumowanie okresu do udostępniania („W tym miesiącu odłożyłeś X”)
 21. Limity na kategorie (np. jedzenie do 800 zł w okresie) — **ZROBIONE** (5.11.2026), razem z podpowiedziami „chudego miesiąca”
 22. Wybór godziny przypomnień w Ustawieniach → Powiadomienia (dziś stała 9:00)
-23. **Martwe subskrypcje** („Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś
+23. **Martwe subskrypcje** — **ZROBIONE** (5.11.2026) („Płacisz za X od 8 miesięcy, ale nigdy nie oznaczyłeś
     tego jako używane — anulować?”) — wymaga zapisu „używam / nie używam”
     przy potwierdzonej subskrypcji; przesunięte z punktu 7 planu 20.10.2026
 
@@ -1032,3 +1032,25 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   ostrzeżenie.
 - Plan Free/Plus: limity nie są jeszcze ograniczane (jak reszta limitów
   planu — do etapu płatności).
+
+### 5.11.2026 — Faza 2: martwe subskrypcje („Czy jeszcze korzystasz?”)
+
+- **Pytamy po 3 pełnych miesiącach** płacenia bez „Używam” — albo 3 miesiące
+  po ostatnim „Używam”. „Płacisz od” = pierwsza znana płatność reguły
+  (albo start reguły, gdy wcześniejszych nie ma). Pełny miesiąc liczy się
+  dopiero po minięciu dnia (31.01 → 30.04 to 2) — pytamy raczej później
+  niż za wcześnie.
+- **Subskrypcja potwierdzona z detektora** zaczyna się od następnego
+  terminu, więc pierwsze pytanie przyjdzie 3 miesiące później, nawet jeśli
+  wcześniejsze płatności (bez powiązania z regułą) sięgają dalej. Świadomie:
+  zaraz po „To subskrypcja” pytanie „czy używasz?” byłoby natrętne.
+- **„Używam”** zapisuje dzień użytkownika w `RecurringRule.subscriptionUsedOn`
+  (`@db.Date`) przez `POST /subscriptions/:ruleId/used` (tylko własna,
+  aktywna subskrypcja, inaczej 404).
+- **„Nie używam” niczego nie usuwa.** Finso nie anuluje subskrypcji
+  u dostawcy, a usunięcie stałej płatności przed anulowaniem zawyżyłoby
+  „Możesz wydać”. Appka mówi wprost: „Anuluj X u dostawcy. Gdy płatności
+  się skończą, usuń ją ze stałych zobowiązań”, z przyciskiem do tej płatności.
+- Gdzie: Ustawienia → Subskrypcje, sekcja „Czy jeszcze korzystasz?” (od kiedy
+  i ile rocznie, w górę), oraz karta subskrypcji na Start („Czy nadal
+  korzystasz z: …?”).
