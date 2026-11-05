@@ -2,7 +2,7 @@
   "name": "mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "expo-router/entry",
+  "main": "index.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -43,6 +43,7 @@
     "react": "19.2.3",
     "react-hook-form": "^7.89.0",
     "react-native": "0.86.3",
+    "react-native-android-widget": "0.26.0",
     "react-native-css-interop": "0.2.7",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",

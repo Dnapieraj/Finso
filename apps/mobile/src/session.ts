@@ -6,6 +6,7 @@ import { appLock } from "./lock/store";
 import { cancelReminders } from "./notifications/schedule";
 import { queryClient } from "./query-client";
 import { secureTokenStore } from "./secure-token-store";
+import { forgetWidget } from "./widget/update";
 
 /**
  * - `restoring` — reading the secure store at startup (splash screen stays up),
@@ -110,6 +111,8 @@ export const session = createSessionStore({
     void cancelReminders();
     // The next person to sign in on this phone starts without it.
     void appLock.disable();
+    // The home screen widget stops showing this account's amounts.
+    void forgetWidget();
   },
 });
 

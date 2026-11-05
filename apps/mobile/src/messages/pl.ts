@@ -554,6 +554,16 @@ export const pl = {
         "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
     },
   },
+  // Home screen widget (Android). Short: a widget is a few lines tall.
+  widget: {
+    appName: "Finso",
+    left: "Dziś możesz wydać",
+    over: "Dziś ponad plan o",
+    paydayIn: (days: number, unit: string) => `Wypłata za ${String(days)} ${unit}`,
+    paydayTomorrow: "Wypłata jutro",
+    refresh: "Otwórz Finso, żeby odświeżyć budżet.",
+    openApp: "Otwórz Finso, żeby zobaczyć, ile możesz dziś wydać.",
+  },
   updateRequired: {
     title: "Zaktualizuj aplikację",
     body: "Ta wersja Finso nie jest już obsługiwana. Zaktualizuj aplikację w sklepie — twoje dane czekają na koncie.",

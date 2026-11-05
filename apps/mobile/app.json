@@ -32,6 +32,26 @@
         {
           "faceIDPermission": "Finso używa Face ID do odblokowania aplikacji, jeśli włączysz blokadę w Ustawieniach."
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Budget",
+              "label": "Możesz dziś wydać",
+              "description": "Ile możesz dziś wydać i kiedy wypłata.",
+              "previewImage": "./assets/widget-preview.png",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "widgetCategory": "home_screen",
+              "updatePeriodMillis": 1800000
+            }
+          ]
+        }
       ]
     ],
     "scheme": "finso"
