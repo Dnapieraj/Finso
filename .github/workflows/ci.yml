@@ -29,6 +29,8 @@ jobs:
   ci:
     name: Lint, typecheck, test
     runs-on: ubuntu-latest
+    # A hung test fails the run instead of holding a runner for hours.
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -59,7 +61,8 @@ jobs:
         run: pnpm format:check
 
       - name: Lint, typecheck, test
-        run: pnpm turbo run lint typecheck test
+        # Streamed, not grouped: a task that never finishes still shows its output.
+        run: pnpm turbo run lint typecheck test --log-order=stream
         env:
           # Scheduled and manual runs ignore cached results (see `schedule` above).
           TURBO_FORCE: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
