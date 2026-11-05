@@ -122,7 +122,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 
 13. Nieregularne dochody — uczenie się wzorca — **ZROBIONE** (4.11.2026, 893d9c9..f42da80)
 14. Wspólne wydatki / rozliczenia
-15. Widżety iOS/Android („Możesz dziś wydać X zł”)
+15. Widżety iOS/Android („Możesz dziś wydać X zł”) — **Android ZROBIONY** (5.11.2026); iOS czeka na decyzję (Mac albo EAS)
 16. Tryb offline z synchronizacją
 17. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
     i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
@@ -966,3 +966,31 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   Ustawienia → Dochody: „Prognoza: X na okres · zwykle Y–Z”.
 - **„Chudy miesiąc” (podpowiedzi, co przyciąć) — nie zrobione.** Wymaga
   limitów per kategoria (kolejny punkt), z którymi da się to sensownie połączyć.
+
+### 5.11.2026 — Faza 2: widżet na Androida
+
+- **Biblioteka `react-native-android-widget` 0.26** (plugin Expo, widżet pisany
+  w JSX, rysowany przez zadanie w tle). Działa z Expo SDK 57 i development
+  buildem; Expo nie ma własnego API widżetów na Androida.
+- **Jeden widżet 3×2: „Dziś możesz wydać X · Wypłata za N dni”**, w kolorach
+  Vireo (jasny i ciemny wariant wg telefonu). Dotknięcie otwiera appkę.
+- **Widżet nie łączy się z API.** Appka po każdym wczytaniu budżetu zapisuje
+  w secure store mały snapshot (kwota na dziś, saldo okresu, koniec okresu,
+  dzień, strefa); widżet czyta tylko jego.
+- **Liczby z innego dnia nie są pokazywane** — limit na dziś zmienia się
+  o północy, więc po zmianie dnia widżet prosi „Otwórz Finso, żeby odświeżyć
+  budżet” zamiast pokazać nieaktualną kwotę.
+- **Pod kreską — jak Start:** przy ujemnym saldzie okresu widżet mówi
+  „Jesteś pod kreską o X” (w górę), a nie „Dziś ponad plan” — Start w tej
+  sytuacji też nie pokazuje limitu na dziś. Wyszło przy sprawdzaniu na
+  emulatorze.
+- **Tryb ukrytych kwot albo blokada aplikacji = ukryta kwota i neutralny
+  nagłówek „Twój budżet •••”** — ekran główny widzi każdy, a sam nagłówek
+  „Jesteś pod kreską” zdradzałby stan finansów.
+- **Wylogowanie czyści snapshot**; widżet prosi o otwarcie appki.
+- Snapshot zapisany przez starszą wersję (bez salda okresu) nie jest
+  pokazywany — widżet prosi o otwarcie appki.
+- Podgląd w wyborniku widżetów: prawdziwy render z emulatora
+  (`assets/widget-preview.png`).
+- **iPhone: nie zrobione.** Widżet iOS to rozszerzenie WidgetKit w Swifcie,
+  budowane na Macu albo przez EAS Build (konto Expo) — do Twojej decyzji.
