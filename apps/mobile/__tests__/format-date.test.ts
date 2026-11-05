@@ -1,4 +1,4 @@
-import { formatDayMonth } from "../src/format/date";
+import { formatDayMonth, formatFullDate } from "../src/format/date";
 
 // Own month names instead of Intl: Hermes on Android may ship without full
 // Polish locale data, and web + tests + device must print the same text.
@@ -18,4 +18,9 @@ it.each([
   ["2026-12-31", "31 grudnia"],
 ])("%s → %s", (date, expected) => {
   expect(formatDayMonth(date)).toBe(expected);
+});
+
+it("pełna data z rokiem — gdy zakres może przejść przez Nowy Rok", () => {
+  expect(formatFullDate("2026-12-31")).toBe("31 grudnia 2026");
+  expect(formatFullDate("2027-01-02")).toBe("2 stycznia 2027");
 });

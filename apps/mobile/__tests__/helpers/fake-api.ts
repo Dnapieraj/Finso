@@ -40,6 +40,7 @@ import type {
   SubscriptionsOverviewOutput,
   CategoryLimitsOverview,
   SetCategoryLimitInput,
+  ImportTransactionsInput,
 } from "@vireo/shared";
 import { addExpenseToSummary, categoryLimitStatuses, grosze, isoDate } from "@vireo/shared";
 import { ApiError, type ApiClient } from "@vireo/shared/api";
@@ -759,6 +760,30 @@ export const fakeApi = {
       return Promise.resolve(trashed.expense);
     }),
     draft: jest.fn((input: CreateTransactionRequest): TransactionDraft => keyed(input)),
+    draftImport: jest.fn((input: ImportTransactionsInput) => keyed(input)),
+    /** Like the API: skips rows with the date and amount of a saved expense, each once. */
+    importRows: jest.fn(({ input }: IdempotentDraft<ImportTransactionsInput>) => {
+      const left = allExpenses().filter((expense) => expense.status === "CONFIRMED");
+      let imported = 0;
+      for (const row of input.rows) {
+        const same = left.findIndex((e) => e.date === row.date && e.amount === row.amount);
+        if (same === -1) {
+          saved.push(
+            testTransaction({
+              id: nextId(),
+              amount: row.amount,
+              date: row.date,
+              categoryId: null,
+              note: row.note,
+            }),
+          );
+          imported += 1;
+        } else {
+          left.splice(same, 1);
+        }
+      }
+      return Promise.resolve({ imported, duplicates: input.rows.length - imported });
+    }),
     create: jest.fn(({ input }: TransactionDraft) => {
       const expense = testTransaction({
         id: "01923b6e-0000-7000-8000-000000000099",

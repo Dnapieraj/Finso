@@ -298,6 +298,7 @@ export const pl = {
     limits: "Limity kategorii",
     subscriptions: "Subskrypcje",
     export: "Eksport danych",
+    bankImport: "Import z banku",
     app: "Aplikacja",
     notifications: "Powiadomienia",
     appearance: "Wygląd",
@@ -618,6 +619,41 @@ export const pl = {
     mailSystem: (system: string) => `System: ${system}`,
     mailNoMoney: "Nie wpisuj kwot ani innych danych finansowych — nie są potrzebne.",
     osNames: { android: "Android", ios: "iOS" } as Record<string, string | undefined>,
+  },
+  bankImport: {
+    title: "Import z banku",
+    intro:
+      "Pobierz w bankowości internetowej historię operacji w formacie CSV i wybierz ten plik. Finso doda z niego wydatki w złotówkach — wpływy i operacje w obcych walutach pominie.",
+    dedupe:
+      "Wydatki, które już są w Finso (ta sama data i kwota), nie zostaną dodane drugi raz. Kategorie przypiszesz potem w Historii.",
+    pick: "Wybierz plik CSV",
+    pickAnother: "Wybierz inny plik",
+    reading: "Wczytywanie pliku…",
+    expenses: { one: "wydatek", few: "wydatki", many: "wydatków" },
+    summary: (count: number, unit: string, from: string, to: string, total: string) =>
+      `W pliku: ${String(count)} ${unit} z okresu ${from} – ${to}, razem ${total}.`,
+    skipped: (parts: string) => `Pominięte: ${parts}.`,
+    skippedIncome: { one: "wpływ", few: "wpływy", many: "wpływów" },
+    skippedForeign: "w obcej walucie",
+    skippedInvalid: {
+      one: "nieczytelny wiersz",
+      few: "nieczytelne wiersze",
+      many: "nieczytelnych wierszy",
+    },
+    importButton: (count: number, unit: string) => `Importuj ${String(count)} ${unit}`,
+    importing: "Importowanie…",
+    done: (count: number, unit: string) => `Zaimportowano ${String(count)} ${unit}.`,
+    // „1 był”, „2 były”, „5 było” już w Finso.
+    wasThere: { one: "był", few: "były", many: "było" },
+    duplicates: (count: number, verb: string) => `${String(count)} ${verb} już w Finso.`,
+    openHistory: "Otwórz historię",
+    unreadable: "Nie udało się odczytać pliku. Spróbuj ponownie albo wybierz inny.",
+    noColumns: "Nie znaleziono kolumn z datą i kwotą. Czy to wyciąg CSV z banku?",
+    noExpenses: "W pliku nie ma wydatków w złotówkach.",
+    tooMany: (max: number) =>
+      `W pliku jest za dużo wydatków. Wybierz w banku krótszy okres — najwyżej ${String(max)} naraz.`,
+    failed: "Nie udało się zaimportować. Spróbuj ponownie.",
+    retry: "Spróbuj ponownie",
   },
   exportData: {
     title: "Eksport danych",

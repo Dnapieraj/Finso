@@ -100,6 +100,7 @@ export default function SettingsScreen() {
           <SettingsLink label={t.limits} href="/settings/limits" />
           <SettingsLink label={t.templates} href="/settings/templates" />
           <SettingsLink label={t.subscriptions} href="/settings/subscriptions" />
+          <SettingsLink label={t.bankImport} href="/settings/import" />
           <SettingsLink label={t.export} href="/settings/export" />
         </View>
       </View>

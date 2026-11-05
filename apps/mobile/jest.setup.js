@@ -36,5 +36,6 @@ jest.mock("expo-system-ui", () => require("./__tests__/helpers/fake-system-ui"))
 // No device storage and no share sheet under Jest; tests read the exported files.
 jest.mock("expo-file-system", () => require("./__tests__/helpers/fake-file-system"));
 jest.mock("expo-sharing", () => require("./__tests__/helpers/fake-sharing"));
+jest.mock("expo-document-picker", () => require("./__tests__/helpers/fake-document-picker"));
 // No launcher under Jest; the widget's content is tested on its own (widget-content.test).
 jest.mock("react-native-android-widget", () => require("./__tests__/helpers/fake-android-widget"));

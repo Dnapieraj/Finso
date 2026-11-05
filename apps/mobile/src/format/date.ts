@@ -16,6 +16,11 @@ const MONTHS = [
   "grudnia",
 ] as const;
 
+/** `"2026-10-10"` → `"10 października 2026"`. */
+export function formatFullDate(isoDate: string): string {
+  return `${formatDayMonth(isoDate)} ${isoDate.slice(0, 4)}`;
+}
+
 /** `"2026-10-10"` → `"10 października"`. Takes a calendar date, not a timestamp. */
 export function formatDayMonth(isoDate: string): string {
   const [, month, day] = isoDate.split("-").map(Number);
