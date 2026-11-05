@@ -37,7 +37,8 @@ function updateRecent(change: (page: TransactionPage) => TransactionPage) {
 
 /** Ask the server for the real numbers once it has settled. */
 function refreshFromServer() {
-  void queryClient.invalidateQueries({ queryKey: BUDGET_KEY });
+  // All of "budget": the category limits live under it too.
+  void queryClient.invalidateQueries({ queryKey: ["budget"] });
   void queryClient.invalidateQueries({ queryKey: ["transactions"] });
   // A third monthly payment can turn an expense into a detected subscription.
   void queryClient.invalidateQueries({ queryKey: ["subscriptions"] });

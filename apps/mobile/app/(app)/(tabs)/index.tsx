@@ -16,6 +16,9 @@ import { Screen } from "../../../src/components/screen";
 import { ConfirmationsCard } from "../../../src/confirmations/confirmations-card";
 import { useConfirmations } from "../../../src/confirmations/queries";
 import { periodProgress } from "../../../src/dashboard/period-progress";
+import { LeanMonthCard } from "../../../src/limits/lean-month-card";
+import { LimitsCard } from "../../../src/limits/limits-card";
+import { useCategoryLimits } from "../../../src/limits/queries";
 import { useBudget, useCategories, useRecentExpenses } from "../../../src/dashboard/queries";
 import { ExpenseNoticeBar } from "../../../src/expenses/expense-notice";
 import { ExpenseRow } from "../../../src/expenses/expense-row";
@@ -233,6 +236,7 @@ export default function DashboardScreen() {
   const expenses = useRecentExpenses();
   const confirmations = useConfirmations();
   const subscriptions = useSubscriptions();
+  const limits = useCategoryLimits();
   const [refreshing, setRefreshing] = useState(false);
   const colors = theme.colors[useColorScheme() === "dark" ? "dark" : "light"];
 
@@ -243,6 +247,7 @@ export default function DashboardScreen() {
       confirmations.refetch(),
       expenses.refetch(),
       subscriptions.refetch(),
+      limits.refetch(),
     ]);
     setRefreshing(false);
   }
@@ -273,7 +278,9 @@ export default function DashboardScreen() {
         ) : (
           <BudgetOverview budget={budget.data} />
         )}
+        <LeanMonthCard />
         <ConfirmationsCard />
+        <LimitsCard />
         <SubscriptionsCard />
         <RecentExpenses />
       </Screen>

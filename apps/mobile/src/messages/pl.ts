@@ -295,6 +295,7 @@ export const pl = {
     incomes: "Dochody",
     commitments: "Stałe zobowiązania",
     templates: "Szablony wydatków",
+    limits: "Limity kategorii",
     subscriptions: "Subskrypcje",
     export: "Eksport danych",
     app: "Aplikacja",
@@ -552,6 +553,41 @@ export const pl = {
       yearlySchedule: (dayAndMonth: string) => `Co rok, ${dayAndMonth}`,
       yearlyHint:
         "Roczny rytm pochodzi z wykrytej subskrypcji. Żeby go zmienić, usuń zobowiązanie i dodaj nowe.",
+    },
+  },
+  limits: {
+    title: "Limity kategorii",
+    card: "Limity",
+    add: "Dodaj limit",
+    newTitle: "Nowy limit",
+    editTitle: (category: string) => `Limit: ${category}`,
+    amount: "Limit na okres",
+    amountHint: "Ile najwyżej chcesz wydać w tej kategorii od wypłaty do wypłaty.",
+    categoryRequired: "Wybierz kategorię.",
+    allLimited: "Każda kategoria ma już limit — zmień istniejący.",
+    loading: "Wczytywanie limitów",
+    error: "Nie udało się wczytać limitów.",
+    empty:
+      "Nie masz jeszcze limitów. Ustaw np. jedzenie do 800 zł na okres — Start pokaże, ile zostało.",
+    notFound: "Nie znaleziono tego limitu.",
+    delete: "Usuń limit",
+    deleteWarning: "Wydatki w tej kategorii zostaną.",
+    left: (left: string, limit: string, perDay: string) =>
+      `Zostało ${left} z ${limit} · ${perDay} dziennie`,
+    over: (over: string, limit: string) => `Ponad limit o ${over} (limit ${limit})`,
+    rowLabel: (category: string) => `Limit: ${category}`,
+    lean: {
+      title: "Chudszy okres",
+      body: (counted: string, typical: string) =>
+        `Z dochodu nieregularnego liczymy w tym okresie ${counted}, a zwykle wpływa ${typical}.`,
+      cut: "Gdzie przyciąć:",
+      noHints: "Za mało historii wydatków, żeby podpowiedzieć, co przyciąć.",
+      suggestion: (category: string, usual: string, suggested: string) =>
+        `${category}: zwykle ${usual}, spróbuj ${suggested}`,
+      set: "Ustaw limit",
+      setLabel: (amount: string, category: string) =>
+        `Ustaw limit ${amount} dla kategorii ${category}`,
+      setError: "Nie udało się ustawić limitu. Spróbuj ponownie.",
     },
   },
   // Home screen widget (Android). Short: a widget is a few lines tall.

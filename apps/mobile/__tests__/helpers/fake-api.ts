@@ -38,8 +38,10 @@ import type {
   ConfirmedSubscriptionOutput,
   DetectedSubscriptionOutput,
   SubscriptionsOverviewOutput,
+  CategoryLimitsOverview,
+  SetCategoryLimitInput,
 } from "@vireo/shared";
-import { addExpenseToSummary, grosze } from "@vireo/shared";
+import { addExpenseToSummary, categoryLimitStatuses, grosze, isoDate } from "@vireo/shared";
 import { ApiError, type ApiClient } from "@vireo/shared/api";
 
 export const testUser: PublicUser = {
@@ -282,6 +284,34 @@ let created = 0;
 let due: DueConfirmation[] = [];
 /** Quick add templates — none unless a test seeds them. */
 let templates: ExpenseTemplate[] = [];
+/** Category limits, in the order they were set — none unless a test seeds them. */
+let limits: { categoryId: string; amount: number }[] = [];
+/** The lean month the server reports — none unless a test seeds one. */
+let lean: CategoryLimitsOverview["leanMonth"] = null;
+
+/** Like the API: the real engine over the fake server's expenses on testBudget.asOf. */
+function limitsOverview(): CategoryLimitsOverview {
+  return {
+    limits: categoryLimitStatuses({
+      limits: limits.map((limit) => ({ ...limit, amount: grosze(limit.amount) })),
+      expenses: allExpenses().map((expense) => ({
+        ...expense,
+        amount: grosze(expense.amount),
+        date: isoDate(expense.date),
+      })),
+      today: isoDate(testBudget.asOf),
+      periodStartDay: account.periodStartDay,
+    }),
+    // Like leanMonth: a limit already at or below the suggestion takes it off.
+    leanMonth: lean && {
+      ...lean,
+      suggestions: lean.suggestions.filter(
+        (s) => !limits.some((l) => l.categoryId === s.categoryId && l.amount <= s.suggested),
+      ),
+    },
+  };
+}
+
 /** Subscriptions — none unless a test seeds them. */
 let detected: DetectedSubscriptionOutput[] = [];
 let confirmedSubscriptions: ConfirmedSubscriptionOutput[] = [];
@@ -335,6 +365,8 @@ export function resetFakeServer(): void {
   trashedGoals = [];
   due = [];
   templates = [];
+  limits = [];
+  lean = null;
   detected = [];
   confirmedSubscriptions = [];
   dismissed = [];
@@ -354,12 +386,16 @@ export function seedFakeServer(data: {
   transactions?: Transaction[];
   due?: DueConfirmation[];
   templates?: ExpenseTemplate[];
+  limits?: { categoryId: string; amount: number }[];
+  leanMonth?: CategoryLimitsOverview["leanMonth"];
   detected?: DetectedSubscriptionOutput[];
   confirmedSubscriptions?: ConfirmedSubscriptionOutput[];
 }) {
   if (data.detected) detected = data.detected;
   if (data.confirmedSubscriptions) confirmedSubscriptions = data.confirmedSubscriptions;
   if (data.templates) templates = data.templates;
+  if (data.limits) limits = data.limits;
+  if (data.leanMonth !== undefined) lean = data.leanMonth;
   if (data.transactions) earlier = data.transactions;
   if (data.due) due = data.due;
   if (data.rules) rules = data.rules;
@@ -608,6 +644,21 @@ export const fakeApi = {
     undismiss: jest.fn((key: string) => {
       detected = [...detected, ...dismissed.filter((item) => item.key === key)];
       dismissed = dismissed.filter((item) => item.key !== key);
+      return Promise.resolve();
+    }),
+  },
+  categoryLimits: {
+    overview: jest.fn(() => Promise.resolve(limitsOverview())),
+    set: jest.fn((categoryId: string, input: SetCategoryLimitInput) => {
+      limits = limits.some((limit) => limit.categoryId === categoryId)
+        ? limits.map((limit) =>
+            limit.categoryId === categoryId ? { categoryId, ...input } : limit,
+          )
+        : [...limits, { categoryId, ...input }];
+      return Promise.resolve();
+    }),
+    remove: jest.fn((categoryId: string) => {
+      limits = limits.filter((limit) => limit.categoryId !== categoryId);
       return Promise.resolve();
     }),
   },

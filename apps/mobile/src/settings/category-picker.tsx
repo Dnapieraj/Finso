@@ -14,10 +14,13 @@ export function CategoryPicker({
   value,
   error,
   onChange,
+  exclude = [],
 }: {
   value: string | null;
   error?: string;
   onChange: (categoryId: string) => void;
+  /** Categories not to offer, e.g. those that already have a limit. */
+  exclude?: readonly string[];
 }) {
   const categories = useCategories();
 
@@ -38,16 +41,18 @@ export function CategoryPicker({
         accessibilityLabel={t.commitments.category}
         className="flex-row flex-wrap gap-2"
       >
-        {categories.data.map((category) => (
-          <CategoryChip
-            key={category.id}
-            category={category}
-            selected={category.id === value}
-            onPress={() => {
-              onChange(category.id);
-            }}
-          />
-        ))}
+        {categories.data
+          .filter((category) => !exclude.includes(category.id))
+          .map((category) => (
+            <CategoryChip
+              key={category.id}
+              category={category}
+              selected={category.id === value}
+              onPress={() => {
+                onChange(category.id);
+              }}
+            />
+          ))}
       </View>
     );
   }

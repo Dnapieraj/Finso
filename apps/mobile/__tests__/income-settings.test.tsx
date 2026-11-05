@@ -124,6 +124,7 @@ describe("list", () => {
             periods: 4,
             low: 300_000,
             high: 750_000,
+            typical: 600_000,
             received: 100_000,
             notYetReceived: 200_000,
           },
