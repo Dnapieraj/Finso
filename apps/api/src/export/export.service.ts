@@ -36,7 +36,7 @@ export class ExportService {
     if (!user) throw new UnauthorizedException();
 
     const order = [{ date: "asc" as const }, { id: "asc" as const }];
-    const [categories, expenses, incomeSources, incomeEntries, goals, recurringRules] =
+    const [categories, expenses, incomeSources, incomeEntries, goals, recurringRules, deposits] =
       await Promise.all([
         this.categories.list(userId),
         this.db.transaction.findMany({ where: { userId }, orderBy: order }),
@@ -44,6 +44,7 @@ export class ExportService {
         this.db.incomeEntry.findMany({ where: { userId }, orderBy: order }),
         this.goals.list(userId),
         this.rules.list(userId),
+        this.db.goalDeposit.findMany({ where: { userId }, orderBy: order }),
       ]);
 
     return {
@@ -70,6 +71,12 @@ export class ExportService {
         occurrenceDate: row.occurrenceDate && toIsoDate(row.occurrenceDate),
       })),
       goals,
+      goalDeposits: deposits.map((row) => ({
+        id: row.id,
+        goalId: row.goalId,
+        amount: row.amount,
+        date: toIsoDate(row.date),
+      })),
       recurringRules,
     };
   }

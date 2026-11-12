@@ -74,6 +74,7 @@ model User {
   incomeEntries          IncomeEntry[]
   transactions           Transaction[]
   goals                  Goal[]
+  goalDeposits           GoalDeposit[]
   idempotencyKeys        IdempotencyKey[]
   expenseTemplates       ExpenseTemplate[]
   categoryLimits         CategoryLimit[]
@@ -308,10 +309,13 @@ model Goal {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name          String
-  targetAmount  Int
-  currentAmount Int      @default(0)
-  targetDate    DateTime @db.Date
+  name         String
+  targetAmount Int
+  /// Odłożone poza wpłatami: kwota wpisana przy zakładaniu celu („Już
+  /// odłożone”) i późniejsze ręczne korekty. Odłożone razem = to + wpłaty
+  /// (GoalDeposit); API zwraca sumę jako `currentAmount`.
+  baseAmount   Int      @default(0)
+  targetDate   DateTime @db.Date
 
   /// Jak przy Transaction: użytkownik może odzyskać przypadkowo
   /// usunięty cel, zamiast bezpowrotnie tracić postęp.
@@ -320,7 +324,31 @@ model Goal {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  deposits GoalDeposit[]
+
   @@index([userId, deletedAt])
+}
+
+/// Wpłata na cel — osobny zapis z datą, żeby była historia postępu i żeby
+/// budżet wiedział, ile z raty tego okresu już wpłacono (packages/shared,
+/// assembleBudgetInput). Miękkie usuwanie jak przy wydatkach: „Cofnij”
+/// przywraca wpłatę, a dane finansowe nie znikają.
+model GoalDeposit {
+  id     String @id @default(uuid(7))
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalId String
+  goal   Goal   @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  amount Int
+  date   DateTime @db.Date
+
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, goalId, deletedAt])
 }
 
 // --- Idempotencja -------------------------------------------------------------

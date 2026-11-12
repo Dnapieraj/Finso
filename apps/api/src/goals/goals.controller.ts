@@ -13,8 +13,14 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiHeader, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
-import type { Goal } from "@vireo/shared";
-import { createGoalSchema, goalSchema, updateGoalSchema } from "@vireo/shared";
+import type { Goal, GoalDeposit } from "@vireo/shared";
+import {
+  createGoalDepositSchema,
+  createGoalSchema,
+  goalDepositSchema,
+  goalSchema,
+  updateGoalSchema,
+} from "@vireo/shared";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
 import type { AuthUser } from "../auth/decorators.js";
@@ -26,6 +32,8 @@ import { GoalsService } from "./goals.service.js";
 export class CreateGoalDto extends createZodDto(createGoalSchema) {}
 export class UpdateGoalDto extends createZodDto(updateGoalSchema) {}
 export class GoalDto extends createZodDto(goalSchema) {}
+export class CreateGoalDepositDto extends createZodDto(createGoalDepositSchema) {}
+export class GoalDepositDto extends createZodDto(goalDepositSchema) {}
 
 @ApiTags("goals")
 @ApiBearerAuth()
@@ -93,5 +101,58 @@ export class GoalsController {
   @ZodResponse({ status: HttpStatus.OK, type: GoalDto })
   restore(@CurrentUser() user: AuthUser, @Param("id") id: string): Promise<Goal> {
     return this.goals.restore(user.id, id);
+  }
+
+  @Get(":id/deposits")
+  @ZodResponse({ type: [GoalDepositDto] })
+  listDeposits(@CurrentUser() user: AuthUser, @Param("id") id: string): Promise<GoalDeposit[]> {
+    return this.goals.listDeposits(user.id, id);
+  }
+
+  /** Z `Idempotency-Key` ponowienie po zerwanym połączeniu nie wpłaca drugi raz. */
+  @Post(":id/deposits")
+  @ZodResponse({ status: HttpStatus.CREATED, type: GoalDepositDto })
+  @ApiHeader({
+    name: "Idempotency-Key",
+    required: false,
+    description: "UUID wpłaty; ten sam klucz przez 24 h zwraca ten sam wynik",
+  })
+  createDeposit(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Body() body: CreateGoalDepositDto,
+    @Headers("idempotency-key") rawKey: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<GoalDeposit> {
+    return idempotentPost(this.idempotency, {
+      userId: user.id,
+      // Cel w zakresie: ten sam klucz dla innego celu to inne żądanie.
+      scope: `POST /goals/${id}/deposits`,
+      rawKey,
+      request: body,
+      res,
+      perform: (tx) => this.goals.createDeposit(user.id, id, body, tx),
+    });
+  }
+
+  /** Miękkie usunięcie — do cofnięcia przez POST …/restore. */
+  @Delete(":id/deposits/:depositId")
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeDeposit(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Param("depositId") depositId: string,
+  ): Promise<void> {
+    return this.goals.removeDeposit(user.id, id, depositId);
+  }
+
+  @Post(":id/deposits/:depositId/restore")
+  @ZodResponse({ status: HttpStatus.OK, type: GoalDepositDto })
+  restoreDeposit(
+    @CurrentUser() user: AuthUser,
+    @Param("id") id: string,
+    @Param("depositId") depositId: string,
+  ): Promise<GoalDeposit> {
+    return this.goals.restoreDeposit(user.id, id, depositId);
   }
 }

@@ -24,7 +24,7 @@ export function toSoftDelete<W>(where: W): { where: W; data: { deletedAt: Date }
  * funkcja, a nie coś wpięte prosto w konstruktor PrismaService.
  *
  * Każde findMany/findFirst/findUnique/count/aggregate/groupBy na
- * Transaction, Goal i IncomeEntry dostaje wymuszony filtr `deletedAt: null`.
+ * Transaction, Goal, IncomeEntry i GoalDeposit dostaje wymuszony filtr `deletedAt: null`.
  * delete/deleteMany nigdy nie trafiają do bazy jako DELETE — zamieniają
  * się w update ustawiający deletedAt. update/updateMany celowo NIE są
  * filtrowane — inaczej przywrócenie skasowanego rekordu byłoby
@@ -153,6 +153,46 @@ export function withSoftDelete(client: PrismaClient) {
         },
         async deleteMany({ args }) {
           return client.incomeEntry.updateMany(toSoftDelete(args.where));
+        },
+      },
+      goalDeposit: {
+        async findMany({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findFirst({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findFirstOrThrow({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findUnique({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async findUniqueOrThrow({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async count({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async aggregate({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async groupBy({ args, query }) {
+          args.where = excludeDeleted(args.where);
+          return query(args);
+        },
+        async delete({ args }) {
+          return client.goalDeposit.update(toSoftDelete(args.where));
+        },
+        async deleteMany({ args }) {
+          return client.goalDeposit.updateMany(toSoftDelete(args.where));
         },
       },
     },

@@ -18,7 +18,7 @@ export type DbTransaction = Parameters<Parameters<Db["$transaction"]>[0]>[0];
  * celowo NIE jest w `exports`. Nest odmówi wstrzyknięcia go w innym
  * module ("nieznana zależność") — to strukturalna gwarancja, nie
  * konwencja. Jedyne, co inne moduły mogą wstrzyknąć, to token PRISMA:
- * klient przepuszczony przez withSoftDelete(), gdzie Transaction, Goal i IncomeEntry
+ * klient przepuszczony przez withSoftDelete(), gdzie Transaction, Goal, IncomeEntry i GoalDeposit
  * mają wymuszony filtr `deletedAt: null` na każdym odczycie.
  *
  *   constructor(@Inject(PRISMA) private readonly db: Db) {}

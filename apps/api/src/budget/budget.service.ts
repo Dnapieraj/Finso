@@ -53,7 +53,11 @@ export class BudgetService {
       awaitingIncome: awaitingIncome(snapshot),
       incomeForecasts: incomeForecasts(snapshot),
       fixedCommitments: input.remainingFixedCommitments,
-      goalContributions: input.goalContributions,
+      goalContributions: input.goalContributions.map((line) => ({
+        goalId: line.goalId,
+        amount: line.amount,
+        deposited: line.deposited ?? grosze(0),
+      })),
       today: result.today,
     };
   }
@@ -102,7 +106,7 @@ export class BudgetService {
     // Zapisy powiązane z regułą — wszystkie, w każdym statusie i z każdego
     // okresu: dopiero one mówią, które terminy są zaległe, a które
     // „Jeszcze nie”. Wpływów jest kilka w miesiącu, więc bierzemy całość.
-    const [sources, entries, expenseRules, transactions, goals] = await Promise.all([
+    const [sources, entries, expenseRules, transactions, goals, deposits] = await Promise.all([
       this.db.incomeSource.findMany({ where: { userId }, include: { recurringRule: true } }),
       this.db.incomeEntry.findMany({ where: { userId } }),
       this.db.recurringRule.findMany({ where: { userId, kind: "EXPENSE", isActive: true } }),
@@ -113,6 +117,7 @@ export class BudgetService {
         },
       }),
       this.db.goal.findMany({ where: { userId } }),
+      this.db.goalDeposit.findMany({ where: { userId } }),
     ]);
 
     return {
@@ -171,12 +176,20 @@ export class BudgetService {
         recurringRuleId: tx.recurringRuleId,
         beforeFinso: tx.beforeFinso,
       })),
-      goals: goals.map((goal) => ({
-        id: goal.id,
-        targetAmount: grosze(goal.targetAmount),
-        currentAmount: grosze(goal.currentAmount),
-        targetDate: toIsoDate(goal.targetDate),
-      })),
+      goals: goals.map((goal) => {
+        const own = deposits
+          .filter((deposit) => deposit.goalId === goal.id)
+          .map((deposit) => ({ amount: grosze(deposit.amount), date: toIsoDate(deposit.date) }));
+        return {
+          id: goal.id,
+          targetAmount: grosze(goal.targetAmount),
+          currentAmount: grosze(
+            own.reduce((sum, deposit) => sum + deposit.amount, goal.baseAmount),
+          ),
+          targetDate: toIsoDate(goal.targetDate),
+          deposits: own,
+        };
+      }),
     };
   }
 }
