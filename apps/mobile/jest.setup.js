@@ -39,3 +39,4 @@ jest.mock("expo-sharing", () => require("./__tests__/helpers/fake-sharing"));
 jest.mock("expo-document-picker", () => require("./__tests__/helpers/fake-document-picker"));
 // No launcher under Jest; the widget's content is tested on its own (widget-content.test).
 jest.mock("react-native-android-widget", () => require("./__tests__/helpers/fake-android-widget"));
+jest.mock("@sentry/react-native", () => require("./__tests__/helpers/fake-sentry"));
