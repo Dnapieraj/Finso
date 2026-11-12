@@ -17,7 +17,7 @@ export const LEGAL_URLS = {
   terms: `${SITE_URL}/regulamin`,
 } as const;
 
-/** The version from app.json ("0.1.0"); "?" if the build carries no config. */
+/** The version from app.json ("1.0.0"); "?" if the build carries no config. */
 export function appVersion(): string {
   return Constants.expoConfig?.version ?? "?";
 }
