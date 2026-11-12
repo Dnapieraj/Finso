@@ -116,7 +116,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 10. Szybkie dodawanie: szablony („Kawa 14 zł”) i ostatnio używane pozycje
 11. Dzienny limit z przenoszeniem, pokazany wprost — niewydane wczoraj
     zwiększa limit na dziś („Wczoraj zostało 20 zł, dziś masz 254 zł”)
-12. **Detektor subskrypcji i podwyżek cen** — główna funkcja planu Plus
+12. **Detektor subskrypcji i podwyżek cen**
 
 ### Faza 2 (po publikacji)
 
@@ -289,9 +289,11 @@ Bez logowania, bez TanStack Query, bez formularzy i bez wywołań API.
 
 ### Płatności
 
-- **RevenueCat** — warstwa nad Apple IAP + Google Play Billing
-- **Krytyczne:** subskrypcja sprzedawana w appce mobilnej **musi** iść przez Apple IAP / Google Billing (prowizja 15–30%). Nie da się tego obejść Stripe'em wewnątrz appki. RevenueCat to ujednolica i daje jedno źródło prawdy o statusie subskrypcji w backendzie (webhooki).
-- ~~Web: Stripe Checkout~~ — **porzucone**: web nie ma logowania, więc nie ma do czego przypisać zakupu. Subskrypcje sprzedajemy wyłącznie w aplikacji (RevenueCat). Web pokazuje cennik i kieruje do sklepów.
+- **Appka płatna przy pobraniu** (decyzja 12.11.2026, sekcja 6): cenę pobiera
+  App Store / Google Play, w kodzie nie ma płatności, paywalla ani RevenueCat.
+- ~~RevenueCat, subskrypcja Plus~~ — **porzucone 12.11.2026** na rzecz jednej ceny.
+- ~~Web: Stripe Checkout~~ — **porzucone**: web nie ma logowania ani sprzedaży,
+  pokazuje cennik i kieruje do sklepów.
 
 ### Infrastruktura
 
@@ -325,55 +327,46 @@ Nie jestem prawnikiem — przy sprzedaży subskrypcji w Polsce skonsultuj kwesti
 
 ## 6. Monetyzacja
 
-**Finso Free**
+**Decyzja z 12.11.2026 (zastępuje model Free/Plus z 7.10.2026): Finso jest
+płatne jednorazowo przy pobraniu — 19,99 zł w App Store i Google Play.**
 
-- Ręczne wydatki bez limitu
-- 1 cel oszczędnościowy
-- Historia 60 dni
-- Symulator „czy mnie stać" — 5 użyć dziennie
-
-**Finso Plus — 12,99 zł/mies. lub 99 zł/rok**
-
-- Nielimitowane cele i symulacje
-- Detektor subskrypcji i podwyżek (w appce od 20.10.2026, do etapu 8 dostępny dla wszystkich)
-- Nieregularne dochody / prognozy
-- Wspólne wydatki
-- Pełna historia, eksport danych
-- Widżety
-
-Rocznie z wyraźnym rabatem (~36%) — to standard, bo poprawia retencję i cashflow.
-
-Zakup **wyłącznie w aplikacji** (Apple IAP / Google Play Billing przez RevenueCat). Strona web pokazuje ten cennik i linki do sklepów.
-
-**Model płatności — decyzja z 7.10.2026, wdrożenie w etapie 8 (bez zmian w kodzie przed nim):**
-
-- **Free na zawsze**, z limitami wyżej (1 cel, historia 60 dni, 5 symulacji dziennie)
-- **Plus: 7 dni za darmo**, potem **12,99 zł/mies.** albo **99 zł/rok**
-- Okres próbny jako oferta wprowadzająca w App Store i Google Play, obsługiwany przez
-  RevenueCat (bez własnej logiki próby w API — o uprawnieniach decyduje RevenueCat)
-- **Przed startem próby** paywall pokazuje wyraźnie cenę po próbie i informację
-  o automatycznym odnowieniu oraz jak anulować (wymóg App Store 3.1.2 i Google Play)
-- **Przypomnienie dzień przed końcem próby** — lokalne powiadomienie, tym samym
-  mechanizmem co przypomnienia o wypłacie; termin z daty końca próby z RevenueCat
-- Paywall pokazuje **plan roczny jako korzystniejszy** (domyślnie zaznaczony,
-  z wyliczoną oszczędnością względem 12 × 12,99 zł)
-- Przy wdrożeniu: cennik na stronie web (`apps/web`) i regulamin muszą wspomnieć
-  o 7 dniach próby i automatycznym odnowieniu
+- **Bez planów, subskrypcji i zakupów w aplikacji.** Kto kupił, ma wszystkie
+  funkcje i przyszłe aktualizacje. Limity planu Free (1 cel, 60 dni historii,
+  5 symulacji dziennie) nie będą wdrażane.
+- **Cena 19,99 zł**, nie równe 20 zł: Apple sprzedaje według ustalonych progów
+  cenowych kończących się na ,99; ta sama kwota w obu sklepach. Cena zawiera
+  VAT (sklep go odprowadza); po VAT i prowizji 15% (programy dla małych
+  deweloperów) zostaje ok. 13,80 zł za sprzedaż.
+- **Zakupy w sklepach są osobne** — kupione na Androidzie nie obejmuje iPhone'a
+  (zasady sklepów, nie da się tego połączyć bez płatności w appce).
+- **Nie da się dać okresu próbnego** — sklepy nie mają próby dla aplikacji
+  płatnych przy pobraniu. Zwroty obsługują sklepy na swoich zasadach.
+- **Google Play: appki płatnej można później zrobić darmową, ale darmowej nie
+  da się już zrobić płatną.** Zmiana modelu w przyszłości (np. darmowe pobranie
+  - zakup w appce) jest możliwa, ale wtedy dotychczasowi kupujący muszą dostać
+    pełną wersję bez dopłaty.
+- **Koszt serwera jest stały, przychód jednorazowy** — API i baza działają dla
+  każdego kupującego bez końca. Do obserwacji po publikacji.
+- **Kopie APK bez zakupu (Android):** płatną appkę da się skopiować poza sklepem.
+  Przed publikacją rozważyć Play Integrity API przy rejestracji (czy appka
+  pochodzi z Google Play) — punkt etapu 8.
+- Strona web (`apps/web`) pokazuje jedną cenę (`appPrice` w
+  `src/content/pricing.ts`) — musi się zgadzać z ceną w sklepach.
 
 ---
 
 ## 7. Kolejność budowania
 
-| Etap | Co                                                                                                                                                                                                                                                                                                                                                | Przybliżony czas       |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 0    | Setup monorepo, wspólny config, CI — **zrobione**                                                                                                                                                                                                                                                                                                 | 2–3 dni                |
-| 1–2  | Model danych: schema Prisma, soft delete, docker-compose, migracje, seed kategorii — **zrobione**                                                                                                                                                                                                                                                 | —                      |
-| 3    | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione**                                                                                                                                                                                                                                                                         | 1 tydz.                |
-| 4    | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione**                                                                                                                                                                                                                             | 1–2 tyg.               |
-| 5    | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione**                                                                                                                                                                                                                                    | —                      |
-| 6    | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**)                                                                                                                                                                                    | kilka dni              |
-| 7    | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**), logowanie, rejestracja, wylogowanie i usuwanie konta (7.1, **zrobione**); dalej: dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push, paywall RevenueCat | 4–6 tyg.               |
-| 8    | Publikacja: App Store + Google Play + Vercel                                                                                                                                                                                                                                                                                                      | 1–2 tyg. (review trwa) |
+| Etap | Co                                                                                                                                                                                                                                                                                                                                                                                    | Przybliżony czas       |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 0    | Setup monorepo, wspólny config, CI — **zrobione**                                                                                                                                                                                                                                                                                                                                     | 2–3 dni                |
+| 1–2  | Model danych: schema Prisma, soft delete, docker-compose, migracje, seed kategorii — **zrobione**                                                                                                                                                                                                                                                                                     | —                      |
+| 3    | **Silnik budżetu** w `packages/shared` + testy jednostkowe — **zrobione**                                                                                                                                                                                                                                                                                                             | 1 tydz.                |
+| 4    | API: auth, CRUD zasobów, testy e2e izolacji (4a); składanie wejścia silnika i endpointy `/budget` (4b) — **zrobione**                                                                                                                                                                                                                                                                 | 1–2 tyg.               |
+| 5    | Design system Vireo: tokeny i paleta „Oliwka” (5a), `formatMoney` i komponenty `@vireo/ui` (5b) — **zrobione**                                                                                                                                                                                                                                                                        | —                      |
+| 6    | **Web: strona wizytówkowa** — zmiana kierunku na wizytówkę (6.0–6.1, **zrobione**), strona główna (6.2, **zrobione**), strony prawne i SEO (6.3, **zrobione**)                                                                                                                                                                                                                        | kilka dni              |
+| 7    | **Mobile: cała aplikacja** — szkielet: Expo SDK 57, NativeWind 4, TanStack Query, klient API w `@vireo/shared/api`, tokeny w `@vireo/tokens` (7.0, **zrobione**), logowanie, rejestracja, wylogowanie i usuwanie konta (7.1, **zrobione**); dalej: dashboard, dodawanie wydatków, symulator, cele, historia, onboarding, push (paywall RevenueCat wycofany 12.11.2026 — appka płatna) | 4–6 tyg.               |
+| 8    | Publikacja: App Store + Google Play + Vercel                                                                                                                                                                                                                                                                                                                                          | 1–2 tyg. (review trwa) |
 
 _Numeracja etapów 0–6 odpowiada historii commitów (np. „etap 3” = silnik budżetu, „etap 5a” = tokeny).
 Etapy 1 i 2 nie mają oznaczeń w commitach, więc są opisane łącznie._
@@ -558,9 +551,10 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
 - Ikona i ekran startowy — dziś domyślne grafiki Expo
-- **„Przywróć zakupy”** (etap RevenueCat) — wymóg Apple przy subskrypcjach
-  (wytyczna 3.1.1): przycisk na ekranie planu, który przywraca Plus po
-  reinstalacji albo na nowym telefonie
+- Cena 19,99 zł ustawiona w obu sklepach (umowa „Paid Apps” i dane bankowo-podatkowe
+  w App Store Connect, profil płatności w Google Play Console)
+- Rozważyć Play Integrity API przy rejestracji (kopie APK spoza Google Play)
+- Usunąć kolumnę `User.plan` / enum `SubscriptionPlan` — nieużywane po rezygnacji z planów
 - **Build na iPhone'a wymaga EAS Build w chmurze** — pracujemy na Windowsie,
   a lokalny build iOS (`expo run:ios`) potrzebuje macOS z Xcode. Do zrobienia:
   konto Apple Developer (99 USD/rok), `eas.json` z profilami `development`
@@ -570,9 +564,6 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
   (Android i iOS) ustalony 4.10.2026 — po pierwszej publikacji nie do zmiany
 - Linki do regulaminu i polityki prywatności przy rejestracji
 - Dzień wypłaty „ostatni dzień miesiąca” — dziś 29–31 każe wybrać 28
-
-- **Dochód nieregularny a plan Free:** onboarding pozwala dziś każdemu wybrać dochód nieregularny, choć „Nieregularne dochody / prognozy” są w planie Plus (sekcja 6). Przed włączeniem limitów zdecydować, co z darmowymi użytkownikami, którzy już mają źródło `IRREGULAR` (zostawić im je, zablokować tylko nowe, przełączyć na regularne?)
-- Ekran usuwania konta (`apps/mobile/app/(app)/settings/delete-account.tsx`) musi ostrzegać, że **usunięcie konta nie anuluje subskrypcji Plus** — tak jak sekcja „Subskrypcja Plus” na stronie `/usuwanie-konta` (`apps/web/src/messages/legal/delete-account.ts`). Najlepiej w etapie RevenueCat, gdy appka będzie wiedziała, czy użytkownik ma aktywną subskrypcję
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
 Atrapy przycisków „Kontynuuj z Apple / Google” usunięte 4.11.2026 (martwy przycisk nie przejdzie review — App Store 2.1 — i zaśmiecał ekran); wracają razem z działającym logowaniem. Do zrobienia:
@@ -1146,3 +1137,17 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   w tym okresie nic jeszcze nie wpłynęło — a podwójnego liczenia i tak nie ma.
 - **Bez zmian w API** — `PATCH /income/sources/:id` już to obsługiwał;
   dopisane testy e2e pilnują budżetu po zmianie w obie strony.
+
+### 12.11.2026 — model płatności: appka płatna jednorazowo (19,99 zł)
+
+- **Decyzja właściciela:** zamiast Free + Plus (subskrypcja przez RevenueCat)
+  Finso kosztuje 19,99 zł przy pobraniu z App Store i Google Play. Szczegóły
+  i konsekwencje w sekcji 6.
+- **19,99 zł zamiast 20 zł** — progi cenowe Apple kończą się na ,99; ta sama
+  kwota w obu sklepach, żeby cennik na stronie był jeden.
+- **Strona web:** jedna karta cennika z listą funkcji, które już są w appce
+  (bez „Wspólnych wydatków” i widżetów — pierwszych nie ma, widżet jest tylko
+  na Androida); regulamin („Cena i zakup”), polityka prywatności (bez
+  RevenueCat i statusu planu) i `/usuwanie-konta` („Zakup aplikacji” zamiast
+  ostrzeżenia o subskrypcji) zaktualizowane.
+- **Appka mobilna bez zmian** — nie miała jeszcze paywalla ani limitów.
