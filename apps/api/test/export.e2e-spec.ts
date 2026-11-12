@@ -50,6 +50,7 @@ describe("Eksport danych (e2e)", () => {
       incomeSources: [],
       incomeEntries: [],
       goals: [],
+      goalDeposits: [],
       recurringRules: [],
     });
   });

@@ -37,8 +37,11 @@ async function seedUserData(db: PrismaClient, userId: string): Promise<void> {
       { userId, amount: 1_500, date: new Date("2026-09-13"), deletedAt: new Date() },
     ],
   });
-  await db.goal.create({
+  const goal = await db.goal.create({
     data: { userId, name: "Wakacje", targetAmount: 500_000, targetDate: new Date("2027-06-01") },
+  });
+  await db.goalDeposit.create({
+    data: { userId, goalId: goal.id, amount: 20_000, date: new Date("2026-09-15") },
   });
   await db.expenseTemplate.create({
     data: { userId, name: "Kawa", amount: 1_400, categoryId: category.id },
@@ -69,6 +72,7 @@ async function countUserRows(db: PrismaClient, userId: string): Promise<Record<s
     incomeEntries: await db.incomeEntry.count({ where }),
     transactions: await db.transaction.count({ where }),
     goals: await db.goal.count({ where }),
+    goalDeposits: await db.goalDeposit.count({ where }),
     idempotencyKeys: await db.idempotencyKey.count({ where }),
     expenseTemplates: await db.expenseTemplate.count({ where }),
     subscriptionDismissals: await db.subscriptionDismissal.count({ where }),
@@ -138,6 +142,7 @@ describe("Users (e2e)", () => {
         incomeEntries: 0,
         transactions: 0,
         goals: 0,
+        goalDeposits: 0,
         idempotencyKeys: 0,
         expenseTemplates: 0,
         subscriptionDismissals: 0,
