@@ -29,6 +29,12 @@ export const envSchema = z
     /** Limit żądań na endpoint auth na IP w oknie AUTH_THROTTLE_TTL_SECONDS. */
     AUTH_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
     AUTH_THROTTLE_TTL_SECONDS: z.coerce.number().int().positive().default(60),
+    /**
+     * Ile serwerów pośredniczących hostingu stoi przed API (zwykle 1).
+     * Bez tego limit /auth/* liczyłby wszystkich jako jeden adres proxy.
+     * 0 — bez proxy (lokalnie): nagłówek X-Forwarded-For jest ignorowany.
+     */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
 
     /**
      * Klucz HMAC kodów z e-maili (reset hasła, potwierdzenie adresu). W bazie

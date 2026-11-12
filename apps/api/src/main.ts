@@ -3,6 +3,7 @@ import { NestFactory } from "@nestjs/core";
 
 import { AppModule } from "./app.module.js";
 import type { Env } from "./config/env.js";
+import { configureHttp } from "./http/configure-http.js";
 import { setupSwagger } from "./swagger.js";
 
 async function bootstrap() {
@@ -11,6 +12,7 @@ async function bootstrap() {
   // Bez tego onModuleDestroy (i $disconnect w PrismaService) nigdy się nie
   // wywoła przy SIGTERM/SIGINT — połączenia do bazy zostałyby wiszące.
   app.enableShutdownHooks();
+  configureHttp(app, { trustProxyHops: config.get("TRUST_PROXY_HOPS", { infer: true }) });
   // Na produkcji dokumentacja nie jest publiczna — mapa wszystkich
   // endpointów to niepotrzebna pomoc dla atakującego. Web i mobile
   // korzystają z typów z @vireo/shared, nie z OpenAPI.
