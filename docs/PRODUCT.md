@@ -548,6 +548,26 @@ Potem etap 8 (RevenueCat, publikacja). Faza 2 bez zmian.
 
 Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
 
+### Plan „gotowe do publikacji” (12.11.2026)
+
+Cel właściciela: zostaje mu tylko publikacja (konta, płatności za sklepy,
+hosting, domena, kliknięcie „Opublikuj”). Wszystko inne robimy przed nim.
+Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
+
+1. Linki do regulaminu i polityki prywatności przy rejestracji — **ZROBIONE**
+2. Dzień wypłaty „ostatni dzień miesiąca”
+3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus)
+4. „Wpłać na cel” z historią wpłat
+5. Ikona appki i ekran startowy (własne grafiki zamiast Expo)
+6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności
+7. Play Integrity przy rejestracji (Android) — w kodzie, włączane zmienną środowiskową
+8. Buildy do sklepów: `eas.json`, wersjonowanie, produkcyjna konfiguracja API
+   (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API
+9. Materiały do sklepów: opisy, zrzuty ekranu, ankiety o danych (Data safety,
+   App Privacy), konto testowe dla recenzentów
+10. Przewodnik publikacji `docs/PUBLIKACJA.md` — krok po kroku, co kliknąć
+11. Końcowy przegląd wszystkich ekranów na emulatorze
+
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
 - Ikona i ekran startowy — dziś domyślne grafiki Expo
@@ -562,7 +582,7 @@ Biblioteki z tej listy są zaakceptowane; instalowane przez `expo install`.
   certyfikaty i provisioning zarządzane przez EAS. Android buduje się lokalnie
   (`expo run:android`), do sklepu też przez EAS. Identyfikator `app.finso`
   (Android i iOS) ustalony 4.10.2026 — po pierwszej publikacji nie do zmiany
-- Linki do regulaminu i polityki prywatności przy rejestracji
+- ~~Linki do regulaminu i polityki prywatności przy rejestracji~~ — zrobione 12.11.2026
 - Dzień wypłaty „ostatni dzień miesiąca” — dziś 29–31 każe wybrać 28
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
