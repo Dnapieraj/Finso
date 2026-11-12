@@ -558,7 +558,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 2. Dzień wypłaty „ostatni dzień miesiąca” — **ZROBIONE**
 3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus) — **ZROBIONE** (razem z `revenueCatId`)
 4. „Wpłać na cel” z historią wpłat — **ZROBIONE**
-5. Ikona appki i ekran startowy (własne grafiki zamiast Expo)
+5. Ikona appki i ekran startowy (własne grafiki zamiast Expo) — **ZROBIONE**
 6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności
 7. Play Integrity przy rejestracji (Android) — w kodzie, włączane zmienną środowiskową
 8. Buildy do sklepów: `eas.json`, wersjonowanie, produkcyjna konfiguracja API
@@ -570,7 +570,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
-- Ikona i ekran startowy — dziś domyślne grafiki Expo
+- ~~Ikona i ekran startowy~~ — zrobione 12.11.2026
 - Cena 19,99 zł ustawiona w obu sklepach (umowa „Paid Apps” i dane bankowo-podatkowe
   w App Store Connect, profil płatności w Google Play Console)
 - Rozważyć Play Integrity API przy rejestracji (kopie APK spoza Google Play)
@@ -1218,3 +1218,16 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - Eksport: nowy plik „Wpłaty na cele” (data, kwota, cel); polityka
   prywatności i strona usuwania konta wymieniają wpłaty.
 - Gdzie: Cele → cel → „Wpłaty” (kwota, „Wpłać”, historia z „Usuń” i „Cofnij”).
+
+### 12.11.2026 — ikona i ekran startowy
+
+- **Znak:** jasny liść z „ptaszkiem” w miejscu żyłki na oliwkowym tle
+  (`primary` #3D5A2E). Liść — natura i ptak vireo; ptaszek — odpowiedź
+  „stać cię”. Prosty, czytelny w 48 px, bez tekstu.
+- Pliki generowane z jednego SVG (`apps/mobile/assets/source/generate-icons.cjs`,
+  przez `sharp`, który już jest w projekcie przez Expo — bez nowej zależności):
+  ikona sklepu 1024×1024 **bez kanału alfa** (App Store odrzuca przezroczystą),
+  warstwy ikony adaptacyjnej Androida (znak w bezpiecznej strefie), wersja
+  jednokolorowa (motywy Androida 13+), ekran startowy (oliwkowe koło z liściem
+  — czytelne na jasnym i ciemnym tle) i ikony strony web (zamiast domyślnej
+  ikony Next.js). Test `app-assets` pilnuje rozmiaru i braku alfy.

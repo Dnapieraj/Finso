@@ -108,3 +108,16 @@ test.describe("dark mode", () => {
     await expect(page.locator("body")).toHaveCSS("background-color", "rgb(18, 22, 17)");
   });
 });
+
+// The same leaf-and-check mark as the app icon, not the framework default.
+test("the site uses the Finso icon in the tab and on the home screen", async ({
+  page,
+  request,
+}) => {
+  await expect(page.locator('link[rel="icon"][type="image/svg+xml"]')).toHaveCount(1);
+  const apple = page.locator('link[rel="apple-touch-icon"]');
+  await expect(apple).toHaveCount(1);
+  const href = await apple.getAttribute("href");
+  expect((await request.get(href ?? "/missing")).ok()).toBe(true);
+  expect((await request.get("/favicon.ico")).status()).toBe(404);
+});
