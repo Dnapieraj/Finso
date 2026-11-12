@@ -42,7 +42,7 @@ export const privacyPolicy = {
               "Dane konta: adres e-mail i hasło. Hasła nie przechowujemy wprost — zapisujemy tylko jego skrót (hash) wyliczony algorytmem argon2.",
             ],
             [
-              "Dane finansowe, które wpisujesz w aplikacji: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania, cele oszczędnościowe, szablony szybkiego dodawania (nazwa, kwota, kategoria) i odrzucone przez ciebie podpowiedzi detektora subskrypcji.",
+              "Dane finansowe, które wpisujesz w aplikacji: wydatki i wpływy (kwota, data, kategoria, notatka), źródła dochodu, stałe zobowiązania, cele oszczędnościowe i wpłaty na nie (kwota, data), szablony szybkiego dodawania (nazwa, kwota, kategoria) i odrzucone przez ciebie podpowiedzi detektora subskrypcji.",
             ],
             [
               "Ustawienia: waluta, strefa czasowa i dzień miesiąca, od którego liczy się twój okres budżetowy.",

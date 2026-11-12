@@ -127,7 +127,7 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 17. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach — **ZROBIONE** (12.11.2026)
     (wcześniej: usunąć i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
     przy zmianie w trakcie okresu
-18. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
+18. „Wpłać na cel” z historią wpłat — **ZROBIONE** (12.11.2026); wcześniej „Już odłożone” to ręczna korekta
     kwoty. Wpłaty jako osobne zapisy (data, kwota, cofnięcie) dałyby
     historię postępu i mogłyby zmniejszać dostępne środki w okresie wpłaty
 19. Import wyciągu CSV z banku — zastępuje integrację bankową przed Fazą 3 — **ZROBIONE** (5.11.2026)
@@ -557,7 +557,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 1. Linki do regulaminu i polityki prywatności przy rejestracji — **ZROBIONE**
 2. Dzień wypłaty „ostatni dzień miesiąca” — **ZROBIONE**
 3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus) — **ZROBIONE** (razem z `revenueCatId`)
-4. „Wpłać na cel” z historią wpłat
+4. „Wpłać na cel” z historią wpłat — **ZROBIONE**
 5. Ikona appki i ekran startowy (własne grafiki zamiast Expo)
 6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności
 7. Play Integrity przy rejestracji (Android) — w kodzie, włączane zmienną środowiskową
@@ -1194,3 +1194,27 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   Test przechodzi dzień po dniu przez 3 lata (w tym 2028, przestępny), że
   okresy się stykają i każdy dzień ma swój okres.
 - Bez migracji: kolumna nie miała ograniczenia 1–28 w bazie, pilnował tego Zod.
+
+### 12.11.2026 — wpłaty na cel z historią
+
+- **Wpłata to osobny zapis** (`GoalDeposit`: kwota, data, miękkie usuwanie
+  jak przy wydatkach). Odłożone na cel = `Goal.baseAmount` (dawne
+  `currentAmount`: „Już odłożone” z założenia celu i ręczne korekty) +
+  wpłaty. Migracja zmienia nazwę kolumny (`RENAME`), żeby nie stracić kwot.
+- **Budżet:** rata liczona od stanu z początku okresu (bez wpłat z tego
+  okresu), a pozycja celu w budżecie to `max(rata, wpłacone w okresie)`.
+  Wpłata w ramach raty nie zmienia „Możesz wydać” — te pieniądze budżet już
+  odłożył. Wpłata ponad ratę zmniejsza budżet o nadwyżkę, bo pieniądze wyszły.
+- **Symulator:** zakup może opóźnić cel tylko o niewpłaconą część raty —
+  wpłacone pieniądze są już na celu.
+- **Ręczna zmiana „Już odłożone”** przy celu z wpłatami to korekta części
+  wpisanej ręcznie; wpłaty zostają. Nie może zejść poniżej sumy wpłat (400) —
+  wtedy usuwa się wpłatę. Formularz wysyła kwotę tylko, gdy użytkownik ją
+  zmienił; po wpłacie na tym samym ekranie nietknięte pole samo się odświeża
+  (inaczej „Zapisz” cofnąłby wpłatę starą kwotą).
+- Data wpłaty: dziś w strefie użytkownika; z przyszłości — 400. Wpłata
+  z `Idempotency-Key` (zakres per cel). Bez wypłat z celu — na razie tylko
+  korekta „Już odłożone”.
+- Eksport: nowy plik „Wpłaty na cele” (data, kwota, cel); polityka
+  prywatności i strona usuwania konta wymieniają wpłaty.
+- Gdzie: Cele → cel → „Wpłaty” (kwota, „Wpłać”, historia z „Usuń” i „Cofnij”).
