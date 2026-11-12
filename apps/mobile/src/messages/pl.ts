@@ -112,6 +112,11 @@ export const pl = {
     submit: "Załóż konto",
     submitting: "Zakładanie konta…",
     toLogin: "Masz już konto? Zaloguj się",
+    legalPrefix: "Zakładając konto, akceptujesz ",
+    terms: "Regulamin",
+    legalMiddle: " i potwierdzasz, że znasz ",
+    privacy: "Politykę prywatności",
+    legalSuffix: ".",
   },
   /** Shown on the login screen after the session ended without the user asking. */
   signOutNotice: {

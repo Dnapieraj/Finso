@@ -1,3 +1,4 @@
+import { Linking } from "react-native";
 import { ApiError } from "@vireo/shared/api";
 import { fireEvent, screen, waitFor } from "expo-router/testing-library";
 
@@ -81,5 +82,24 @@ it("links back to the login screen", async () => {
 
   await waitFor(() => {
     expect(app).toHavePathname("/login");
+  });
+});
+
+describe("legal documents before the account is created", () => {
+  const openURL = jest.spyOn(Linking, "openURL");
+  beforeEach(() => {
+    openURL.mockResolvedValue(true);
+  });
+
+  it("says that creating the account accepts the terms and links both documents", async () => {
+    await openRegister();
+
+    expect(screen.getByText(/Zakładając konto, akceptujesz/)).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole("link", { name: "Regulamin" }));
+    expect(openURL).toHaveBeenLastCalledWith("https://finso.app/regulamin");
+
+    await fireEvent.press(screen.getByRole("link", { name: "Politykę prywatności" }));
+    expect(openURL).toHaveBeenLastCalledWith("https://finso.app/polityka-prywatnosci");
   });
 });
