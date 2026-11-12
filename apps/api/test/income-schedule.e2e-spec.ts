@@ -192,6 +192,95 @@ describe("Źródło dochodu z harmonogramem (e2e)", () => {
       expect(await get<IncomeSource>(`/income/sources/${source.id}`)).toEqual(source);
     });
 
+    describe("zmiana rodzaju dochodu", () => {
+      const freelance = async () =>
+        (
+          await post("/income/sources", {
+            name: "Zlecenia",
+            kind: "IRREGULAR",
+          }).expect(201)
+        ).body as IncomeSource;
+      const addEntry = (incomeSourceId: string, amount: number, date: string) =>
+        post("/income/entries", { incomeSourceId, amount, date }).expect(201);
+      const periodIncome = async () =>
+        (await get<BudgetSummary>("/budget/current")).breakdown.periodIncome;
+
+      it("stały → nieregularny: reguła znika, budżet przestaje oczekiwać kwoty", async () => {
+        const source = await createSalary();
+
+        const res = await patch(`/income/sources/${source.id}`, {
+          kind: "IRREGULAR",
+          expectedAmount: null,
+          schedule: null,
+        }).expect(200);
+
+        expect(res.body).toMatchObject({
+          kind: "IRREGULAR",
+          expectedAmount: null,
+          recurringRuleId: null,
+          schedule: null,
+        });
+        expect(await get<RecurringRule[]>("/recurring-rules")).toEqual([]);
+        expect(await periodIncome()).toBe(0);
+      });
+
+      it("stały → nieregularny: wpływy, które przyszły, zostają i dalej się liczą", async () => {
+        const source = await createSalary();
+        await addEntry(source.id, 800_000, "2026-09-10");
+
+        await patch(`/income/sources/${source.id}`, {
+          kind: "IRREGULAR",
+          expectedAmount: null,
+          schedule: null,
+        }).expect(200);
+
+        expect(await periodIncome()).toBe(800_000);
+      });
+
+      it("nieregularny → stały: budżet oczekuje kwoty według nowego harmonogramu", async () => {
+        const source = await freelance();
+
+        const res = await patch(`/income/sources/${source.id}`, {
+          kind: "REGULAR",
+          expectedAmount: 800_000,
+          schedule: monthly,
+        }).expect(200);
+
+        expect(res.body).toMatchObject({
+          kind: "REGULAR",
+          expectedAmount: 800_000,
+          recurringRuleId: anyString,
+        });
+        expect(await periodIncome()).toBe(800_000);
+      });
+
+      it("nieregularny → stały: wpływ z tego okresu zamyka termin — bez liczenia go dwa razy", async () => {
+        const source = await freelance();
+        await addEntry(source.id, 500_000, "2026-09-05");
+
+        await patch(`/income/sources/${source.id}`, {
+          kind: "REGULAR",
+          expectedAmount: 800_000,
+          schedule: monthly,
+        }).expect(200);
+
+        // 500 zł wpłynęło już w tym okresie: to ta wypłata, nie dodatkowe 800 zł.
+        expect(await periodIncome()).toBe(500_000);
+      });
+
+      it("nieregularny → stały bez kwoty to 400 i nic się nie zmienia", async () => {
+        const source = await freelance();
+
+        await patch(`/income/sources/${source.id}`, {
+          kind: "REGULAR",
+          schedule: monthly,
+        }).expect(400);
+
+        expect(await get<IncomeSource>(`/income/sources/${source.id}`)).toEqual(source);
+        expect(await get<RecurringRule[]>("/recurring-rules")).toEqual([]);
+      });
+    });
+
     it("cudzego źródła nie da się zmienić ani podpiąć mu harmonogramu (404)", async () => {
       const other = await registerUser(app);
       const source = await createSalary(null);
