@@ -2,6 +2,8 @@ import { JwtService } from "@nestjs/jwt";
 import { getOptionsToken } from "@nestjs/throttler";
 import request from "supertest";
 
+import { configureHttp } from "../src/http/configure-http.js";
+
 import type { PrismaClient } from "../src/generated/prisma/client.js";
 import type { AuthSession, AuthTokens } from "@vireo/shared";
 
@@ -389,9 +391,53 @@ describe("Rate limiting /auth/* (e2e)", () => {
     await attempt().expect(429);
   });
 
+  it("bez zaufanego proxy podrobiony X-Forwarded-For nie obchodzi limitu", async () => {
+    const attempt = (ip: string) =>
+      request(app.getHttpServer())
+        .post("/auth/login")
+        .set("X-Forwarded-For", ip)
+        .send({ email: "spoof@example.com", password: "guess" });
+
+    // Poprzedni test zużył już limit tego adresu; inny nagłówek go nie odnawia.
+    await attempt("203.0.113.7").expect(429);
+  });
+
   it("nie limituje endpointów spoza auth", async () => {
     for (let i = 0; i < LIMIT + 2; i += 1) {
       await request(app.getHttpServer()).get("/health").expect(200);
     }
+  });
+});
+
+describe("Rate limiting za proxy hostingu (TRUST_PROXY_HOPS) (e2e)", () => {
+  const LIMIT = 2;
+  let app: TestApp;
+
+  beforeAll(async () => {
+    app = await createTestApp((builder) =>
+      builder
+        .overrideProvider(getOptionsToken())
+        .useValue({ throttlers: [{ ttl: 60_000, limit: LIMIT }] }),
+    );
+    // Hosting dokłada jeden serwer pośredniczący (TRUST_PROXY_HOPS=1).
+    configureHttp(app, { trustProxyHops: 1 });
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it("każdy użytkownik ma własny limit — nie jeden wspólny dla adresu proxy", async () => {
+    const attempt = (ip: string) =>
+      request(app.getHttpServer())
+        .post("/auth/login")
+        .set("X-Forwarded-For", ip)
+        .send({ email: "proxy@example.com", password: "guess" });
+
+    for (let i = 0; i < LIMIT; i += 1) {
+      await attempt("198.51.100.1").expect(401);
+    }
+    await attempt("198.51.100.1").expect(429);
+    await attempt("198.51.100.2").expect(401);
   });
 });

@@ -40,3 +40,18 @@ describe("MIN_APP_VERSION", () => {
     expect(() => validateEnv({ ...base, MIN_APP_VERSION: "1.0" })).toThrow(/MIN_APP_VERSION/);
   });
 });
+
+describe("TRUST_PROXY_HOPS", () => {
+  it("domyślnie 0 — lokalnie nagłówek X-Forwarded-For jest ignorowany", () => {
+    expect(validateEnv(base).TRUST_PROXY_HOPS).toBe(0);
+  });
+
+  it("za proxy hostingu: 1", () => {
+    expect(validateEnv({ ...base, TRUST_PROXY_HOPS: "1" }).TRUST_PROXY_HOPS).toBe(1);
+  });
+
+  it("odrzuca wartości ujemne i niecałkowite", () => {
+    expect(() => validateEnv({ ...base, TRUST_PROXY_HOPS: "-1" })).toThrow(/TRUST_PROXY_HOPS/);
+    expect(() => validateEnv({ ...base, TRUST_PROXY_HOPS: "1.5" })).toThrow(/TRUST_PROXY_HOPS/);
+  });
+});
