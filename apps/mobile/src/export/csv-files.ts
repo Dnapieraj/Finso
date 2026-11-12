@@ -5,13 +5,14 @@ import { scheduleSummary } from "../settings/schedule";
 
 const t = pl.exportData.csv;
 
-/** The four files Settings → Eksport danych offers. */
-export type ExportKind = "expenses" | "income" | "goals" | "commitments";
+/** The files Settings → Eksport danych offers. */
+export type ExportKind = "expenses" | "income" | "goals" | "deposits" | "commitments";
 
 const FILE_STEMS: Record<ExportKind, string> = {
   expenses: "wydatki",
   income: "wplywy",
   goals: "cele",
+  deposits: "wplaty-na-cele",
   commitments: "stale-zobowiazania",
 };
 
@@ -54,6 +55,14 @@ function rowsOf(data: ExportData, kind: ExportKind): string[][] {
         amount(goal.currentAmount),
         goal.targetDate,
       ]);
+    case "deposits": {
+      const goal = (id: string) => data.goals.find((item) => item.id === id)?.name ?? "";
+      return data.goalDeposits.map((deposit) => [
+        deposit.date,
+        amount(deposit.amount),
+        goal(deposit.goalId),
+      ]);
+    }
     case "commitments":
       return data.recurringRules
         .filter((rule) => rule.kind === "EXPENSE")

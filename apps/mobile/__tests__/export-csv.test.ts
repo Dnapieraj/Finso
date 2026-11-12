@@ -63,6 +63,14 @@ const data: ExportData = {
     },
   ],
   goals: [testGoal()],
+  goalDeposits: [
+    {
+      id: "01923b6e-0000-7000-8000-000000000061",
+      goalId: testGoal().id,
+      amount: 20_000,
+      date: "2026-10-15",
+    },
+  ],
   recurringRules: [rent, netflix, testRule({ id: "x", kind: "INCOME", name: null })],
 };
 
@@ -96,6 +104,13 @@ describe("export files", () => {
         "Nazwa;Kwota docelowa (zł);Odłożone (zł);Termin",
         "Wakacje;4000,00;1000,00;2027-06-01",
       ),
+    });
+  });
+
+  it("goal deposits: date, amount and the goal they went to", () => {
+    expect(buildExportFile(data, "deposits")).toEqual({
+      fileName: "finso-wplaty-na-cele-2026-10-20.csv",
+      csv: csv("Data;Kwota (zł);Cel", "2026-10-15;200,00;Wakacje"),
     });
   });
 

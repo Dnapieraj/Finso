@@ -11,7 +11,7 @@ import { haptics } from "../../../../src/feedback/haptics";
 import { pl } from "../../../../src/messages/pl";
 
 const t = pl.exportData;
-const KINDS: readonly ExportKind[] = ["expenses", "income", "goals", "commitments"];
+const KINDS: readonly ExportKind[] = ["expenses", "income", "goals", "deposits", "commitments"];
 
 /**
  * A copy of the user's data (GDPR art. 20) as CSV files. Each tap asks the

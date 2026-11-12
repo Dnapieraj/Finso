@@ -24,11 +24,11 @@ async function openExport() {
   return app;
 }
 
-it("Ustawienia → Eksport danych: cztery pliki do wyboru", async () => {
+it("Ustawienia → Eksport danych: pięć plików do wyboru", async () => {
   const app = await openExport();
 
   expect(app).toHavePathname("/settings/export");
-  for (const name of ["Wydatki", "Wpływy", "Cele", "Stałe zobowiązania"]) {
+  for (const name of ["Wydatki", "Wpływy", "Cele", "Wpłaty na cele", "Stałe zobowiązania"]) {
     expect(screen.getByRole("button", { name: `Eksportuj: ${name}` })).toBeOnTheScreen();
   }
 });

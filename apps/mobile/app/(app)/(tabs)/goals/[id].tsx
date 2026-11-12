@@ -4,18 +4,25 @@ import { Text } from "react-native";
 import { LoadError, Skeleton } from "../../../../src/components/query-states";
 import { Screen } from "../../../../src/components/screen";
 import { useGoals } from "../../../../src/dashboard/queries";
+import { GoalDeposits } from "../../../../src/goals/goal-deposits";
 import { GoalForm } from "../../../../src/goals/goal-form";
 import { pl } from "../../../../src/messages/pl";
 
 const t = pl.goals;
 
-/** Editing one goal, found in the list the previous screen already loaded. */
+/** One goal: deposits first, then its settings — found in the list already loaded. */
 export default function EditGoal() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const goals = useGoals();
   const goal = goals.data?.find((item) => item.id === id);
 
-  if (goal) return <GoalForm goal={goal} />;
+  if (goal) {
+    return (
+      <GoalForm goal={goal}>
+        <GoalDeposits goal={goal} />
+      </GoalForm>
+    );
+  }
   return (
     <Screen back title={t.editTitle}>
       {goals.isPending ? (

@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import {
@@ -93,7 +93,7 @@ function YearStepper({
  * and a year; the goal is due on the month's last day. Edits send only
  * what changed, so an overdue goal keeps its past deadline untouched.
  */
-export function GoalForm({ goal }: { goal?: Goal }) {
+export function GoalForm({ goal, children }: { goal?: Goal; children?: ReactNode }) {
   const budgetClock = useBudgetClock();
   const today = monthOf(budgetClock().today);
   const saved = goal ? monthOf(goal.targetDate) : null;
@@ -101,6 +101,17 @@ export function GoalForm({ goal }: { goal?: Goal }) {
   const [name, setName] = useState(goal?.name ?? "");
   const [target, setTarget] = useState(goal ? toMoneyInput(goal.targetAmount) : "");
   const [already, setAlready] = useState(goal ? toMoneyInput(goal.currentAmount) : "");
+  // The total saved the field last showed. A deposit on this screen moves the
+  // goal's total: an untouched field follows it, and "Zapisz" sends
+  // `currentAmount` only when the user changed it — never a stale total that
+  // would quietly undo the deposit.
+  const shownTotal = useRef(goal?.currentAmount ?? 0);
+  const total = goal?.currentAmount;
+  useEffect(() => {
+    if (total === undefined || total === shownTotal.current) return;
+    setAlready((text) => (text === toMoneyInput(shownTotal.current) ? toMoneyInput(total) : text));
+    shownTotal.current = total;
+  }, [total]);
   const [month, setMonth] = useState<number | null>(saved?.month ?? null);
   const [year, setYear] = useState(saved?.year ?? today.year);
   const [errors, setErrors] = useState<Errors>({});
@@ -169,7 +180,7 @@ export function GoalForm({ goal }: { goal?: Goal }) {
     const change: UpdateGoalInput = {};
     if (parsedName.name !== goal.name) change.name = parsedName.name;
     if (parsedTarget.grosze !== goal.targetAmount) change.targetAmount = parsedTarget.grosze;
-    if (parsedSaved.grosze !== goal.currentAmount) change.currentAmount = parsedSaved.grosze;
+    if (already !== toMoneyInput(shownTotal.current)) change.currentAmount = parsedSaved.grosze;
     if (deadlineChanged) change.targetDate = lastDayOf(chosen);
     if (Object.keys(change).length === 0) router.back();
     else save.mutate({ action: "update", id: goal.id, change });
@@ -179,6 +190,7 @@ export function GoalForm({ goal }: { goal?: Goal }) {
   return (
     <Screen back title={goal ? t.editTitle : t.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
+      {children}
       <TextField
         label={t.name}
         value={name}
@@ -200,7 +212,7 @@ export function GoalForm({ goal }: { goal?: Goal }) {
       />
       <TextField
         label={t.saved}
-        hint={t.savedHint}
+        hint={goal ? t.savedEditHint : t.savedHint}
         value={already}
         onChangeText={(text) => {
           setAlready(text);

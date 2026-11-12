@@ -3,6 +3,7 @@ import type {
   BudgetSummary,
   Category,
   CompleteOnboardingInput,
+  CreateGoalDepositRequest,
   CreateGoalRequest,
   CreateIncomeSourceRequest,
   CreateRecurringRuleRequest,
@@ -17,6 +18,7 @@ import type {
   UpdateExpenseTemplateInput,
   DueConfirmation,
   Goal,
+  GoalDeposit,
   ListTransactionsQuery,
   LoginInput,
   PublicUser,
@@ -80,7 +82,9 @@ export const testBudget: BudgetSummary = {
   awaitingIncome: 0,
   incomeForecasts: [],
   fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
-  goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+  goalContributions: [
+    { goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000, deposited: 0 },
+  ],
   today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },
 };
 
@@ -285,6 +289,9 @@ let sources: IncomeSource[] = [];
 let goals: Goal[] = [];
 /** Goals in the trash: soft-deleted, so they can come back. */
 let trashedGoals: Goal[] = [];
+/** Deposits, newest first; removed ones wait for Cofnij in `removedDeposits`. */
+let deposits: GoalDeposit[] = [];
+let removedDeposits: GoalDeposit[] = [];
 let created = 0;
 /** Income and payments waiting for an answer — none unless a test seeds them. */
 let due: DueConfirmation[] = [];
@@ -358,6 +365,13 @@ function nextId(): string {
 }
 
 /** Forgets expenses saved, keys handed out and account changes from the previous test. */
+/** A deposit moves the goal's total saved, like the API. */
+function changeSaved(goalId: string, by: number): void {
+  goals = goals.map((goal) =>
+    goal.id === goalId ? { ...goal, currentAmount: goal.currentAmount + by } : goal,
+  );
+}
+
 export function resetFakeServer(): void {
   saved.length = 0;
   drafts = 0;
@@ -370,6 +384,8 @@ export function resetFakeServer(): void {
   sources = [testIncomeSource()];
   goals = [testGoal()];
   trashedGoals = [];
+  deposits = [];
+  removedDeposits = [];
   due = [];
   templates = [];
   limits = [];
@@ -390,6 +406,7 @@ export function seedFakeServer(data: {
   rules?: RecurringRule[];
   sources?: IncomeSource[];
   goals?: Goal[];
+  deposits?: GoalDeposit[];
   transactions?: Transaction[];
   due?: DueConfirmation[];
   templates?: ExpenseTemplate[];
@@ -408,6 +425,7 @@ export function seedFakeServer(data: {
   if (data.rules) rules = data.rules;
   if (data.sources) sources = data.sources;
   if (data.goals) goals = data.goals;
+  if (data.deposits) deposits = data.deposits;
 }
 
 /** The signed-in account has not finished onboarding (e.g. quit halfway last time). */
@@ -534,6 +552,39 @@ export const fakeApi = {
       return Promise.resolve(goal);
     }),
   },
+  goalDeposits: {
+    list: jest.fn((goalId: string) =>
+      Promise.resolve(deposits.filter((deposit) => deposit.goalId === goalId)),
+    ),
+    draft: jest.fn((input: CreateGoalDepositRequest) => keyed(input)),
+    create: jest.fn(({ input }: IdempotentDraft<CreateGoalDepositRequest>) => {
+      const deposit: GoalDeposit = {
+        id: nextId(),
+        goalId: input.goalId,
+        amount: input.amount,
+        date: input.date ?? testBudget.asOf,
+      };
+      deposits = [deposit, ...deposits];
+      changeSaved(input.goalId, input.amount);
+      return Promise.resolve(deposit);
+    }),
+    remove: jest.fn((goalId: string, id: string) => {
+      const deposit = deposits.find((item) => item.id === id && item.goalId === goalId);
+      if (!deposit) return Promise.reject(new Error(`No deposit ${id}`));
+      deposits = deposits.filter((item) => item.id !== id);
+      removedDeposits = [...removedDeposits, deposit];
+      changeSaved(goalId, -deposit.amount);
+      return Promise.resolve();
+    }),
+    restore: jest.fn((goalId: string, id: string) => {
+      const deposit = removedDeposits.find((item) => item.id === id && item.goalId === goalId);
+      if (!deposit) return Promise.reject(new Error(`No removed deposit ${id}`));
+      removedDeposits = removedDeposits.filter((item) => item.id !== id);
+      deposits = [deposit, ...deposits].sort((a, b) => b.date.localeCompare(a.date));
+      changeSaved(goalId, deposit.amount);
+      return Promise.resolve(deposit);
+    }),
+  },
   recurringRules: {
     list: jest.fn(() => Promise.resolve(rules)),
     draft: jest.fn((input: CreateRecurringRuleRequest) => keyed(input)),
@@ -620,6 +671,7 @@ export const fakeApi = {
       incomeSources: sources,
       incomeEntries: [],
       goals,
+      goalDeposits: [],
       recurringRules: rules,
     }),
   ),
