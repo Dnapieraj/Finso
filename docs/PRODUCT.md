@@ -1151,3 +1151,14 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   RevenueCat i statusu planu) i `/usuwanie-konta` („Zakup aplikacji” zamiast
   ostrzeżenia o subskrypcji) zaktualizowane.
 - **Appka mobilna bez zmian** — nie miała jeszcze paywalla ani limitów.
+
+### 12.11.2026 — wspólne wydatki po publikacji, strona reklamuje tylko to, co jest
+
+- **Wspólne wydatki przesunięte na aktualizację po publikacji.** Najdroższa
+  funkcja z listy (znajomi, podział, rozliczenia, wpływ na budżet), a nie
+  odpowiada na główną obietnicę „czy stać mnie teraz”. Zrobimy ją, jeśli
+  kupujący o nią poproszą.
+- **Appka płatna obiecuje tylko to, co już robi.** Karta „Wspólne wydatki”
+  na stronie głównej zastąpiona kartą „Import wyciągu z banku” (działa na
+  obu platformach; widżet odpadł, bo jest tylko na Androida). Test e2e
+  `features list only what the app already does` pilnuje listy.

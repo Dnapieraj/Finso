@@ -16,7 +16,8 @@ zanim użytkownik wyda pieniądze. Nie raportuje przeszłości jak inne appki.
 1. Symulator decyzji — planowany wydatek → ile zostanie, wpływ na cele
 2. Nieregularne dochody — budżet z prognozy i zmienności
 3. Detektor subskrypcji — powtarzające się płatności, podwyżki, martwe subskrypcje
-4. Wspólne wydatki — należności od znajomych widoczne w budżecie
+4. Wspólne wydatki — należności od znajomych widoczne w budżecie (**po publikacji**, w aktualizacji;
+   strona web nie reklamuje funkcji, których appka jeszcze nie ma — decyzja 12.11.2026)
 
 Pełna specyfikacja: `docs/PRODUCT.md`
 Jeśli PRODUCT.md i CLAUDE.md się różnią — **CLAUDE.md wygrywa** (jest aktualniejszy).
