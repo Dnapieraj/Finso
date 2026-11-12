@@ -1,5 +1,5 @@
 import { addDays, isoDate, type IsoDate } from "../date.js";
-import { clampedDayInMonth, monthIndexOf, yearMonth } from "./calendar.js";
+import { clampedDayInMonth, monthIndexOf } from "./calendar.js";
 import type { BudgetPeriod } from "./types.js";
 
 /**
@@ -35,14 +35,14 @@ export function todayInTimeZone(instant: Date, timeZone: string): IsoDate {
  * do dnia przed kolejnym startem (włącznie).
  *
  * `periodStartDay` = 1 → miesiąc kalendarzowy. `periodStartDay` = 10 →
- * np. 10.09–09.10. Zakres 1-28 gwarantuje walidacja (updateMeSchema),
- * więc start okresu istnieje w każdym miesiącu.
+ * np. 10.09–09.10. Dzień 29–31 w krótszym miesiącu to jego ostatni dzień
+ * (wypłata „31.” w lutym przychodzi 28/29.), jak terminy reguł.
  */
 export function currentBudgetPeriod(today: IsoDate, periodStartDay: number): BudgetPeriod {
-  const { day } = yearMonth(today);
-  // Przed dniem startu jesteśmy jeszcze w okresie, który zaczął się
-  // w poprzednim miesiącu.
-  const startMonth = monthIndexOf(today) - (day < periodStartDay ? 1 : 0);
+  const month = monthIndexOf(today);
+  // Przed (przyciętym) dniem startu jesteśmy jeszcze w okresie, który
+  // zaczął się w poprzednim miesiącu.
+  const startMonth = month - (today < clampedDayInMonth(month, periodStartDay) ? 1 : 0);
   const start = clampedDayInMonth(startMonth, periodStartDay);
   const nextStart = clampedDayInMonth(startMonth + 1, periodStartDay);
   return { start, end: addDays(nextStart, -1) };

@@ -39,15 +39,16 @@ describe("cursorPageQuerySchema", () => {
 });
 
 describe("updateMeSchema", () => {
-  it("przyjmuje strefę IANA i dzień startu okresu 1-28", () => {
+  it("przyjmuje strefę IANA i dzień startu okresu 1-31", () => {
     expect(
       updateMeSchema.safeParse({ timezone: "America/New_York", periodStartDay: 28 }).success,
     ).toBe(true);
+    expect(updateMeSchema.safeParse({ periodStartDay: 31 }).success).toBe(true);
   });
 
-  it("odrzuca nieznaną strefę i dzień 29+ (luty by go nie miał)", () => {
+  it("odrzuca nieznaną strefę i dzień spoza 1-31", () => {
     expect(updateMeSchema.safeParse({ timezone: "Mars/Olympus" }).success).toBe(false);
-    expect(updateMeSchema.safeParse({ periodStartDay: 29 }).success).toBe(false);
+    expect(updateMeSchema.safeParse({ periodStartDay: 32 }).success).toBe(false);
     expect(updateMeSchema.safeParse({ periodStartDay: 0 }).success).toBe(false);
   });
 

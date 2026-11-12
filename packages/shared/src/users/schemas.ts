@@ -3,8 +3,11 @@ import { z } from "zod";
 /** Plan subskrypcji — lustrzane odbicie enuma `SubscriptionPlan` z bazy. */
 export const subscriptionPlanSchema = z.enum(["FREE", "PLUS"]);
 
-/** Najpóźniejszy dzień startu okresu — każdy miesiąc ma co najmniej 28 dni. */
-export const PERIOD_START_DAY_MAX = 28;
+/**
+ * Najpóźniejszy dzień startu okresu. 29–31 w krótszym miesiącu oznacza
+ * jego ostatni dzień (31 = „ostatni dzień miesiąca”).
+ */
+export const PERIOD_START_DAY_MAX = 31;
 
 /**
  * Czy `value` to strefa czasowa IANA znana środowisku (np. "Europe/Warsaw").

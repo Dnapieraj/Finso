@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { isoDate } from "../date.js";
-import { currentBudgetPeriod, periodsUntil, todayInTimeZone } from "./period.js";
+import { addDays } from "../date.js";
+import { budgetPeriodAt, currentBudgetPeriod, periodsUntil, todayInTimeZone } from "./period.js";
 
 const d = isoDate;
 
@@ -73,6 +74,66 @@ describe("currentBudgetPeriod", () => {
     expect(currentBudgetPeriod(d("2028-02-15"), 1)).toEqual({
       start: "2028-02-01",
       end: "2028-02-29",
+    });
+  });
+
+  describe("wypłata 29., 30. albo 31. — w krótszym miesiącu ostatniego dnia", () => {
+    it("start 31., 28 lutego (ostatni dzień) → nowy okres zaczyna się dziś", () => {
+      expect(currentBudgetPeriod(d("2026-02-28"), 31)).toEqual({
+        start: "2026-02-28",
+        end: "2026-03-30",
+      });
+    });
+
+    it("start 31., dzień przed ostatnim lutego → jeszcze okres od 31 stycznia", () => {
+      expect(currentBudgetPeriod(d("2026-02-27"), 31)).toEqual({
+        start: "2026-01-31",
+        end: "2026-02-27",
+      });
+    });
+
+    it("start 31. w miesiącu 30-dniowym → 30. kwietnia, a okres kończy się dzień przed 31 maja", () => {
+      expect(currentBudgetPeriod(d("2026-04-30"), 31)).toEqual({
+        start: "2026-04-30",
+        end: "2026-05-30",
+      });
+      expect(currentBudgetPeriod(d("2026-04-29"), 31)).toEqual({
+        start: "2026-03-31",
+        end: "2026-04-29",
+      });
+    });
+
+    it("rok przestępny: start 30. → 29 lutego 2028", () => {
+      expect(currentBudgetPeriod(d("2028-02-29"), 30)).toEqual({
+        start: "2028-02-29",
+        end: "2028-03-29",
+      });
+    });
+
+    it("start 29. w lutym nieprzestępnym → 28 lutego", () => {
+      expect(currentBudgetPeriod(d("2026-02-28"), 29)).toEqual({
+        start: "2026-02-28",
+        end: "2026-03-28",
+      });
+    });
+
+    it.each([29, 30, 31])(
+      "start %i: okresy przez 3 lata stykają się dzień w dzień i każdy dzień ma swój okres",
+      (day) => {
+        let date = d("2026-01-01");
+        while (date <= "2028-12-31") {
+          const period = currentBudgetPeriod(date, day);
+          expect(period.start <= date && date <= period.end).toBe(true);
+          const next = budgetPeriodAt(date, day, 1);
+          expect(next.start).toBe(addDays(period.end, 1));
+          date = addDays(date, 1);
+        }
+      },
+    );
+
+    it("periodsUntil przy starcie 31.: termin 30 kwietnia to już następny okres", () => {
+      expect(periodsUntil(d("2026-04-15"), d("2026-04-30"), 31)).toBe(2);
+      expect(periodsUntil(d("2026-04-15"), d("2026-04-29"), 31)).toBe(1);
     });
   });
 

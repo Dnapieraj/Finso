@@ -33,11 +33,14 @@ describe("completeOnboardingSchema", () => {
   });
 
   describe("dzień wypłaty (periodStartDay)", () => {
-    it.each([1, 28])("przyjmuje %i", (day) => {
-      expect(accepts(onboarding({ periodStartDay: day }))).toBe(true);
-    });
+    it.each([1, 28, 29, 31])(
+      "przyjmuje %i (29–31: w krótszych miesiącach ostatni dzień)",
+      (day) => {
+        expect(accepts(onboarding({ periodStartDay: day }))).toBe(true);
+      },
+    );
 
-    it.each([0, 29, 31, 10.5])("odrzuca %s — okres musi startować w każdym miesiącu", (day) => {
+    it.each([0, 32, 10.5])("odrzuca %s", (day) => {
       expect(accepts(onboarding({ periodStartDay: day }))).toBe(false);
     });
   });
