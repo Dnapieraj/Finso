@@ -48,8 +48,13 @@ export const budgetSummarySchema = z.object({
   fixedCommitments: z.array(
     z.object({ label: z.string(), amount: amountOutput, overdue: z.literal(true).optional() }),
   ),
-  /** Rata każdego celu w tym okresie — pozycje breakdown.goalContributions. */
-  goalContributions: z.array(z.object({ goalId: idSchema, amount: amountOutput })),
+  /**
+   * Rata każdego celu w tym okresie — pozycje breakdown.goalContributions.
+   * `deposited` — ile z niej już wpłacono w tym okresie.
+   */
+  goalContributions: z.array(
+    z.object({ goalId: idSchema, amount: amountOutput, deposited: amountOutput }),
+  ),
   /** Dzienny limit z przenoszeniem — patrz calculateTodayAllowance. */
   today: z.object({
     limit: amountOutput,

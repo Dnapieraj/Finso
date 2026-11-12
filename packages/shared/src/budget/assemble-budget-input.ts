@@ -61,11 +61,19 @@ export interface BudgetTransaction {
   beforeFinso?: boolean;
 }
 
+export interface BudgetGoalDeposit {
+  amount: Grosze;
+  date: IsoDate;
+}
+
 export interface BudgetGoal {
   id: string;
   targetAmount: Grosze;
+  /** Odłożone razem — także wpłaty z `deposits`. */
   currentAmount: Grosze;
   targetDate: IsoDate;
+  /** Wpłaty na cel (nieusunięte); brak = żadnych. */
+  deposits?: BudgetGoalDeposit[];
 }
 
 /**
@@ -118,7 +126,10 @@ export interface BudgetSnapshot {
  * okresem albo przed `trackedSince`.
  *
  * **goalContributions** / **goals** — każdy cel z ratą z
- * calculateGoalContribution(cel, periodsUntil(...)).
+ * calculateGoalContribution(cel, periodsUntil(...)) liczoną od stanu z
+ * początku okresu (bez wpłat z tego okresu), żeby wpłata w ramach raty nie
+ * zmieniała budżetu. Pozycja to `max(rata, wpłacone w okresie)`: wpłata
+ * ponad ratę to pieniądze, które już wyszły z budżetu.
  */
 export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseInput {
   const period = currentBudgetPeriod(snapshot.today, snapshot.periodStartDay);
@@ -132,16 +143,15 @@ export function assembleBudgetInput(snapshot: BudgetSnapshot): SimulatePurchaseI
     asOf: snapshot.today,
     periodIncome: periodIncome(snapshot, confirmedInPeriod(snapshot.incomeEntries), period),
     remainingFixedCommitments: remainingCommitments(snapshot, period),
-    goalContributions: snapshot.goals.map((goal): GoalContributionLine => ({
-      goalId: goal.id,
-      amount: calculateGoalContribution(
-        goal,
-        periodsUntil(snapshot.today, goal.targetDate, snapshot.periodStartDay),
-      ).contributionPerPeriod,
-    })),
+    goalContributions: snapshot.goals.map((goal) => goalContribution(snapshot, goal, period)),
     alreadySpent: sumAmounts(transactions),
     ...daySpending(snapshot, transactions, period),
-    goals: snapshot.goals.map((goal) => ({ ...goal })),
+    goals: snapshot.goals.map(({ id, targetAmount, currentAmount, targetDate }) => ({
+      id,
+      targetAmount,
+      currentAmount,
+      targetDate,
+    })),
   };
 }
 
@@ -227,4 +237,19 @@ function isInPeriod(date: IsoDate, period: BudgetPeriod): boolean {
 
 function sumAmounts(rows: { amount: Grosze }[]): Grosze {
   return grosze(rows.reduce((sum, row) => sum + row.amount, 0));
+}
+
+function goalContribution(
+  snapshot: BudgetSnapshot,
+  goal: BudgetGoal,
+  period: BudgetPeriod,
+): GoalContributionLine {
+  const deposited = sumAmounts(
+    (goal.deposits ?? []).filter((deposit) => isInPeriod(deposit.date, period)),
+  );
+  const planned = calculateGoalContribution(
+    { targetAmount: goal.targetAmount, currentAmount: grosze(goal.currentAmount - deposited) },
+    periodsUntil(snapshot.today, goal.targetDate, snapshot.periodStartDay),
+  ).contributionPerPeriod;
+  return { goalId: goal.id, amount: grosze(Math.max(planned, deposited)), deposited };
 }

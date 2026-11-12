@@ -596,7 +596,7 @@ describe("assembleBudgetInput — cele", () => {
         ],
       }),
     );
-    expect(input.goalContributions).toEqual([{ goalId: "trip", amount: 33_334 }]);
+    expect(input.goalContributions).toEqual([{ goalId: "trip", amount: 33_334, deposited: 0 }]);
     expect(input.goals).toEqual([
       { id: "trip", targetAmount: 100_000, currentAmount: 0, targetDate: "2026-11-30" },
     ]);
@@ -615,7 +615,7 @@ describe("assembleBudgetInput — cele", () => {
         ],
       }),
     );
-    expect(input.goalContributions).toEqual([{ goalId: "late", amount: 60_000 }]);
+    expect(input.goalContributions).toEqual([{ goalId: "late", amount: 60_000, deposited: 0 }]);
   });
 
   it("osiągnięty cel → rata 0", () => {
@@ -631,7 +631,71 @@ describe("assembleBudgetInput — cele", () => {
         ],
       }),
     );
-    expect(input.goalContributions).toEqual([{ goalId: "done", amount: 0 }]);
+    expect(input.goalContributions).toEqual([{ goalId: "done", amount: 0, deposited: 0 }]);
+  });
+
+  describe("wpłaty na cel", () => {
+    // Wrzesień–listopad = 3 okresy. Odłożone razem (currentAmount) obejmuje wpłaty.
+    const trip = (currentAmount: number, deposits: { amount: number; date: string }[]) => ({
+      id: "trip",
+      targetAmount: g(90_000),
+      currentAmount: g(currentAmount),
+      targetDate: d("2026-11-30"),
+      deposits: deposits.map((deposit) => ({ amount: g(deposit.amount), date: d(deposit.date) })),
+    });
+
+    it("wpłata w ramach raty nie zmienia budżetu — rata liczona od stanu z początku okresu", () => {
+      const input = assembleBudgetInput(
+        snapshot({ goals: [trip(10_000, [{ amount: 10_000, date: "2026-09-05" }])] }),
+      );
+      // 90 000 / 3 = 30 000 do odłożenia w tym okresie; 10 000 już wpłacone.
+      expect(input.goalContributions).toEqual([
+        { goalId: "trip", amount: 30_000, deposited: 10_000 },
+      ]);
+    });
+
+    it("wpłata ponad ratę zmniejsza budżet o całą wpłaconą kwotę", () => {
+      const input = assembleBudgetInput(
+        snapshot({ goals: [trip(45_000, [{ amount: 45_000, date: "2026-09-20" }])] }),
+      );
+      expect(input.goalContributions).toEqual([
+        { goalId: "trip", amount: 45_000, deposited: 45_000 },
+      ]);
+    });
+
+    it("wpłaty z poprzednich okresów zmniejszają tylko to, co zostało do odłożenia", () => {
+      const input = assembleBudgetInput(
+        snapshot({ goals: [trip(30_000, [{ amount: 30_000, date: "2026-08-15" }])] }),
+      );
+      // Zostało 60 000 na 3 okresy.
+      expect(input.goalContributions).toEqual([{ goalId: "trip", amount: 20_000, deposited: 0 }]);
+    });
+
+    it("cel domknięty wpłatą w tym okresie — rezerwujemy tylko tyle, ile wpłacono", () => {
+      const input = assembleBudgetInput(
+        snapshot({
+          goals: [
+            {
+              ...trip(90_000, [{ amount: 20_000, date: "2026-09-10" }]),
+              targetDate: d("2026-09-30"),
+            },
+          ],
+        }),
+      );
+      // Na początku okresu brakowało 20 000 (termin w tym okresie) — wpłacone w całości.
+      expect(input.goalContributions).toEqual([
+        { goalId: "trip", amount: 20_000, deposited: 20_000 },
+      ]);
+    });
+
+    it("symulator dostaje cel bez listy wpłat", () => {
+      const input = assembleBudgetInput(
+        snapshot({ goals: [trip(10_000, [{ amount: 10_000, date: "2026-09-05" }])] }),
+      );
+      expect(input.goals).toEqual([
+        { id: "trip", targetAmount: 90_000, currentAmount: 10_000, targetDate: "2026-11-30" },
+      ]);
+    });
   });
 });
 

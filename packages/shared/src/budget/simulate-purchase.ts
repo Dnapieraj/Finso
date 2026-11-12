@@ -44,8 +44,12 @@ export function simulatePurchase(
 
   // Ile faktycznie zabraknie po tym zakupie — 0, jeśli i tak starczyło.
   const deficit = Math.max(0, 0 - remainingAfter);
+  // Wpłacone już w tym okresie pieniądze są na celu — zakup ich nie zabierze.
   const contributionByGoalId = new Map(
-    input.goalContributions.map((line) => [line.goalId, line.amount]),
+    input.goalContributions.map((line) => [
+      line.goalId,
+      grosze(Math.max(0, line.amount - (line.deposited ?? 0))),
+    ]),
   );
 
   const goalImpacts: GoalImpact[] = input.goals.map((goal) => ({

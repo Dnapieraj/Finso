@@ -147,6 +147,27 @@ describe("simulatePurchase", () => {
       expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 4 }]);
     });
 
+    it("wpłacona już część raty nie przepadnie przez zakup — liczy się tylko niewpłacona", () => {
+      const input = baseInput();
+      // Rata 100 000, z czego 90 000 już wpłacone: zakup może zabrać najwyżej 10 000.
+      input.goalContributions = [
+        { goalId: "g1", amount: grosze(100_000), deposited: grosze(90_000) },
+      ];
+      const result = simulatePurchase(input, grosze(600_000));
+
+      expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 4 }]);
+    });
+
+    it("rata w całości wpłacona — zakup nie opóźnia celu", () => {
+      const input = baseInput();
+      input.goalContributions = [
+        { goalId: "g1", amount: grosze(100_000), deposited: grosze(100_000) },
+      ];
+      const result = simulatePurchase(input, grosze(600_000));
+
+      expect(result.goalImpacts).toEqual([{ goalId: "g1", delayDays: 0 }]);
+    });
+
     it("cel już osiągnięty — delayDays 0, nawet przy deficycie", () => {
       const input = baseInput();
       input.goals = [

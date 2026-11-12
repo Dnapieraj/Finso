@@ -30,7 +30,14 @@ export interface FixedCommitment {
 /** Jedna linia wkładu w cel oszczędnościowy w tym okresie — wynik {@link calculateGoalContribution} dla danego celu. */
 export interface GoalContributionLine {
   goalId: string;
+  /** Ile budżet odkłada na cel w tym okresie — rata albo więcej, gdy wpłacono ponad nią. */
   amount: Grosze;
+  /**
+   * Ile z tego już wpłacono w tym okresie. Tych pieniędzy zakup nie zabierze,
+   * więc symulator liczy opóźnienie celu tylko od `amount - deposited`.
+   * Brak = 0.
+   */
+  deposited?: Grosze;
 }
 
 export interface CalculateAvailableBalanceInput {
