@@ -98,10 +98,11 @@ test.describe("account deletion page (Google Play requirement)", () => {
     );
   });
 
-  test("warns that a store subscription has to be cancelled separately", async ({ page }) => {
-    const section = page.getByRole("region", { name: "Subskrypcja Plus" });
+  test("says the app bought in the store stays after deleting the account", async ({ page }) => {
+    const section = page.getByRole("region", { name: "Zakup aplikacji" });
     await expect(section).toContainText("App Store");
     await expect(section).toContainText("Google Play");
+    await expect(section).toContainText("bez ponownej płatności");
   });
 });
 
@@ -124,10 +125,11 @@ test("privacy policy gives contact, deletion and complaint routes", async ({ pag
 test("privacy policy names only the processors in use", async ({ page }) => {
   await page.goto("/polityka-prywatnosci");
   const recipients = page.getByRole("region", { name: "Komu przekazujemy dane" });
-  for (const name of ["RevenueCat", "Apple", "Google"]) {
+  for (const name of ["Resend", "Apple", "Google"]) {
     await expect(recipients).toContainText(name);
   }
-  await expect(page.locator("main")).not.toContainText(/Sentry|PostHog/);
+  // A paid app sells nothing inside, so there is no subscription service.
+  await expect(page.locator("main")).not.toContainText(/Sentry|PostHog|RevenueCat/);
 });
 
 // Matches the app lock in apps/mobile (src/lock): biometrics or the phone's
@@ -161,7 +163,7 @@ test("privacy policy describes the subscription detector and what it stores", as
   const main = page.locator("main");
   await expect(main).toContainText("odrzucone przez ciebie podpowiedzi detektora subskrypcji");
   await expect(main).toContainText("Detektor subskrypcji szuka w twoich wydatkach");
-  await expect(main.locator("time")).toHaveAttribute("datetime", "2026-10-20");
+  await expect(main.locator("time")).toHaveAttribute("datetime", "2026-11-12");
 });
 
 test("terms say payments go through the stores and are not financial advice", async ({ page }) => {
@@ -174,6 +176,13 @@ test("terms say payments go through the stores and are not financial advice", as
     "href",
     "/polityka-prywatnosci",
   );
+});
+
+test("terms describe a one-time purchase, with no plans or renewals", async ({ page }) => {
+  await page.goto("/regulamin");
+  const main = page.locator("main");
+  await expect(main.getByRole("region", { name: "Cena i zakup" })).toContainText("jednorazowo");
+  await expect(main).not.toContainText(/Plus|Free|odnawia|subskrypcj[aęi] (Plus|w sklepie)/);
 });
 
 // The privacy policy promises this, so the test keeps the promise true.

@@ -29,13 +29,18 @@ test("store links are the only calls to action", async ({ page }) => {
   await expect(page.getByText(/zaloguj|zarejestruj|kup teraz/i)).toHaveCount(0);
 });
 
-test("pricing shows both plans with amounts formatted by formatMoney", async ({ page }) => {
+// A paid app (docs/PRODUCT.md §6): one price in the stores, no plans, no subscription.
+test("pricing shows one price paid once, formatted by formatMoney", async ({ page }) => {
   const pricing = page.locator("#cennik");
-  await expect(pricing.getByRole("heading", { level: 3 })).toHaveText(["Free", "Plus"]);
+  await expect(pricing.getByRole("heading", { level: 3 })).toHaveText(["Finso"]);
   // formatMoney separates the currency with a non-breaking space, which \s matches.
-  await expect(pricing).toContainText(/0\szł/);
-  await expect(pricing).toContainText(/12,99\szł/);
-  await expect(pricing).toContainText(/99\szł rocznie — wychodzi 8,25\szł miesięcznie/);
+  await expect(pricing).toContainText(/19,99\szł/);
+  await expect(pricing).toContainText("jednorazowo");
+  await expect(pricing).not.toContainText(/Free|Plus|mies\.|rocznie/);
+});
+
+test("nowhere on the page is there a plan or a subscription to buy", async ({ page }) => {
+  await expect(page.locator("main")).not.toContainText(/Finso Plus|plan Free|Subskrypcję Plus/i);
 });
 
 test("footer links to the legal pages required by the stores", async ({ page }) => {
