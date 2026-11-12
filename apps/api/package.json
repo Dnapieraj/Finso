@@ -17,6 +17,7 @@
     "db:validate": "prisma validate",
     "db:seed": "prisma db seed",
     "db:demo": "tsx prisma/demo.ts",
+    "db:showcase": "tsx prisma/showcase.ts",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
