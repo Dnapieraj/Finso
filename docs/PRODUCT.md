@@ -565,8 +565,8 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
    (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API — **ZROBIONE**
 9. Materiały do sklepów: opisy, zrzuty ekranu, ankiety o danych (Data safety,
    App Privacy), konto testowe dla recenzentów — **ZROBIONE** (docs/SKLEPY.md; zrzuty iPhone'a z buildu TestFlight)
-10. Przewodnik publikacji `docs/PUBLIKACJA.md` — krok po kroku, co kliknąć
-11. Końcowy przegląd wszystkich ekranów na emulatorze
+10. Przewodnik publikacji `docs/PUBLIKACJA.md` — krok po kroku, co kliknąć — **ZROBIONE**
+11. Końcowy przegląd wszystkich ekranów na emulatorze — **ZROBIONE** (nowy build, 6/6 scenariuszy Maestro, zrzuty do sklepu)
 
 **Do zrobienia przed publikacją (etap 8) — `apps/mobile`:**
 
@@ -1301,3 +1301,12 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   z Androida) — instrukcja w SKLEPY.md, do zrobienia z buildu TestFlight.
 - Przegląd na emulatorze z nowym buildem: wszystkie 6 scenariuszy Maestro
   przechodzi; zablokowane uprawnienia faktycznie znikają z manifestu.
+
+### 12.11.2026 — plan „gotowe do publikacji” zamknięty
+
+- Wszystkie 11 punktów zrobione. Zostają wyłącznie kroki właściciela opisane
+  w `docs/PUBLIKACJA.md`: konta (Google Play, Apple, Expo, Resend, opcjonalnie
+  Sentry), domena, hosting API i bazy w UE, podmiana placeholderów (domena,
+  e-mail, administrator danych), przegląd prawny tekstów, buildy EAS, formularze
+  w sklepach, zrzuty iPhone'a z TestFlight, test zamknięty w Google Play
+  (konto osobiste: 12 testerów przez 14 dni).
