@@ -556,7 +556,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 
 1. Linki do regulaminu i polityki prywatności przy rejestracji — **ZROBIONE**
 2. Dzień wypłaty „ostatni dzień miesiąca” — **ZROBIONE**
-3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus)
+3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus) — **ZROBIONE** (razem z `revenueCatId`)
 4. „Wpłać na cel” z historią wpłat
 5. Ikona appki i ekran startowy (własne grafiki zamiast Expo)
 6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności
@@ -574,7 +574,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 - Cena 19,99 zł ustawiona w obu sklepach (umowa „Paid Apps” i dane bankowo-podatkowe
   w App Store Connect, profil płatności w Google Play Console)
 - Rozważyć Play Integrity API przy rejestracji (kopie APK spoza Google Play)
-- Usunąć kolumnę `User.plan` / enum `SubscriptionPlan` — nieużywane po rezygnacji z planów
+- ~~Usunąć kolumnę `User.plan` / enum `SubscriptionPlan`~~ — zrobione 12.11.2026 (migracja `drop_subscription_plan`)
 - **Build na iPhone'a wymaga EAS Build w chmurze** — pracujemy na Windowsie,
   a lokalny build iOS (`expo run:ios`) potrzebuje macOS z Xcode. Do zrobienia:
   konto Apple Developer (99 USD/rok), `eas.json` z profilami `development`

@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-/** Plan subskrypcji — lustrzane odbicie enuma `SubscriptionPlan` z bazy. */
-export const subscriptionPlanSchema = z.enum(["FREE", "PLUS"]);
-
 /**
  * Najpóźniejszy dzień startu okresu. 29–31 w krótszym miesiącu oznacza
  * jego ostatni dzień (31 = „ostatni dzień miesiąca”).
@@ -31,7 +28,6 @@ export function isValidTimeZone(value: string): boolean {
 export const publicUserSchema = z.object({
   id: z.string(),
   email: z.string(),
-  plan: subscriptionPlanSchema,
   currency: z.string(),
   timezone: z.string(),
   periodStartDay: z.number().int(),

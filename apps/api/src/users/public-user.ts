@@ -6,7 +6,6 @@ import type { User } from "../generated/prisma/client.js";
 export const publicUserSelect = {
   id: true,
   email: true,
-  plan: true,
   currency: true,
   timezone: true,
   periodStartDay: true,
@@ -22,7 +21,6 @@ export function toPublicUser(user: Pick<User, keyof typeof publicUserSelect>): P
   return {
     id: user.id,
     email: user.email,
-    plan: user.plan,
     currency: user.currency,
     timezone: user.timezone,
     periodStartDay: user.periodStartDay,
