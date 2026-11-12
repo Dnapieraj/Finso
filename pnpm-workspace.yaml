@@ -16,3 +16,6 @@ allowBuilds:
   unrs-resolver: false
   # Native file watcher used by Expo tooling; ships prebuilt binaries per OS.
   "@parcel/watcher": false
+  # Sentry CLI pobiera binarkę do wysyłania map źródeł; potrzebna tylko w buildzie
+  # EAS z SENTRY_AUTH_TOKEN (docs/PUBLIKACJA.md), nie lokalnie ani w CI.
+  "@sentry/cli": false

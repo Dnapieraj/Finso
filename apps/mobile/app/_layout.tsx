@@ -4,6 +4,7 @@ import "../global.css";
 import { BricolageGrotesque_700Bold } from "@expo-google-fonts/bricolage-grotesque/700Bold";
 import { HankenGrotesk_400Regular } from "@expo-google-fonts/hanken-grotesk/400Regular";
 import { HankenGrotesk_600SemiBold } from "@expo-google-fonts/hanken-grotesk/600SemiBold";
+import * as Sentry from "@sentry/react-native";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
@@ -24,6 +25,7 @@ import {
   useAppearanceLoaded,
 } from "../src/appearance/store";
 import { LockGate } from "../src/lock/lock-gate";
+import { startMonitoring } from "../src/monitoring/sentry";
 import { appLock, useAppLock } from "../src/lock/store";
 import { OfflineBar } from "../src/network/offline-bar";
 import {
@@ -32,14 +34,18 @@ import {
 } from "../src/preferences/device-preferences";
 import { queryClient } from "../src/query-client";
 import { session, useSession } from "../src/session";
+import { appVersion } from "../src/support/support";
 import { textScaleVars, themeVars } from "../src/theme";
 import { useUpdateRequired } from "../src/update/store";
 import { UpdateRequiredScreen } from "../src/update/update-required-screen";
 
+// Crash reports only in builds with a DSN; written out in full so Expo inlines it.
+startMonitoring({ dsn: process.env.EXPO_PUBLIC_SENTRY_DSN, appVersion: appVersion() });
+
 // Keep the splash screen until the fonts load, so text never flashes in a fallback font.
 void SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const choice = useAppearance();
   const appearanceLoaded = useAppearanceLoaded();
   const systemScheme = useColorScheme() === "dark" ? "dark" : "light";
@@ -128,3 +134,6 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+// Wrapped so an uncaught render error is reported (a no-op without a DSN).
+export default Sentry.wrap(RootLayout);
