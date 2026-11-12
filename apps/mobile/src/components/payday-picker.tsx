@@ -17,7 +17,10 @@ function DayChip({
   return (
     <Pressable
       accessibilityRole="radio"
-      accessibilityLabel={String(day)}
+      // 31 is saved as "the last day": in shorter months the period starts on it.
+      accessibilityLabel={
+        day === 31 ? `31, ${pl.onboarding.payday.lastDay.toLowerCase()}` : String(day)
+      }
       accessibilityState={{ selected }}
       onPress={onPress}
       className={`aspect-square w-[12%] items-center justify-center rounded-xl border ${
@@ -36,8 +39,9 @@ function DayChip({
 }
 
 /**
- * The payday, 1–28, so the budget period starts on the same day every
- * month (see User.periodStartDay). Used by onboarding and settings.
+ * The payday, 1–31; 29–31 fall on the last day of shorter months, so 31
+ * means "the last day of the month" (see User.periodStartDay). Used by
+ * onboarding and settings.
  */
 export function PaydayPicker({
   value,

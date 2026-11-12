@@ -217,13 +217,16 @@ describe("step 1: payday", () => {
     expect(screen.getByText("Krok 1 z 4")).toBeOnTheScreen();
   });
 
-  it("offers days 1–28 and explains what to pick for a payday on the 29th–31st", async () => {
+  it("offers days 1–31, the 31st as the last day of the month", async () => {
     await openOnboarding();
 
     expect(screen.getByRole("radio", { name: "1" })).toBeOnTheScreen();
     expect(screen.getByRole("radio", { name: "28" })).toBeOnTheScreen();
-    expect(screen.queryByRole("radio", { name: "29" })).not.toBeOnTheScreen();
-    expect(screen.getByText("Dostajesz ją 29., 30. lub 31.? Wybierz 28.")).toBeOnTheScreen();
+    expect(screen.getByRole("radio", { name: "30" })).toBeOnTheScreen();
+    expect(screen.getByRole("radio", { name: "31, ostatni dzień miesiąca" })).toBeOnTheScreen();
+    expect(
+      screen.getByText("29.–31.: w krótszych miesiącach liczymy ostatni dzień miesiąca."),
+    ).toBeOnTheScreen();
   });
 
   it("marks the chosen day as selected", async () => {

@@ -21,8 +21,11 @@ it("has the current payday selected", async () => {
   await openPayday();
 
   expect(screen.getByRole("radio", { name: "10" })).toBeSelected();
-  expect(screen.queryByRole("radio", { name: "29" })).not.toBeOnTheScreen();
-  expect(screen.getByText("Dostajesz ją 29., 30. lub 31.? Wybierz 28.")).toBeOnTheScreen();
+  expect(screen.getByRole("radio", { name: "29" })).toBeOnTheScreen();
+  expect(screen.getByRole("radio", { name: "31, ostatni dzień miesiąca" })).toBeOnTheScreen();
+  expect(
+    screen.getByText("29.–31.: w krótszych miesiącach liczymy ostatni dzień miesiąca."),
+  ).toBeOnTheScreen();
 });
 
 it("saves a new payday and returns to settings, which show it", async () => {
@@ -88,4 +91,17 @@ it("Wstecz leaves without saving", async () => {
     expect(app).toHavePathname("/settings");
   });
   expect(fakeApi.users.updateMe).not.toHaveBeenCalled();
+});
+
+it("payday on the last day of the month: saved as 31, shown in words", async () => {
+  const app = await openPayday();
+
+  await fireEvent.press(screen.getByRole("radio", { name: "31, ostatni dzień miesiąca" }));
+  await fireEvent.press(screen.getByRole("button", { name: "Zapisz" }));
+
+  await waitFor(() => {
+    expect(app).toHavePathname("/settings");
+  });
+  expect(fakeApi.users.updateMe).toHaveBeenCalledWith({ periodStartDay: 31 });
+  expect(await screen.findByText("Ostatni dzień miesiąca")).toBeOnTheScreen();
 });

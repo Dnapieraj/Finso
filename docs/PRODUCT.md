@@ -555,7 +555,7 @@ hosting, domena, kliknięcie „Opublikuj”). Wszystko inne robimy przed nim.
 Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 
 1. Linki do regulaminu i polityki prywatności przy rejestracji — **ZROBIONE**
-2. Dzień wypłaty „ostatni dzień miesiąca”
+2. Dzień wypłaty „ostatni dzień miesiąca” — **ZROBIONE**
 3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus)
 4. „Wpłać na cel” z historią wpłat
 5. Ikona appki i ekran startowy (własne grafiki zamiast Expo)
@@ -583,7 +583,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
   (`expo run:android`), do sklepu też przez EAS. Identyfikator `app.finso`
   (Android i iOS) ustalony 4.10.2026 — po pierwszej publikacji nie do zmiany
 - ~~Linki do regulaminu i polityki prywatności przy rejestracji~~ — zrobione 12.11.2026
-- Dzień wypłaty „ostatni dzień miesiąca” — dziś 29–31 każe wybrać 28
+- ~~Dzień wypłaty „ostatni dzień miesiąca”~~ — zrobione 12.11.2026
 
 **Osobny krok przed publikacją (etap 8) — prawdziwe logowanie przez Apple i Google:**
 Atrapy przycisków „Kontynuuj z Apple / Google” usunięte 4.11.2026 (martwy przycisk nie przejdzie review — App Store 2.1 — i zaśmiecał ekran); wracają razem z działającym logowaniem. Do zrobienia:
@@ -1182,3 +1182,15 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   na stronie głównej zastąpiona kartą „Import wyciągu z banku” (działa na
   obu platformach; widżet odpadł, bo jest tylko na Androida). Test e2e
   `features list only what the app already does` pilnuje listy.
+
+### 12.11.2026 — dzień wypłaty 29.–31.
+
+- `periodStartDay` przyjmuje 1–31. W krótszym miesiącu okres startuje jego
+  ostatniego dnia (wypłata „31.” w lutym = 28/29 lutego), tak samo jak
+  terminy reguł (`clampedDayInMonth`). 31 w appce nazywa się „Ostatni dzień
+  miesiąca”.
+- Silnik: start okresu porównywany z przyciętym dniem startu w bieżącym
+  miesiącu — bez tego 28 lutego przy starcie 31. wypadał poza każdy okres.
+  Test przechodzi dzień po dniu przez 3 lata (w tym 2028, przestępny), że
+  okresy się stykają i każdy dzień ma swój okres.
+- Bez migracji: kolumna nie miała ograniczenia 1–28 w bazie, pilnował tego Zod.

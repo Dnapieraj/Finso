@@ -259,7 +259,8 @@ export const pl = {
       title: "Kiedy dostajesz wypłatę?",
       intro: "Od tego dnia liczymy Twój miesiąc budżetowy.",
       days: "Dzień wypłaty",
-      lateMonthHint: "Dostajesz ją 29., 30. lub 31.? Wybierz 28.",
+      lateMonthHint: "29.–31.: w krótszych miesiącach liczymy ostatni dzień miesiąca.",
+      lastDay: "Ostatni dzień miesiąca",
       required: "Wybierz dzień wypłaty.",
     },
     income: {
@@ -309,7 +310,8 @@ export const pl = {
     account: "Konto",
     budget: "Budżet",
     payday: "Dzień wypłaty",
-    paydayValue: (day: number) => `${String(day)}. dnia miesiąca`,
+    paydayValue: (day: number) =>
+      day === 31 ? "Ostatni dzień miesiąca" : `${String(day)}. dnia miesiąca`,
     incomes: "Dochody",
     commitments: "Stałe zobowiązania",
     templates: "Szablony wydatków",
