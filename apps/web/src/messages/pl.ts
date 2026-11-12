@@ -87,14 +87,10 @@ export const pl = {
         ],
       },
       {
-        key: "shared",
-        title: "Wspólne wydatki",
-        body: "Dzielisz rachunek ze znajomymi? Kwota do odzyskania jest widoczna w budżecie jako należność w drodze, a nie pieniądze, które zniknęły.",
-        example: [
-          "„Należność w drodze: ",
-          { amount: grosze(20000), whole: "down", sign: "always" },
-          " od Oli”",
-        ],
+        key: "bankImport",
+        title: "Import wyciągu z banku",
+        body: "Nie chcesz przepisywać wydatków? Wczytaj plik CSV z mBanku, PKO BP, ING i innych. Plik czyta telefon — saldo i numery kont nie trafiają na serwer, a wydatki wpisane wcześniej nie liczą się dwa razy.",
+        example: ["„Zaimportowano 42 wydatki. 3 były już w Finso.”"],
       },
     ],
   },

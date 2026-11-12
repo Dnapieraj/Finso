@@ -1,8 +1,8 @@
 import {
   CalculatorIcon,
+  FileUpIcon,
   RepeatIcon,
   TrendingUpIcon,
-  UsersIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,7 +25,7 @@ const icons: Record<(typeof t.items)[number]["key"], LucideIcon> = {
   simulator: CalculatorIcon,
   irregular: TrendingUpIcon,
   subscriptions: RepeatIcon,
-  shared: UsersIcon,
+  bankImport: FileUpIcon,
 };
 
 export function Features() {
