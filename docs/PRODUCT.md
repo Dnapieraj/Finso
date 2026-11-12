@@ -564,7 +564,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 8. Buildy do sklepów: `eas.json`, wersjonowanie, produkcyjna konfiguracja API
    (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API — **ZROBIONE**
 9. Materiały do sklepów: opisy, zrzuty ekranu, ankiety o danych (Data safety,
-   App Privacy), konto testowe dla recenzentów
+   App Privacy), konto testowe dla recenzentów — **ZROBIONE** (docs/SKLEPY.md; zrzuty iPhone'a z buildu TestFlight)
 10. Przewodnik publikacji `docs/PUBLIKACJA.md` — krok po kroku, co kliknąć
 11. Końcowy przegląd wszystkich ekranów na emulatorze
 
@@ -1282,3 +1282,22 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   HTTPS — bez pytania o eksport szyfrowania przy każdym wgraniu); zablokowane
   uprawnienia Androida, których appka nie używa (pamięć, media, mikrofon,
   nakładka) — `READ_MEDIA_IMAGES` wymagałby w Google Play osobnej deklaracji.
+
+### 12.11.2026 — materiały do sklepów i konto dla recenzentów
+
+- **`docs/SKLEPY.md`** — gotowe teksty (nazwa, opisy, słowa kluczowe), odpowiedzi
+  do Data safety (Google) i App Privacy (Apple), klasyfikacja treści, notatka
+  dla recenzentów. Teksty opisują tylko istniejące funkcje.
+- **Konto pokazowe** `pnpm --filter api db:showcase [--reset]` — wypłata, stałe
+  płatności, dwie subskrypcje, cele z wpłatami, wydatki okresu; daty od dziś
+  (test e2e w trzech dniach okresu: budżet na plusie, nic zaległego, rozsądny
+  „Dziś możesz wydać”). Na produkcji hasło wyłącznie z `SHOWCASE_PASSWORD`.
+- **Grafiki Google Play** (`docs/store/google-play`, generator
+  `docs/store/generate-store-assets.cjs`): 6 zrzutów 1080×1920 z podpisem
+  (Play przyjmuje najwyżej 2:1, surowe zrzuty mają 2,22:1), grafika
+  promocyjna 1024×500, ikona 512×512. Zrzuty zrobione Maestro na koncie
+  pokazowym, w trybie ciemnym.
+- **Zrzuty iPhone'a** nie powstaną na Windowsie (Apple odrzuca zrzuty
+  z Androida) — instrukcja w SKLEPY.md, do zrobienia z buildu TestFlight.
+- Przegląd na emulatorze z nowym buildem: wszystkie 6 scenariuszy Maestro
+  przechodzi; zablokowane uprawnienia faktycznie znikają z manifestu.
