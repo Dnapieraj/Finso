@@ -39,6 +39,18 @@ test("pricing shows one price paid once, formatted by formatMoney", async ({ pag
   await expect(pricing).not.toContainText(/Free|Plus|mies\.|rocznie/);
 });
 
+// A paid app promises only what it already does (docs/PRODUCT.md, 12.11.2026).
+test("features list only what the app already does", async ({ page }) => {
+  const features = page.locator("#wyrozniki");
+  await expect(features.getByRole("heading", { level: 3 })).toHaveText([
+    "Symulator decyzji",
+    "Nieregularne dochody",
+    "Detektor subskrypcji",
+    "Import wyciągu z banku",
+  ]);
+  await expect(page.locator("main")).not.toContainText(/Wspólne wydatki|należność/i);
+});
+
 test("nowhere on the page is there a plan or a subscription to buy", async ({ page }) => {
   await expect(page.locator("main")).not.toContainText(/Finso Plus|plan Free|Subskrypcję Plus/i);
 });
