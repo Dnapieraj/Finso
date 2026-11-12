@@ -68,7 +68,9 @@ export const deleteAccount = {
           items: [
             ["adres e-mail i skrót hasła,"],
             ["wydatki i wpływy, także te przeniesione do kosza,"],
-            ["źródła dochodu, stałe zobowiązania, cele oszczędnościowe z wpłatami i własne kategorie,"],
+            [
+              "źródła dochodu, stałe zobowiązania, cele oszczędnościowe z wpłatami i własne kategorie,",
+            ],
             ["ustawienia i aktywne sesje logowania na wszystkich urządzeniach."],
           ],
         },
