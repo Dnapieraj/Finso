@@ -559,7 +559,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 3. Usunięcie `User.plan` / `SubscriptionPlan` (pozostałość po Free/Plus) — **ZROBIONE** (razem z `revenueCatId`)
 4. „Wpłać na cel” z historią wpłat — **ZROBIONE**
 5. Ikona appki i ekran startowy (własne grafiki zamiast Expo) — **ZROBIONE**
-6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności
+6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności — **ZROBIONE**
 7. Play Integrity przy rejestracji (Android) — w kodzie, włączane zmienną środowiskową
 8. Buildy do sklepów: `eas.json`, wersjonowanie, produkcyjna konfiguracja API
    (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API
@@ -1231,3 +1231,20 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   jednokolorowa (motywy Androida 13+), ekran startowy (oliwkowe koło z liściem
   — czytelne na jasnym i ciemnym tle) i ikony strony web (zamiast domyślnej
   ikony Next.js). Test `app-assets` pilnuje rozmiaru i braku alfy.
+
+### 12.11.2026 — zgłaszanie awarii (Sentry)
+
+- **Nowa biblioteka: `@sentry/react-native` ~7.11.0** — wersja, którą Expo SDK 57
+  ma w `bundledNativeModules.json` (zainstalowana przez `expo install`, nie
+  najnowsza 8.x). Moduł natywny — wymaga nowego development buildu.
+- **Nieaktywne bez `EXPO_PUBLIC_SENTRY_DSN`** — lokalnie i w CI nic nie wychodzi;
+  DSN ustawia się dla buildów do sklepu (docs/PUBLIKACJA.md). Region danych: UE.
+- **Minimum danych:** bez użytkownika (`sendDefaultPii: false`, czyszczone
+  `user`, `request`, `extra`), bez zrzutów ekranu i drzewa widoków, z
+  breadcrumbów zostają tylko przejścia między ekranami — dotknięcia, logi i
+  zapytania mogłyby nieść kwoty albo e-mail. Polityka prywatności wymienia
+  Sentry i cel (uzasadniony interes: naprawianie awarii).
+- **Bez Sentry w API** — błędy serwera trafiają do logów hostingu; mniej
+  odbiorców danych, a appka i tak zgłasza, co widzi użytkownik.
+- `@sentry/cli` (wysyłka map źródeł) ma zablokowany skrypt instalacji
+  (`pnpm-workspace.yaml`); mapy źródeł wysyła build EAS z `SENTRY_AUTH_TOKEN`.

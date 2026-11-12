@@ -95,6 +95,9 @@ export const privacyPolicy = {
               "Bezpieczeństwo: ochrona przed przejęciem konta i nadużyciami, np. limit prób logowania (art. 6 ust. 1 lit. f RODO — prawnie uzasadniony interes).",
             ],
             [
+              "Wykrywanie i naprawianie awarii aplikacji na podstawie zgłoszeń awarii (art. 6 ust. 1 lit. f RODO — prawnie uzasadniony interes).",
+            ],
+            [
               "Wypełnianie obowiązków prawnych, jeśli przepisy ich od nas wymagają (art. 6 ust. 1 lit. c RODO).",
             ],
           ],
@@ -122,6 +125,9 @@ export const privacyPolicy = {
               "Resend — wysyłka e-maili z kodami. Otrzymuje twój adres e-mail i treść wiadomości z kodem. Nie otrzymuje danych finansowych.",
             ],
             [
+              "Functional Software, Inc. (Sentry) — zgłoszenia awarii aplikacji, przechowywane w Unii Europejskiej: co się zepsuło i gdzie w kodzie, model telefonu, wersja systemu i aplikacji. Bez danych finansowych, adresu e-mail, zrzutów ekranu i tego, co klikasz.",
+            ],
+            [
               "Apple (App Store) i Google (Google Play) — dystrybucja i sprzedaż aplikacji. Zakup odbywa się na twoim koncie w sklepie, na zasadach sklepu — danych karty płatniczej nie widzimy.",
             ],
             [
@@ -132,7 +138,7 @@ export const privacyPolicy = {
         {
           type: "p",
           text: [
-            "Apple i Google mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, m.in. w USA. Przekazanie odbywa się na podstawie decyzji Komisji Europejskiej (EU-US Data Privacy Framework) lub standardowych klauzul umownych.",
+            "Apple, Google i Sentry (podmiot z USA) mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, m.in. w USA. Przekazanie odbywa się na podstawie decyzji Komisji Europejskiej (EU-US Data Privacy Framework) lub standardowych klauzul umownych.",
           ],
         },
       ],

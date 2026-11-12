@@ -107,6 +107,7 @@ Vitest słabo obsługuje React Native), **Supertest** (API e2e, wymaga Docker + 
 **Playwright** (wyłącznie web — nie testuje natywnych aplikacji). Narzędzie e2e dla mobile
 (np. Maestro) wybieramy przy pierwszych ekranach funkcjonalnych
 Płatności: **brak w kodzie** — cenę pobiera sklep przy pobraniu (appka płatna)
+Zgłaszanie awarii: **Sentry** (`@sentry/react-native`, wyłącznie mobile, nieaktywne bez `EXPO_PUBLIC_SENTRY_DSN`, bez danych osobowych i finansowych)
 
 **Zanim zainstalujesz bibliotekę — sprawdź aktualną wersję i kompatybilność
 z resztą stacku.** Zgłoś problem zamiast cichego obejścia.

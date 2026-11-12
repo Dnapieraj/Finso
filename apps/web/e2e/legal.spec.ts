@@ -120,16 +120,26 @@ test("privacy policy gives contact, deletion and complaint routes", async ({ pag
   await expect(main).toContainText("Prezesa Urzędu Ochrony Danych Osobowych");
 });
 
-// Lists only the services actually integrated. When Sentry or PostHog
+// Lists only the services actually integrated. When analytics (e.g. PostHog)
 // arrives, this fails on purpose: the policy has to be updated with it.
 test("privacy policy names only the processors in use", async ({ page }) => {
   await page.goto("/polityka-prywatnosci");
   const recipients = page.getByRole("region", { name: "Komu przekazujemy dane" });
-  for (const name of ["Resend", "Apple", "Google"]) {
+  for (const name of ["Resend", "Sentry", "Apple", "Google"]) {
     await expect(recipients).toContainText(name);
   }
   // A paid app sells nothing inside, so there is no subscription service.
-  await expect(page.locator("main")).not.toContainText(/Sentry|PostHog|RevenueCat/);
+  await expect(page.locator("main")).not.toContainText(/PostHog|RevenueCat/);
+});
+
+// Matches apps/mobile/src/monitoring/sentry.ts: what a crash report carries and what it never does.
+test("privacy policy says what a crash report contains and that it has no financial data", async ({
+  page,
+}) => {
+  await page.goto("/polityka-prywatnosci");
+  const recipients = page.getByRole("region", { name: "Komu przekazujemy dane" });
+  await expect(recipients).toContainText("zgłoszenia awarii");
+  await expect(recipients).toContainText(/bez danych finansowych/i);
 });
 
 // Matches the app lock in apps/mobile (src/lock): biometrics or the phone's
