@@ -9,8 +9,8 @@ const mail = { href: `mailto:${contactEmail}`, text: contactEmail };
 export const termsOfService = {
   title: "Regulamin",
   description:
-    "Zasady korzystania z aplikacji Finso: konto, plany Free i Plus, płatności przez App Store i Google Play, odpowiedzialność i usuwanie konta.",
-  updated: { iso: "2026-09-24", label: "24 września 2026" },
+    "Zasady korzystania z aplikacji Finso: konto, jednorazowy zakup w App Store i Google Play, odpowiedzialność i usuwanie konta.",
+  updated: { iso: "2026-11-12", label: "12 listopada 2026" },
   intro: [
     "Regulamin określa zasady korzystania z aplikacji mobilnej Finso na iOS i Androida (dalej: aplikacja).",
   ],
@@ -64,35 +64,25 @@ export const termsOfService = {
       ],
     },
     {
-      id: "plany",
-      title: "Plany Free i Plus",
-      blocks: [
-        {
-          type: "p",
-          text: [
-            "Plan Free jest bezpłatny i bezterminowy. Plan Plus to płatna subskrypcja miesięczna lub roczna, która odblokowuje dodatkowe funkcje. Aktualny zakres planów i ceny znajdziesz w aplikacji i w ",
-            { href: "/#cennik", text: "cenniku" },
-            ".",
-          ],
-        },
-      ],
-    },
-    {
-      id: "platnosci",
-      title: "Płatności i anulowanie",
+      id: "cena",
+      title: "Cena i zakup",
       blocks: [
         {
           type: "ul",
           items: [
             [
-              "Subskrypcję Plus kupujesz wyłącznie w aplikacji, przez App Store (iOS) lub Google Play (Android). Płatność, rachunki i zwroty obsługuje sklep na swoich zasadach.",
-            ],
-            ["Subskrypcja odnawia się automatycznie na kolejny okres, dopóki jej nie anulujesz."],
-            [
-              "Subskrypcję anulujesz w ustawieniach subskrypcji swojego konta Apple lub Google. Plus działa do końca opłaconego okresu.",
+              "Aplikacja jest płatna jednorazowo przy pobraniu z App Store (iOS) lub Google Play (Android). Aktualną cenę pokazuje sklep i ",
+              { href: "/#cennik", text: "cennik" },
+              ".",
             ],
             [
-              "Usunięcie konta w Finso nie anuluje subskrypcji w sklepie — trzeba ją anulować osobno.",
+              "Nie ma planów, subskrypcji ani płatności wewnątrz aplikacji — po zakupie masz wszystkie funkcje i kolejne aktualizacje bez dodatkowych opłat.",
+            ],
+            [
+              "Płatność, rachunki i zwroty obsługuje sklep na swoich zasadach. Zakup w jednym sklepie nie obejmuje aplikacji w drugim (np. kupionej w Google Play na iPhonie).",
+            ],
+            [
+              "Usunięcie konta w Finso nie zwraca opłaty za aplikację. Aplikacja zostaje na twoim koncie w sklepie, więc możesz ją pobrać ponownie bez płacenia.",
             ],
           ],
         },
@@ -131,7 +121,7 @@ export const termsOfService = {
           text: [
             "Reklamacje dotyczące działania aplikacji wyślij na ",
             mail,
-            ". Odpowiemy w ciągu 14 dni. Reklamacje płatności rozpatruje sklep, w którym kupiono subskrypcję.",
+            ". Odpowiemy w ciągu 14 dni. Reklamacje płatności rozpatruje sklep, w którym kupiono aplikację.",
           ],
         },
       ],

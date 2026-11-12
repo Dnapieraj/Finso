@@ -13,7 +13,7 @@ export const deleteAccount = {
   title: "Usuwanie konta",
   description:
     "Jak usunąć konto w aplikacji Finso razem ze wszystkimi danymi — w aplikacji albo mailowo, bez instalowania aplikacji.",
-  updated: { iso: "2026-09-24", label: "24 września 2026" },
+  updated: { iso: "2026-11-12", label: "12 listopada 2026" },
   intro: [
     "Konto w aplikacji Finso (iOS i Android) możesz usunąć w każdej chwili. Są dwie drogi — wybierz tę, która ci pasuje.",
   ],
@@ -81,13 +81,13 @@ export const deleteAccount = {
       ],
     },
     {
-      id: "subskrypcja",
-      title: "Subskrypcja Plus",
+      id: "zakup",
+      title: "Zakup aplikacji",
       blocks: [
         {
           type: "p",
           text: [
-            "Usunięcie konta nie anuluje subskrypcji. Jeśli masz Finso Plus, najpierw anuluj ją w ustawieniach subskrypcji App Store (iPhone) lub Google Play (Android) — inaczej sklep będzie dalej pobierał opłaty.",
+            "Finso kupujesz raz, bez subskrypcji, więc po usunięciu konta sklep nic więcej nie pobierze. Aplikacja zostaje na twoim koncie App Store (iPhone) lub Google Play (Android) — możesz ją pobrać ponownie i założyć nowe konto bez ponownej płatności. Usunięcie konta nie zwraca opłaty za aplikację.",
           ],
         },
       ],

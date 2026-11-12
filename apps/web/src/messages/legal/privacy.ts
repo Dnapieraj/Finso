@@ -10,7 +10,7 @@ export const privacyPolicy = {
   title: "Polityka prywatności",
   description:
     "Jakie dane zbiera aplikacja Finso, w jakim celu, komu je przekazujemy, jak długo je przechowujemy i jakie masz prawa.",
-  updated: { iso: "2026-10-20", label: "20 października 2026" },
+  updated: { iso: "2026-11-12", label: "12 listopada 2026" },
   intro: [
     "Ta polityka opisuje, jak aplikacja mobilna Finso i ta strona przetwarzają dane osobowe. Staramy się pisać prosto i konkretnie.",
   ],
@@ -46,9 +46,6 @@ export const privacyPolicy = {
             ],
             [
               "Ustawienia: waluta, strefa czasowa i dzień miesiąca, od którego liczy się twój okres budżetowy.",
-            ],
-            [
-              "Status subskrypcji: plan (Free lub Plus) i identyfikator klienta w RevenueCat. Danych karty płatniczej nie widzimy — płatność obsługuje App Store lub Google Play.",
             ],
             [
               "Dane sesji: skróty tokenów logowania i ich daty ważności, żeby utrzymać cię zalogowanym i móc unieważnić sesję.",
@@ -94,7 +91,6 @@ export const privacyPolicy = {
             [
               "Prowadzenie konta i działanie aplikacji: wyliczanie budżetu, symulacje zakupów, cele oszczędnościowe (art. 6 ust. 1 lit. b RODO — wykonanie umowy).",
             ],
-            ["Obsługa subskrypcji Plus (art. 6 ust. 1 lit. b RODO — wykonanie umowy)."],
             [
               "Bezpieczeństwo: ochrona przed przejęciem konta i nadużyciami, np. limit prób logowania (art. 6 ust. 1 lit. f RODO — prawnie uzasadniony interes).",
             ],
@@ -126,10 +122,7 @@ export const privacyPolicy = {
               "Resend — wysyłka e-maili z kodami. Otrzymuje twój adres e-mail i treść wiadomości z kodem. Nie otrzymuje danych finansowych.",
             ],
             [
-              "RevenueCat, Inc. — obsługa i weryfikacja subskrypcji Plus. Otrzymuje identyfikator klienta i informacje o zakupach.",
-            ],
-            [
-              "Apple (App Store) i Google (Google Play) — dystrybucja aplikacji i płatności za subskrypcję. Zakup odbywa się na twoim koncie w sklepie, na zasadach sklepu.",
+              "Apple (App Store) i Google (Google Play) — dystrybucja i sprzedaż aplikacji. Zakup odbywa się na twoim koncie w sklepie, na zasadach sklepu — danych karty płatniczej nie widzimy.",
             ],
             [
               "Dostawca hostingu, na którego serwerach w Unii Europejskiej działa baza danych Finso.",
@@ -139,7 +132,7 @@ export const privacyPolicy = {
         {
           type: "p",
           text: [
-            "RevenueCat, Apple i Google mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, m.in. w USA. Przekazanie odbywa się na podstawie decyzji Komisji Europejskiej (EU-US Data Privacy Framework) lub standardowych klauzul umownych.",
+            "Apple i Google mogą przetwarzać dane poza Europejskim Obszarem Gospodarczym, m.in. w USA. Przekazanie odbywa się na podstawie decyzji Komisji Europejskiej (EU-US Data Privacy Framework) lub standardowych klauzul umownych.",
           ],
         },
       ],

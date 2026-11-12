@@ -122,35 +122,19 @@ export const pl = {
   },
   pricing: {
     title: "Cennik",
-    lead: "Zacznij za darmo. Plus odblokujesz w aplikacji, gdy będzie ci potrzebny.",
-    perMonth: "/ mies.",
-    free: {
-      name: "Free",
-      priceNote: "na zawsze",
-      features: [
-        "Ręczne wydatki bez limitu",
-        "1 cel oszczędnościowy",
-        "Historia z 60 dni",
-        "Symulator „czy mnie stać” — 5 razy dziennie",
-      ],
-    },
-    plus: {
-      name: "Plus",
-      badge: "Pełnia możliwości",
-      yearlyPrefix: "lub",
-      yearlyMiddle: "rocznie — wychodzi",
-      yearlySuffix: "miesięcznie",
-      features: [
-        "Nielimitowane cele i symulacje",
-        "Detektor subskrypcji i podwyżek",
-        "Prognozy dla nieregularnych dochodów",
-        "Wspólne wydatki",
-        "Pełna historia i eksport danych",
-        "Widżety na ekranie głównym",
-      ],
-    },
+    lead: "Jedna cena, płacisz raz. Bez planów, bez subskrypcji, bez dopłat w aplikacji.",
+    name: "Finso",
+    priceNote: "jednorazowo",
+    features: [
+      "Symulator „czy mnie stać” bez limitu",
+      "Budżet od wypłaty, także przy nieregularnych dochodach",
+      "Cele oszczędnościowe bez limitu",
+      "Detektor subskrypcji i podwyżek",
+      "Pełna historia, import wyciągu i eksport danych",
+      "Wszystkie przyszłe aktualizacje w cenie",
+    ],
     storeNote:
-      "Subskrypcję Plus kupisz wyłącznie w aplikacji — płatność obsługuje App Store lub Google Play. Anulujesz ją w każdej chwili w ustawieniach sklepu.",
+      "Płacisz raz przy pobraniu z App Store lub Google Play. Aplikacja zostaje na twoim koncie w sklepie — pobierzesz ją ponownie bez płacenia.",
     storesLabel: "Pobierz Finso",
   },
   legal: {
