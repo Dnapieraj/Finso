@@ -50,7 +50,6 @@ describe("Auth (e2e)", () => {
         user: {
           id: anyString,
           email: "nowy.user@example.com",
-          plan: "FREE",
           currency: "PLN",
           timezone: "Europe/Warsaw",
           periodStartDay: 1,
@@ -114,13 +113,13 @@ describe("Auth (e2e)", () => {
       await http().post("/auth/register").expect(400);
     });
 
-    it("ignoruje pola spoza schematu (nie da się założyć konta z planem PLUS)", async () => {
+    it("ignoruje pola spoza schematu — appka jest płatna w sklepie, nie ma planów", async () => {
       const res = await http()
         .post("/auth/register")
         .send({ email: uniqueEmail(), password: TEST_PASSWORD, plan: "PLUS" })
         .expect(201);
 
-      expect((res.body as AuthSession).user.plan).toBe("FREE");
+      expect((res.body as AuthSession).user).not.toHaveProperty("plan");
     });
   });
 

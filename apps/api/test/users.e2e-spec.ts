@@ -106,7 +106,6 @@ describe("Users (e2e)", () => {
       expect(res.body).toEqual({
         id: alice.user.id,
         email: "alice@example.com",
-        plan: "FREE",
         currency: "PLN",
         timezone: "Europe/Warsaw",
         periodStartDay: 1,

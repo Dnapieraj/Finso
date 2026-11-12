@@ -95,7 +95,6 @@ describe("Onboarding (e2e)", () => {
       expect(res.body).toEqual({
         id: me.user.id,
         email: me.user.email,
-        plan: "FREE",
         currency: "PLN",
         timezone: "Europe/Berlin",
         periodStartDay: 10,

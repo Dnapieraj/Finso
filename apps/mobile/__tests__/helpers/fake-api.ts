@@ -49,7 +49,6 @@ import { ApiError, type ApiClient } from "@vireo/shared/api";
 export const testUser: PublicUser = {
   id: "01923b6e-0000-7000-8000-000000000001",
   email: "ola@example.com",
-  plan: "FREE",
   currency: "PLN",
   timezone: "Europe/Warsaw",
   periodStartDay: 10,

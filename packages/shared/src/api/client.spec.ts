@@ -21,7 +21,6 @@ const newTokens: AuthTokens = {
 const me = {
   id: "01923b6e-0000-7000-8000-000000000001",
   email: "ola@example.com",
-  plan: "FREE",
   currency: "PLN",
   timezone: "Europe/Warsaw",
   periodStartDay: 10,
@@ -307,7 +306,7 @@ describe("createApiClient", () => {
   });
 
   it.each([
-    ["breaks the shared schema", jsonResponse(200, { ...me, plan: "GOLD" })],
+    ["breaks the shared schema", jsonResponse(200, { ...me, periodStartDay: "10" })],
     ["is not JSON", new Response("<html>proxy error</html>", { status: 200 })],
   ])("rejects a successful response that %s", async (_case, response) => {
     const { api } = setup({ "GET /users/me": [response] });
@@ -917,7 +916,6 @@ describe("createApiClient", () => {
     const user = {
       id: "01923b6e-0000-7000-8000-000000000001",
       email: "nowy@example.com",
-      plan: "FREE",
       currency: "PLN",
       timezone: "Europe/Warsaw",
       periodStartDay: 10,
