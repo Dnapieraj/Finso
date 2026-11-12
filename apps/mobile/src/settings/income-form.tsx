@@ -50,8 +50,11 @@ interface Errors extends ScheduleErrors {
 /**
  * Adding (no `source`) or editing an income. A regular income has an
  * amount and a schedule, saved with the source in one request; an
- * irregular one only a name. The kind is chosen once: switching it would
- * change what the history of entries means.
+ * irregular one only a name. Switching the kind keeps the entries already
+ * saved — they are facts. To irregular, the schedule goes and the budget
+ * counts what comes in; to regular, it needs an amount and a schedule,
+ * and an entry from this period closes this period's payday, so nothing
+ * is counted twice (the API checks both).
  */
 export function IncomeForm({ source }: { source?: IncomeSource }) {
   const [kind, setKind] = useState(source?.kind ?? "REGULAR");
@@ -93,12 +96,13 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
     // schedule on edit means the saved one stays, start date included.
     let expectedAmount: number | null = null;
     let nextSchedule: SavedSchedule | null = null;
+    const kindChanged = source !== undefined && kind !== source.kind;
     if (kind === "REGULAR") {
       const parsedAmount = parseMoneyInput(amount);
       if (parsedAmount.ok) expectedAmount = parsedAmount.grosze;
       else found.amount = amountError(parsedAmount.reason);
 
-      if (!isSameSchedule(schedule, source?.schedule ?? null)) {
+      if (kindChanged || !isSameSchedule(schedule, source?.schedule ?? null)) {
         const checked = validateSchedule(schedule);
         if (checked.ok) {
           nextSchedule = toSchedule(schedule, checked.cadence, "INCOME", budgetClock());
@@ -124,10 +128,12 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
 
     const change: UpdateIncomeSourceInput = {};
     if (parsedName.name !== source.name) change.name = parsedName.name;
-    if (kind === "REGULAR" && expectedAmount !== source.expectedAmount) {
+    if (kindChanged) change.kind = kind;
+    if (kindChanged || (kind === "REGULAR" && expectedAmount !== source.expectedAmount)) {
       change.expectedAmount = expectedAmount;
     }
     if (nextSchedule) change.schedule = nextSchedule;
+    else if (kindChanged) change.schedule = null;
     if (Object.keys(change).length === 0) router.back();
     else save.mutate({ action: "update", id: source.id, change });
   }
@@ -136,26 +142,29 @@ export function IncomeForm({ source }: { source?: IncomeSource }) {
   return (
     <Screen back title={source ? t.income.editTitle : t.income.newTitle}>
       {failure && <FormAlert tone="error">{apiErrorMessage(failure, "settings")}</FormAlert>}
-      {!source && (
-        <View accessibilityRole="radiogroup" accessibilityLabel={t.income.kind} className="gap-3">
-          <ChoiceCard
-            label={t.income.regular}
-            hint={t.income.regularHint}
-            selected={kind === "REGULAR"}
-            onPress={() => {
-              setKind("REGULAR");
-            }}
-          />
-          <ChoiceCard
-            label={t.income.irregular}
-            hint={t.income.irregularHint}
-            selected={kind === "IRREGULAR"}
-            onPress={() => {
-              setKind("IRREGULAR");
-              setErrors({});
-            }}
-          />
-        </View>
+      <View accessibilityRole="radiogroup" accessibilityLabel={t.income.kind} className="gap-3">
+        <ChoiceCard
+          label={t.income.regular}
+          hint={t.income.regularHint}
+          selected={kind === "REGULAR"}
+          onPress={() => {
+            setKind("REGULAR");
+          }}
+        />
+        <ChoiceCard
+          label={t.income.irregular}
+          hint={t.income.irregularHint}
+          selected={kind === "IRREGULAR"}
+          onPress={() => {
+            setKind("IRREGULAR");
+            setErrors({});
+          }}
+        />
+      </View>
+      {source && kind !== source.kind && (
+        <FormAlert tone="info">
+          {kind === "IRREGULAR" ? t.income.toIrregular : t.income.toRegular}
+        </FormAlert>
       )}
       <TextField
         label={t.name}

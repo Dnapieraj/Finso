@@ -124,8 +124,8 @@ Wszystkie funkcje poniżej żyją w aplikacji mobilnej. Web tylko je opisuje.
 14. Wspólne wydatki / rozliczenia
 15. Widżety iOS/Android („Możesz dziś wydać X zł”) — **Android ZROBIONY** (5.11.2026); iOS czeka na decyzję (Mac albo EAS)
 16. Tryb offline z synchronizacją
-17. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach (dziś: usunąć
-    i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
+17. Zmiana rodzaju dochodu stały ↔ nieregularny w Ustawieniach — **ZROBIONE** (12.11.2026)
+    (wcześniej: usunąć i dodać od nowa). Do przemyślenia: co z harmonogramem i historią wpływów
     przy zmianie w trakcie okresu
 18. „Wpłać na cel” z historią wpłat — dziś „Już odłożone” to ręczna korekta
     kwoty. Wpłaty jako osobne zapisy (data, kwota, cofnięcie) dałyby
@@ -1128,3 +1128,21 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
 - **Sesje zostają** — hasło się nie zmienia, a logowanie i tak wymaga hasła;
   inaczej niż przy zmianie hasła.
 - Gdzie: Ustawienia → Konto → „Zmień adres e-mail”.
+
+### 12.11.2026 — Faza 2: zmiana rodzaju dochodu (stały ↔ nieregularny)
+
+- **Gdzie:** Ustawienia → Dochody → edycja; wybór „Stały / Nieregularny” jest
+  teraz także przy edycji, z krótką informacją, co się stanie.
+- **Wpływy zostają** — to fakty finansowe; zmienia się tylko to, czego budżet
+  oczekuje w przyszłości.
+- **Stały → nieregularny:** harmonogram (reguła INCOME) jest usuwany, kwota
+  znika. Budżet liczy to, co wpłynęło, a prognoza powstaje z historii wpływów
+  (w tym tych sprzed zmiany).
+- **Nieregularny → stały:** trzeba podać kwotę i harmonogram; reguła startuje
+  od początku okresu, jak przy nowym dochodzie stałym. Wpływ z bieżącego okresu
+  zamyka termin wypłaty (zapis bez `occurrenceDate` zamyka najwcześniejszy
+  otwarty termin), więc nic nie liczy się dwa razy. Rozważany start od
+  następnego okresu byłby jeszcze ostrożniejszy, ale zaniżałby budżet, gdy
+  w tym okresie nic jeszcze nie wpłynęło — a podwójnego liczenia i tak nie ma.
+- **Bez zmian w API** — `PATCH /income/sources/:id` już to obsługiwał;
+  dopisane testy e2e pilnują budżetu po zmianie w obie strony.

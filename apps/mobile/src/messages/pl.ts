@@ -532,6 +532,10 @@ export const pl = {
       notFound: "Nie znaleziono tego dochodu.",
       delete: "Usuń dochód",
       deleteWarning: "Zapisane wpływy zostaną w historii.",
+      toIrregular:
+        "Zapisane wpływy zostają. Od teraz Finso nie czeka na stałą kwotę — liczy to, co wpłynie, a z historii zrobi ostrożną prognozę.",
+      toRegular:
+        "Zapisane wpływy zostają. Wpływy z tego okresu zaliczymy na poczet wypłat, więc nic nie policzy się dwa razy.",
     },
     templates: {
       title: "Szablony wydatków",

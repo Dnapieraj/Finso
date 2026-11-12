@@ -391,7 +391,7 @@ describe("adding", () => {
 });
 
 describe("editing — fixing a mistake from onboarding", () => {
-  it("opens with the current values; the kind is not editable", async () => {
+  it("opens with the current values, the kind included", async () => {
     const app = await openEdit();
 
     expect(app).toHavePathname(`/settings/income/${salary.id}`);
@@ -399,7 +399,8 @@ describe("editing — fixing a mistake from onboarding", () => {
     expect(screen.getByLabelText("Kwota")).toHaveDisplayValue("5000");
     expect(screen.getByRole("radio", { name: "Co miesiąc" })).toBeSelected();
     expect(screen.getByLabelText("Dzień miesiąca")).toHaveDisplayValue("10");
-    expect(screen.queryByRole("radio", { name: "Nieregularny" })).not.toBeOnTheScreen();
+    expect(screen.getByRole("radio", { name: "Stały" })).toBeSelected();
+    expect(screen.queryByText(/Zapisane wpływy zostają/)).not.toBeOnTheScreen();
   });
 
   it("a new name and amount keep the schedule as it is", async () => {
@@ -461,6 +462,68 @@ describe("editing — fixing a mistake from onboarding", () => {
       expect(fakeApi.incomeSources.update).toHaveBeenCalledWith(freelance.id, {
         name: "Freelance",
       });
+    });
+  });
+
+  it("regular → irregular: says what happens and drops the amount and schedule", async () => {
+    const app = await openEdit();
+
+    await choose("Nieregularny");
+    expect(screen.getByText(/Zapisane wpływy zostają/)).toBeOnTheScreen();
+    expect(screen.queryByLabelText("Kwota")).not.toBeOnTheScreen();
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(app).toHavePathname("/settings/income");
+    });
+    expect(fakeApi.incomeSources.update).toHaveBeenCalledWith(salary.id, {
+      kind: "IRREGULAR",
+      expectedAmount: null,
+      schedule: null,
+    });
+  });
+
+  it("switching back to the saved kind before saving sends nothing about the kind", async () => {
+    const app = await openEdit();
+
+    await choose("Nieregularny");
+    await choose("Stały");
+    expect(screen.queryByText(/Zapisane wpływy zostają/)).not.toBeOnTheScreen();
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(app).toHavePathname("/settings/income");
+    });
+    expect(fakeApi.incomeSources.update).not.toHaveBeenCalled();
+  });
+
+  it("irregular → regular: needs an amount and a day, then sends the new schedule", async () => {
+    seedFakeServer({ sources: [salary, freelance] });
+    const app = await openEdit("Zlecenia");
+
+    await choose("Stały");
+    expect(screen.getByText(/Zapisane wpływy zostają/)).toBeOnTheScreen();
+    await press("Zapisz");
+    expect(await screen.findByText("Podaj kwotę.")).toBeOnTheScreen();
+    expect(fakeApi.incomeSources.update).not.toHaveBeenCalled();
+
+    await type("Kwota", "4000");
+    await type("Dzień miesiąca", "10");
+    await press("Zapisz");
+
+    await waitFor(() => {
+      expect(app).toHavePathname("/settings/income");
+    });
+    expect(fakeApi.incomeSources.update).toHaveBeenCalledWith(freelance.id, {
+      kind: "REGULAR",
+      expectedAmount: 400_000,
+      schedule: {
+        frequency: "MONTHLY",
+        interval: 1,
+        startDate: "2026-09-10",
+        dayOfMonth: 10,
+        dayOfWeek: null,
+      },
     });
   });
 
