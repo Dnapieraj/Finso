@@ -26,6 +26,23 @@ export const createGoalSchema = goalFieldsSchema.extend({
 /** Body `PATCH /goals/:id`. */
 export const updateGoalSchema = goalFieldsSchema.partial();
 
+/**
+ * Body `POST /goals/:id/deposits`. Bez daty = dziś (w strefie użytkownika);
+ * data z przyszłości jest odrzucana przez API.
+ */
+export const createGoalDepositSchema = z.object({
+  amount: amountSchema,
+  date: isoDateInputSchema.optional(),
+});
+
+/** Wpłata na cel w odpowiedzi API. */
+export const goalDepositSchema = z.object({
+  id: idSchema,
+  goalId: idSchema,
+  amount: z.number().int(),
+  date: isoDateOutputSchema,
+});
+
 /** Cel w odpowiedzi API. */
 export const goalSchema = z.object({
   id: idSchema,
@@ -41,5 +58,11 @@ export type CreateGoalInput = z.infer<typeof createGoalSchema>;
 export type CreateGoalRequest = z.input<typeof createGoalSchema>;
 /** Zmiany celu. */
 export type UpdateGoalInput = z.infer<typeof updateGoalSchema>;
-/** Cel w odpowiedzi API. */
+/** Cel w odpowiedzi API. `currentAmount` = odłożone razem, z wpłatami. */
 export type Goal = z.infer<typeof goalSchema>;
+/** Dane nowej wpłaty. */
+export type CreateGoalDepositInput = z.infer<typeof createGoalDepositSchema>;
+/** Nowa wpłata, jak wysyła ją klient — z celem, na który idzie. */
+export type CreateGoalDepositRequest = z.input<typeof createGoalDepositSchema> & { goalId: string };
+/** Wpłata na cel w odpowiedzi API. */
+export type GoalDeposit = z.infer<typeof goalDepositSchema>;

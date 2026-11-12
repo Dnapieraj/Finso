@@ -394,6 +394,7 @@ describe("createApiClient", () => {
       incomeSources: [],
       incomeEntries: [],
       goals: [],
+      goalDeposits: [],
       recurringRules: [],
     };
     const { api } = setup({ "GET /export": [jsonResponse(200, data)] });
@@ -498,7 +499,9 @@ describe("createApiClient", () => {
       awaitingIncome: 0,
       incomeForecasts: [],
       fixedCommitments: [{ label: "Czynsz", amount: 150_000 }],
-      goalContributions: [{ goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000 }],
+      goalContributions: [
+        { goalId: "01923b6e-0000-7000-8000-000000000010", amount: 50_000, deposited: 0 },
+      ],
       today: { limit: 10_288, spent: 0, left: 10_288, carriedFromYesterday: 0, nextDays: 10_288 },
     };
     const goal = {
@@ -1163,6 +1166,55 @@ describe("createApiClient", () => {
 
       await expect(api.goals.restore(GOAL_ID)).resolves.toEqual(goal);
       expect(sentRequest(fetch, 0).method).toBe("POST");
+    });
+  });
+
+  describe("goal deposits: list, deposit with a key, remove and restore", () => {
+    const GOAL_ID = "01923b6e-0000-7000-8000-000000000060";
+    const DEPOSIT_ID = "01923b6e-0000-7000-8000-000000000061";
+    const deposit = { id: DEPOSIT_ID, goalId: GOAL_ID, amount: 20_000, date: "2026-09-23" };
+
+    it("goalDeposits.list reads the deposits of one goal", async () => {
+      const { api, fetch } = setup({
+        [`GET /goals/${GOAL_ID}/deposits`]: [jsonResponse(200, [deposit])],
+      });
+
+      await expect(api.goalDeposits.list(GOAL_ID)).resolves.toEqual([deposit]);
+      expect(sentRequest(fetch, 0).method).toBe("GET");
+    });
+
+    it("goalDeposits.create posts the amount with its Idempotency-Key", async () => {
+      const { api, fetch } = setup({
+        [`POST /goals/${GOAL_ID}/deposits`]: [jsonResponse(201, deposit)],
+      });
+      const draft = api.goalDeposits.draft({ goalId: GOAL_ID, amount: 20_000 });
+
+      await expect(api.goalDeposits.create(draft)).resolves.toEqual(deposit);
+      const sent = sentRequest(fetch, 0);
+      expect(sent.body).toEqual({ amount: 20_000 });
+      expect(sent.headers.get("Idempotency-Key")).toBe(draft.idempotencyKey);
+    });
+
+    it("goalDeposits.remove and restore address one deposit", async () => {
+      const { api, fetch } = setup({
+        [`DELETE /goals/${GOAL_ID}/deposits/${DEPOSIT_ID}`]: [new Response(null, { status: 204 })],
+        [`POST /goals/${GOAL_ID}/deposits/${DEPOSIT_ID}/restore`]: [jsonResponse(200, deposit)],
+      });
+
+      await expect(api.goalDeposits.remove(GOAL_ID, DEPOSIT_ID)).resolves.toBeUndefined();
+      await expect(api.goalDeposits.restore(GOAL_ID, DEPOSIT_ID)).resolves.toEqual(deposit);
+      expect(sentRequest(fetch, 0).method).toBe("DELETE");
+      expect(sentRequest(fetch, 1).method).toBe("POST");
+    });
+
+    it("rejects a deposit that breaks the shared schema", async () => {
+      const { api } = setup({
+        [`GET /goals/${GOAL_ID}/deposits`]: [jsonResponse(200, [{ ...deposit, amount: "200" }])],
+      });
+
+      await expect(api.goalDeposits.list(GOAL_ID)).rejects.toMatchObject({
+        kind: "invalid-response",
+      });
     });
   });
 

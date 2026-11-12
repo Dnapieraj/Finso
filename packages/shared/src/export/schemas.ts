@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { categorySchema } from "../categories/schemas.js";
 import { isoDateOutputSchema } from "../common/schemas.js";
-import { goalSchema } from "../goals/schemas.js";
+import { goalDepositSchema, goalSchema } from "../goals/schemas.js";
 import { incomeEntrySchema, incomeSourceSchema } from "../income/schemas.js";
 import { recurringRuleSchema } from "../recurring-rules/schemas.js";
 import { transactionSchema } from "../transactions/schemas.js";
@@ -22,6 +22,7 @@ export const exportDataSchema = z.object({
   incomeSources: z.array(incomeSourceSchema),
   incomeEntries: z.array(incomeEntrySchema.extend(occurrenceField)),
   goals: z.array(goalSchema),
+  goalDeposits: z.array(goalDepositSchema),
   recurringRules: z.array(recurringRuleSchema),
 });
 

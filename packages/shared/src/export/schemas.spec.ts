@@ -11,6 +11,7 @@ describe("exportDataSchema", () => {
       incomeSources: [],
       incomeEntries: [],
       goals: [],
+      goalDeposits: [],
       recurringRules: [],
     };
 

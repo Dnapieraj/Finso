@@ -36,6 +36,9 @@ import {
   type CreateGoalRequest,
   type Goal,
   type UpdateGoalInput,
+  goalDepositSchema,
+  type CreateGoalDepositRequest,
+  type GoalDeposit,
 } from "../goals/schemas.js";
 import {
   incomeSourceSchema,
@@ -215,6 +218,18 @@ export interface ApiClient {
     remove(id: string): Promise<void>;
     /** Wyjmuje cel z kosza. */
     restore(id: string): Promise<Goal>;
+  };
+  readonly goalDeposits: {
+    /** Wpłaty na cel, najnowsza pierwsza (bez usuniętych). */
+    list(goalId: string): Promise<GoalDeposit[]>;
+    /** Wpłata z własnym kluczem idempotencji — jeden draft na jedną wpłatę. */
+    draft(input: CreateGoalDepositRequest): IdempotentDraft<CreateGoalDepositRequest>;
+    /** Ponowne wysłanie tego samego draftu zwraca zapisaną wcześniej wpłatę. */
+    create(draft: IdempotentDraft<CreateGoalDepositRequest>): Promise<GoalDeposit>;
+    /** Usuwa wpłatę (miękko — da się cofnąć). */
+    remove(goalId: string, id: string): Promise<void>;
+    /** Przywraca usuniętą wpłatę. */
+    restore(goalId: string, id: string): Promise<GoalDeposit>;
   };
   readonly recurringRules: {
     /** Reguły wydatków i dochodów, także wyłączone. */
@@ -544,6 +559,30 @@ export function createApiClient({
       },
       restore: (id) =>
         write("POST", `/goals/${encodeURIComponent(id)}/restore`, undefined, goalSchema),
+    },
+    goalDeposits: {
+      list: (goalId) =>
+        read(`/goals/${encodeURIComponent(goalId)}/deposits`, z.array(goalDepositSchema)),
+      draft: (input) => ({ input, idempotencyKey: randomUUID() }),
+      create: ({ input: { goalId, ...body }, idempotencyKey }) =>
+        createKeyed(
+          `/goals/${encodeURIComponent(goalId)}/deposits`,
+          { input: body, idempotencyKey },
+          goalDepositSchema,
+        ),
+      async remove(goalId, id) {
+        await execute({
+          method: "DELETE",
+          path: `/goals/${encodeURIComponent(goalId)}/deposits/${encodeURIComponent(id)}`,
+        });
+      },
+      restore: (goalId, id) =>
+        write(
+          "POST",
+          `/goals/${encodeURIComponent(goalId)}/deposits/${encodeURIComponent(id)}/restore`,
+          undefined,
+          goalDepositSchema,
+        ),
     },
     categories: {
       list: () => read("/categories", z.array(categorySchema)),
