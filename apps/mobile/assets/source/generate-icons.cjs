@@ -1,6 +1,7 @@
 // Generates Finso app icons and splash from one leaf-with-a-check mark.
 // Usage (sharp comes with Expo, it is not a direct dependency):
-//   node apps/mobile/assets/source/generate-icons.cjs \n//     node_modules/.pnpm/sharp@<version>/node_modules/sharp apps/mobile/assets
+//   node apps/mobile/assets/source/generate-icons.cjs <path to sharp> apps/mobile/assets
+//   where <path to sharp> is node_modules/.pnpm/sharp@<version>/node_modules/sharp
 // Writes icon-512.png, apple-icon.png and icon.svg next to this script for the website
 // (copy icon.svg and apple-icon.png to apps/web/src/app).
 const path = require("path");
