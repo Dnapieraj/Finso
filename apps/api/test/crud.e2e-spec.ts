@@ -52,8 +52,8 @@ describe("Moduły CRUD (e2e)", () => {
       expect(res.body).toMatchObject({ timezone: "America/New_York", periodStartDay: 10 });
     });
 
-    it("odrzuca dzień 29+ i nieznaną strefę", async () => {
-      await patch("/users/me", { periodStartDay: 29 }).expect(400);
+    it("odrzuca dzień 32+ i nieznaną strefę", async () => {
+      await patch("/users/me", { periodStartDay: 32 }).expect(400);
       await patch("/users/me", { timezone: "Europe/Atlantis" }).expect(400);
     });
   });

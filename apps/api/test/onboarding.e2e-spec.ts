@@ -412,7 +412,7 @@ describe("Onboarding (e2e)", () => {
       });
 
       it("niepoprawne dane: 400 walidacji i nic nie zapisane", async () => {
-        const res = await complete(typical({ periodStartDay: 29, spentThisPeriod: 45_000 })).expect(
+        const res = await complete(typical({ periodStartDay: 32, spentThisPeriod: 45_000 })).expect(
           400,
         );
 

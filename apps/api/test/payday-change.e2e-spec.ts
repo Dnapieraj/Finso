@@ -125,14 +125,24 @@ describe("Zmiana dnia wypłaty (e2e)", () => {
     expect(await startOf(null)).toBe("2026-09-10");
   });
 
+  it("wypłata ostatniego dnia miesiąca (31): okres od 31 sierpnia do 29 września", async () => {
+    await http().patch("/users/me").set(as(me)).send({ periodStartDay: 31 }).expect(200);
+
+    // 23.09: wrzesień ma 30 dni, więc kolejny okres startuje 30.09.
+    expect((await get<BudgetSummary>("/budget/current")).period).toEqual({
+      start: "2026-08-31",
+      end: "2026-09-29",
+    });
+  });
+
   it("zmiana samej strefy czasowej nie rusza reguł", async () => {
     await http().patch("/users/me").set(as(me)).send({ timezone: "Europe/Berlin" }).expect(200);
 
     expect(await startOf("Czynsz")).toBe("2026-09-10");
   });
 
-  it("zły dzień (29): 400 i ani dzień, ani reguły się nie zmieniają", async () => {
-    await http().patch("/users/me").set(as(me)).send({ periodStartDay: 29 }).expect(400);
+  it("zły dzień (32): 400 i ani dzień, ani reguły się nie zmieniają", async () => {
+    await http().patch("/users/me").set(as(me)).send({ periodStartDay: 32 }).expect(400);
 
     expect(await startOf("Czynsz")).toBe("2026-09-10");
     expect((await get<{ periodStartDay: number }>("/users/me")).periodStartDay).toBe(10);
