@@ -1,0 +1,15 @@
+# Kontekst obrazu API: bez zależności, wyników buildów i sekretów.
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/.expo
+**/coverage
+**/test-results
+**/playwright-report
+**/.env
+**/.env.*
+!**/.env.example
+apps/mobile
+apps/web
+.git
