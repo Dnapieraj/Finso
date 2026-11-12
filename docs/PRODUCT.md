@@ -560,9 +560,9 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 4. „Wpłać na cel” z historią wpłat — **ZROBIONE**
 5. Ikona appki i ekran startowy (własne grafiki zamiast Expo) — **ZROBIONE**
 6. Zgłaszanie awarii (Sentry) — w kodzie, nieaktywne bez DSN; polityka prywatności — **ZROBIONE**
-7. Play Integrity przy rejestracji (Android) — w kodzie, włączane zmienną środowiskową
+7. Play Integrity przy rejestracji (Android) — **ROZSTRZYGNIĘTE bez kodu**: przełącznik „Automatyczna ochrona integralności” w Google Play Console (docs/PUBLIKACJA.md)
 8. Buildy do sklepów: `eas.json`, wersjonowanie, produkcyjna konfiguracja API
-   (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API
+   (zmienne, CORS, rate limiting, migracje przy starcie), Dockerfile API — **ZROBIONE**
 9. Materiały do sklepów: opisy, zrzuty ekranu, ankiety o danych (Data safety,
    App Privacy), konto testowe dla recenzentów
 10. Przewodnik publikacji `docs/PUBLIKACJA.md` — krok po kroku, co kliknąć
@@ -573,7 +573,7 @@ Tryb offline, podsumowanie okresu i wspólne wydatki — po publikacji.
 - ~~Ikona i ekran startowy~~ — zrobione 12.11.2026
 - Cena 19,99 zł ustawiona w obu sklepach (umowa „Paid Apps” i dane bankowo-podatkowe
   w App Store Connect, profil płatności w Google Play Console)
-- Rozważyć Play Integrity API przy rejestracji (kopie APK spoza Google Play)
+- ~~Play Integrity API przy rejestracji~~ — zamiast kodu: automatyczna ochrona w Play Console (decyzja 12.11.2026)
 - ~~Usunąć kolumnę `User.plan` / enum `SubscriptionPlan`~~ — zrobione 12.11.2026 (migracja `drop_subscription_plan`)
 - **Build na iPhone'a wymaga EAS Build w chmurze** — pracujemy na Windowsie,
   a lokalny build iOS (`expo run:ios`) potrzebuje macOS z Xcode. Do zrobienia:
@@ -1248,3 +1248,37 @@ nie są potrzebne. Przegląd zrzutów ekranu z emulatora, ekran po ekranie.
   odbiorców danych, a appka i tak zgłasza, co widzi użytkownik.
 - `@sentry/cli` (wysyłka map źródeł) ma zablokowany skrypt instalacji
   (`pnpm-workspace.yaml`); mapy źródeł wysyła build EAS z `SENTRY_AUTH_TOKEN`.
+
+### 12.11.2026 — kopie APK: ochrona w Play Console zamiast własnego Play Integrity
+
+- **Bez własnej weryfikacji Play Integrity.** Wymagałaby konta Google Cloud,
+  natywnej biblioteki i wywołań API Google z serwera, a przede wszystkim mogłaby
+  zablokować uczciwych kupujących (telefony bez usług Google, niestandardowe
+  systemy, chwilowe błędy Google). Zasada „bezpieczniej dla użytkownika”.
+- **Zamiast tego:** Play Console → Integralność aplikacji → „Automatyczna ochrona”
+  — Google sam dokłada do paczki sprawdzanie, czy appka pochodzi ze sklepu, bez
+  zmian w kodzie (krok w docs/PUBLIKACJA.md). Każde konto i tak żyje na naszym
+  serwerze; gdyby nadużycia się pojawiły, wrócimy do tematu.
+
+### 12.11.2026 — konfiguracja produkcyjna i buildy do sklepów
+
+- **`TRUST_PROXY_HOPS`** (API): na hostingu za serwerem pośredniczącym limit
+  `/auth/*` liczyłby wszystkich jako jeden adres — jeden atakujący blokowałby
+  logowanie wszystkim. 1 = ufamy jednemu proxy; 0 (domyślnie) = nagłówek
+  `X-Forwarded-For` ignorowany, więc podrobiony nie obchodzi limitu.
+- **Dockerfile API** (`apps/api/Dockerfile`, budowany z katalogu głównego):
+  przy starcie `prisma migrate deploy` → seed kategorii systemowych (upsert,
+  idempotentny) → serwer. Sprawdzony na pustej bazie (17 migracji, 8 kategorii,
+  rejestracja 201, `/docs` ukryte). Zależności deweloperskie zostają w obrazie
+  (prisma i tsx są potrzebne przy starcie) — odchudzenie na później. CI buduje
+  obraz przy każdym pushu.
+- **Bez CORS i helmet:** API woła tylko appka mobilna (nie przeglądarka), więc
+  brak nagłówków CORS = przeglądarki nie mogą go wołać z cudzych stron.
+- **`eas.json`:** profile `development` (dev client, API na komputerze),
+  `preview` (APK do testów) i `production`; numery buildów z EAS
+  (`appVersionSource: remote`, `autoIncrement`). Adres API produkcji to
+  placeholder `https://api.finso.app`, jak domena strony.
+- **`app.json`:** wersja 1.0.0; iOS `usesNonExemptEncryption: false` (tylko
+  HTTPS — bez pytania o eksport szyfrowania przy każdym wgraniu); zablokowane
+  uprawnienia Androida, których appka nie używa (pamięć, media, mikrofon,
+  nakładka) — `READ_MEDIA_IMAGES` wymagałby w Google Play osobnej deklaracji.
