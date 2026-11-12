@@ -30,6 +30,8 @@ it("with a DSN: crash reports with the app version and no personal data", () => 
     sendDefaultPii: false,
     attachScreenshot: false,
     attachViewHierarchy: false,
+    // Session tracking would count app opens under an installation id.
+    enableAutoSessionTracking: false,
   });
 });
 

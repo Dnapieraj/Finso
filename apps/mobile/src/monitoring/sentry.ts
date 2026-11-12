@@ -19,6 +19,9 @@ export function startMonitoring(config: { dsn: string | undefined; appVersion: s
     sendDefaultPii: false,
     attachScreenshot: false,
     attachViewHierarchy: false,
+    // Sessions (release health) carry an installation id and app opens —
+    // more than a crash report needs.
+    enableAutoSessionTracking: false,
     beforeBreadcrumb: keepNavigationOnly,
     beforeSend: withoutPersonalData,
   });
